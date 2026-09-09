@@ -57,6 +57,11 @@
   border-color: currentColor;
 }
 
+/* Muss vor allen Komponenten stehen und sie ueberstimmen: Das hidden-Attribut
+   setzt die Laufzeit auf Elemente, deren Klasse ein eigenes display mitbringt
+   (etwa .badge). Ohne diese Regel bliebe das Erledigt-Abzeichen immer sichtbar. */
+[hidden] { display: none !important; }
+
 html { scroll-behavior: smooth; scroll-padding-top: 76px; }
 
 body {
@@ -414,10 +419,14 @@ tr:nth-child(even) td { background: var(--bg-soft); }
   .befehl-teile dd { margin-bottom: 0.5rem; }
 }
 
-/* Nur die Zeilen des gewaehlten Betriebssystems sind sichtbar. */
+/* Nur die Zeilen des gewaehlten Betriebssystems sind sichtbar. Drei genaue
+   Klassen je Shell, dazu zwei groebere fuer die Faelle, in denen sich beide
+   Windows-Shells gleich verhalten. */
 [data-os="mac"]  .nur-win, [data-os="mac"]  .nur-cmd,
 [data-os="win"]  .nur-mac, [data-os="win"]  .nur-cmd,
 [data-os="cmd"]  .nur-mac, [data-os="cmd"]  .nur-win { display: none; }
+[data-os="mac"]  .nur-windows,
+[data-os="win"]  .nur-unix, [data-os="cmd"] .nur-unix { display: none; }
 
 /* ================================================== Terminalnachbildung
 
@@ -484,6 +493,9 @@ tr:nth-child(even) td { background: var(--bg-soft); }
 .terminal-auftrag li { margin-bottom: 0.2rem; }
 .terminal-auftrag li.erledigt { color: #8BE08F; text-decoration: line-through; }
 .terminal-auftrag li.erledigt::marker { color: #8BE08F; }
+/* Die Schritte werden der Reihe nach geprueft; der naechste ist hervorgehoben. */
+.terminal-auftrag li.aktuell { color: var(--term-fg); font-weight: 600; }
+.terminal-auftrag li.aktuell::marker { color: var(--signal); }
 .terminal-auftrag strong { color: var(--term-fg); }
 
 /* ==================================================== Uebungsbox (alle Typen) */

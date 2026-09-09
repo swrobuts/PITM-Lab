@@ -41,11 +41,15 @@ assets/
   pitm.css                    Gemeinsames Stylesheet: Indigo #2E2A72, Bernstein #FFC300
   pitm.js                     Laufzeit: Sprache, OS-Umschaltung, LABS, Übungsboxen, Fortschritt
   terminal.js                 Nachgebildete Shell: zsh, PowerShell, cmd.exe, git, docker
+  pruefung.js                 Wann ein Terminalschritt erledigt ist — Browser UND Testlauf
   pglite/                     PostgreSQL als WebAssembly (PGlite), lokal statt vom CDN
 
 data/
   velocity.sql                Saatdaten der Fallstudie: station, rad, kunde, fahrt, fahrt_mit_typ
   uebungen/lab-XX.json        Befehlskarten und Übungen je Lab
+
+tools/
+  verify.mjs                  Abnahmelauf ohne Browser (siehe unten)
 ```
 
 ---
@@ -91,22 +95,51 @@ zwei Werkzeuge, die unabhängig vom Dialekt arbeiten.
 
 | Teil | Was er kennt |
 |---|---|
-| `posix()` | zsh/bash: `pwd ls cd mkdir touch cat head tail cp mv rm echo wc grep open` |
-| `powershell()` | echte Alias-Auflösung (`ls` → `Get-ChildItem`), `-Recurse/-Force/-TotalCount`, `New-Item`, `Set-Content`, `-WhatIf` |
-| `cmd()` | `dir cd md rd copy move del type` samt Schaltern `/s /q /a` und Fehlertexten im cmd-Stil |
+| `posix()` | zsh/bash: `pwd ls cd mkdir touch cat head tail wc grep cp mv rm echo open`, Umleitung mit `>` und `>>` |
+| `powershell()` | echte Alias-Auflösung (`ls` → `Get-ChildItem`) und **Parameterprüfung je Cmdlet**: `-Force` gilt, `-Rec` wird zu `-Recurse` aufgelöst, `-la` wird zurückgewiesen, `-f` ist bei `Remove-Item` mehrdeutig. `Rename-Item` benennt um und verschiebt nicht |
+| `cmd()` | `dir cd md rd copy move del ren type find set` samt Schaltern `/s /q /a /d`; `md` legt Zwischenordner an, `rd` verweigert einen gefüllten Ordner ohne `/s`, und eine leere Datei entsteht mit `type nul > x`, `echo. > x` oder `copy nul x` |
 | `git()` | `init clone status add commit log switch branch merge push` auf einem Zustand mit Zweigen, Index, verfolgten Dateien und Fernstand |
 | `docker()` | `run ps images volume logs stop rm rmi exec build compose prune` mit Abbildern, Containern, Ports, Bändern und Umgebungsvariablen |
 
-Die Werkzeugausgaben sind englisch wie im Original; nur die Erläuterungen der Umgebung sind
-übersetzt und mit „→“ gekennzeichnet. Die OS-Umschaltung oben in jeder Befehlskarte gilt
-seitenübergreifend (`localStorage`, `pitm:os`) und schaltet gleichzeitig die Prosa: Blöcke mit
-`class="nur-win"` oder `nur-mac` erscheinen nur im passenden Modus.
+Jede Shell antwortet in ihrem eigenen Dialekt, auch im Fehlerfall: `cd nix` meldet in PowerShell
+`Set-Location: Cannot find path …`, in der Eingabeaufforderung „Das System kann den angegebenen
+Pfad nicht finden.“ und in zsh `cd: no such file or directory`. Daran erkennt man, in welcher Shell
+man sitzt. Die Werkzeugausgaben bleiben englisch wie im Original; nur die Erläuterungen der
+Umgebung sind übersetzt und mit „→“ gekennzeichnet.
+
+Die OS-Umschaltung oben in jeder Befehlskarte gilt seitenübergreifend (`localStorage`, `pitm:os`)
+und schaltet gleichzeitig die Prosa: `nur-mac`, `nur-win` und `nur-cmd` zeigen genau eine Shell,
+`nur-unix` und `nur-windows` fassen zusammen, wo sich beide Windows-Shells gleich verhalten.
 
 Der Zustand der Welt ist das, was `terminal`-Übungen prüfen. Verfügbare Prädikate:
 `pfad`, `datei`, `gitRepo`, `gitCommits`, `gitZweig`, `gitIndexLeer`, `gitIndexGefuellt`,
 `gitVeroeffentlicht`, `containerLaeuft`, `containerWeg`, `volumen`, `abbild`, `portGebunden`,
 `umgebung`, `bandAn`. Damit wird der Weg zum Ziel nicht vorgeschrieben: Wer `Get-ChildItem -Force`
-tippt statt `ls -a`, hat die Aufgabe genauso gelöst.
+tippt statt `ls -a`, hat die Aufgabe genauso gelöst. `portGebunden` vergleicht nur Host- und
+Container-Port, damit die engere Bindung aus den Befehlskarten (`-p 127.0.0.1:5432:5432`) zählt.
+
+Zwei Regeln in `assets/pruefung.js` entscheiden, wann ein Schritt hakt:
+
+1. Es wird **immer nur der erste offene Schritt** geprüft. Sonst gilt „Zurück ins
+   Heimatverzeichnis“ als erledigt, bevor überhaupt gewechselt wurde.
+2. Ein Schritt **ohne Muster verlangt eine Änderung**: Er zählt erst, wenn dieser Befehl den
+   Zustand hergestellt hat — nicht, wenn er ohnehin schon galt.
+
+---
+
+## Nach jeder Änderung prüfen
+
+```bash
+node tools/verify.mjs
+```
+
+Der Lauf braucht keinen Browser und prüft drei Dinge: dass Platzhalter und JSON deckungsgleich
+sind, jeder Text in beiden Sprachen vorliegt und die Übungszahlen in `LABS` stimmen; dass **jede
+Terminalübung in jedem passenden Dialekt lösbar ist** — nach jedem Befehl muss die Zahl der
+erledigten Schritte genau stimmen, zu wenige heißt unlösbar, zu viele heißt vorzeitig abgehakt;
+und dass die bekannten Stolperstellen behoben bleiben (leere Datei in cmd, `md` mit
+Zwischenordnern, Umbenennen ohne Verschieben, Portbindung mit Adresse, Parameterprüfung in
+PowerShell, eingehängte Bänder, Compose-Bandnamen).
 
 ---
 
@@ -158,7 +191,7 @@ Anmeldung und keine Auswertung. Die Startseite zeigt den Gesamtstand, je Lab ein
 Ein Server ist nötig, weil die Seite Module und JSON per `fetch` lädt – `file://` genügt nicht.
 
 ```bash
-cd PITM
+cd PITM-Lab
 python3 -m http.server 8777
 # http://localhost:8777
 ```

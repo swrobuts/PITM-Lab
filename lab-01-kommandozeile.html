@@ -267,13 +267,21 @@
     </div>
     <div class="tip-box">
       <h3><span lang="de">Der Trick mit dem Ziehen</span><span lang="en">The drag trick</span></h3>
-      <p><span lang="de">Statt einen langen Pfad abzutippen: einen Ordner aus dem Finder beziehungsweise Explorer in
-        das Terminalfenster ziehen. Die Shell setzt den vollständigen Pfad ein, mit korrekter Behandlung von
-        Leerzeichen. In Kombination mit <code>cd</code> davor ist das der schnellste Weg an eine tief liegende
-        Stelle.</span>
-      <span lang="en">Instead of typing a long path: drag a folder from Finder or Explorer into the terminal window.
-        The shell inserts the full path, with spaces handled correctly. Combined with <code>cd</code> in front, that is
-        the fastest way to a deeply buried location.</span></p>
+      <p class="nur-unix"><span lang="de">Statt einen langen Pfad abzutippen: <code>cd</code> tippen, ein Leerzeichen,
+        dann den Ordner aus dem <strong>Finder</strong> in das Terminalfenster ziehen. Enthält der Pfad Leerzeichen,
+        setzt das Terminal Maskierungen mit Rückstrich – er wird also auch dann richtig gelesen.</span>
+      <span lang="en">Instead of typing a long path: type <code>cd</code>, a space, then drag the folder from
+        <strong>Finder</strong> into the terminal window. If the path contains spaces, Terminal adds backslash escapes –
+        so it is read correctly even then.</span></p>
+      <p class="nur-windows"><span lang="de">Statt einen langen Pfad abzutippen: <code>cd</code> tippen, ein
+        Leerzeichen, dann den Ordner aus dem <strong>Explorer</strong> in das Fenster ziehen. Der Pfad erscheint in
+        Anführungszeichen, wenn er Leerzeichen enthält – lassen Sie sie stehen. Alternativ in der Adresszeile des
+        Explorers <code>cmd</code> oder <code>powershell</code> eintippen: Das Fenster öffnet direkt in diesem
+        Ordner.</span>
+      <span lang="en">Instead of typing a long path: type <code>cd</code>, a space, then drag the folder from
+        <strong>File Explorer</strong> into the window. The path appears in quotation marks if it contains spaces –
+        leave them in place. Alternatively type <code>cmd</code> or <code>powershell</code> into Explorer's address
+        bar: the window opens directly in that folder.</span></p>
     </div>
   </section>
 
@@ -420,6 +428,24 @@
         <em>Reset</em> button restores the initial state, and the switch in the command cards changes the shell here
         too.</span>
     </p>
+    <div class="tip-box">
+      <h3><span lang="de">Zurück in die grafische Welt</span><span lang="en">Back to the graphical world</span></h3>
+      <p><span lang="de">Der Weg funktioniert in beide Richtungen: Diesen Befehl öffnet den Ordner, in dem Sie gerade
+        stehen, im Dateimanager. Der Punkt ist dabei das aktuelle Verzeichnis.</span>
+      <span lang="en">The route works both ways: this command opens the folder you are standing in inside the file
+        manager. The dot is the current directory.</span></p>
+      <p class="nur-mac"><code>open .</code> <span lang="de">– öffnet den Finder an dieser Stelle. Eine einzelne Datei
+        geht genauso: <code>open notiz.txt</code> startet das zugehörige Programm.</span>
+      <span lang="en">– opens Finder at this location. A single file works the same way: <code>open notiz.txt</code>
+        starts the associated program.</span></p>
+      <p class="nur-win"><code>ii .</code> <span lang="de">– Kurzform von <code>Invoke-Item</code>, öffnet den Explorer
+        an dieser Stelle. <code>explorer .</code> tut dasselbe.</span>
+      <span lang="en">– short for <code>Invoke-Item</code>, opens File Explorer at this location.
+        <code>explorer .</code> does the same.</span></p>
+      <p class="nur-cmd"><code>start .</code> <span lang="de">– öffnet den Explorer an dieser Stelle.
+        <code>explorer .</code> tut dasselbe.</span>
+      <span lang="en">– opens File Explorer at this location. <code>explorer .</code> does the same.</span></p>
+    </div>
     <div data-terminal="frei"></div>
   </section>
 

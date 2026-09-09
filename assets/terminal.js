@@ -14,6 +14,10 @@
  *   win  Windows PowerShell
  *   cmd  Windows Eingabeaufforderung (cmd.exe)
  *
+ * Jede Shell antwortet in ihrem eigenen Dialekt, auch im Fehlerfall: Wer in
+ * PowerShell `cd nix` tippt, soll die PowerShell-Meldung sehen, nicht die von
+ * zsh. Genau daran erkennt man im Kurs, in welcher Shell man gerade sitzt.
+ *
  * Die Werkzeugbefehle `git` und `docker` sind shellunabhaengig - genau das
  * ist ihre Eigenschaft und soll auch so erfahrbar sein.
  *
@@ -65,6 +69,10 @@ const DOCKER_ABBILDER = {
   'n8nio/n8n':            { groesse: '612MB',   tag: 'latest' }
 }
 
+/** Compose stellt Band- und Netznamen den Projektnamen voran. */
+const COMPOSE_PROJEKT = 'projekt'
+const COMPOSE_BAND = `${COMPOSE_PROJEKT}_pgdata`
+
 export function neueWelt (os = 'mac') {
   return {
     os,
@@ -73,7 +81,7 @@ export function neueWelt (os = 'mac') {
     wurzel: HEIMAT(),
     pfad: [],                 // relativ zur Heimat
     git: null,                // wird durch `git init` oder `git clone` angelegt
-    docker: { abbilder: [], container: [], volumen: [], compose: false, naechsteId: 0xa1 },
+    docker: { abbilder: [], container: [], volumen: [], compose: false },
     historie: []
   }
 }
@@ -87,6 +95,7 @@ export function zuruecksetzen (welt) {
 /* --------------------------------------------------------------- Pfade */
 
 const heimatText = (w) => w.os === 'mac' ? '~' : `C:\\Users\\${w.benutzer}`
+const heimatVoll = (w) => w.os === 'mac' ? `/Users/${w.benutzer}` : `C:/Users/${w.benutzer}`
 const trenner = (w) => w.os === 'mac' ? '/' : '\\'
 
 export function pfadText (w) {
@@ -102,13 +111,35 @@ export function prompt (w) {
   return `${pfadText(w)}>`
 }
 
-/** Loest einen eingegebenen Pfad gegen das aktuelle Verzeichnis auf. */
+/** Setzt die Umgebungsvariablen ein, die im Prompt sichtbar sind. */
+function ersetzeUmgebung (w, s) {
+  return String(s)
+    .replace(/%USERPROFILE%/gi, heimatText(w))
+    .replace(/%HOMEPATH%/gi, heimatText(w))
+    .replace(/%CD%/gi, pfadText(w))
+    .replace(/\$env:USERPROFILE/gi, heimatText(w))
+    .replace(/\$HOME\b/g, heimatText(w))
+}
+
+/**
+ * Loest einen eingegebenen Pfad gegen das aktuelle Verzeichnis auf.
+ * Absolute Pfade in das eigene Heimatverzeichnis - `C:\Users\studi\Downloads`
+ * oder `/Users/studi/Downloads`, beide stehen so im Prompt - werden erkannt
+ * und auf den Baum abgebildet.
+ */
 function loese (w, eingabe) {
+  const roh = ersetzeUmgebung(w, eingabe).replace(/\\/g, '/')
+  const heim = heimatVoll(w).replace(/\\/g, '/')
+  const klein = roh.toLowerCase()
+  const kleinHeim = heim.toLowerCase()
   let teile
-  const roh = String(eingabe).replace(/\\/g, '/')
-  if (roh === '~' || roh.startsWith('~/')) teile = roh.slice(2).split('/')
+  if (roh === '~') teile = []
+  else if (roh.startsWith('~/')) teile = roh.slice(2).split('/')
+  else if (klein === kleinHeim) teile = []
+  else if (klein.startsWith(kleinHeim + '/')) teile = roh.slice(heim.length + 1).split('/')
   else if (/^[A-Za-z]:\//.test(roh) || roh.startsWith('/')) {
-    // Absolute Pfade fuehren in dieser Nachbildung ebenfalls in die Heimat.
+    // Alles Uebrige ausserhalb der Heimat gibt es in dieser Nachbildung nicht;
+    // es wird auf die Heimat bezogen, damit nichts ins Leere laeuft.
     teile = roh.replace(/^[A-Za-z]:\//, '').replace(/^\//, '').split('/')
   } else teile = [...w.pfad, ...roh.split('/')]
   const aus = []
@@ -131,6 +162,7 @@ function knoten (w, teile) {
 
 const elternteil = (w, teile) => knoten(w, teile.slice(0, -1))
 const name = (teile) => teile[teile.length - 1]
+const zeilenVon = (inhalt) => inhalt === '' ? [] : inhalt.replace(/\n$/, '').split('\n')
 
 /* ------------------------------------------------------- Zerlegung Eingabe */
 
@@ -155,15 +187,26 @@ const fehler = (zeilen, hinweis) => ({
   zeilen: zeilen.map(z => ({ art: 'fehler', text: z })),
   hinweis
 })
-const gemischt = (zeilen) => ({ zeilen })
 
 /* =========================================================== POSIX-Shell */
 
 function posix (w, marken, roh) {
   const [befehl, ...arg] = marken
-  const opt = arg.filter(a => a.startsWith('-'))
-  const rest = arg.filter(a => !a.startsWith('-'))
-  const hat = (b) => opt.some(o => o.includes(b))
+
+  // Optionen und Gegenstaende trennen. `-n 5` zaehlt als eine Option, damit
+  // die 5 nicht faelschlich als Dateiname gilt.
+  const opt = []; const rest = []
+  for (let i = 0; i < arg.length; i++) {
+    const a = arg[i]
+    if (a === '-n' && /^\d+$/.test(arg[i + 1] || '')) { opt.push('-n' + arg[++i]); continue }
+    if (a.startsWith('-') && a.length > 1) { opt.push(a); continue }
+    rest.push(a)
+  }
+  const hat = (b) => opt.some(o => /^-[^-]/.test(o) && o.slice(1).includes(b))
+  const zahl = (vorgabe) => {
+    const o = opt.find(x => /^-n\d+$/.test(x)) || opt.find(x => /^-\d+$/.test(x))
+    return o ? Number(o.replace(/^-n?/, '')) : vorgabe
+  }
 
   switch (befehl) {
     case 'pwd':
@@ -236,16 +279,59 @@ function posix (w, marken, roh) {
         const k = knoten(w, loese(w, r))
         if (!k) return fehler([`cat: ${r}: No such file or directory`])
         if (k.typ === 'ordner') return fehler([`cat: ${r}: Is a directory`])
-        aus.push(...k.inhalt.replace(/\n$/, '').split('\n'))
+        aus.push(...zeilenVon(k.inhalt))
       }
       return ok(aus)
     }
 
-    case 'head': {
-      const n = opt.includes('-n') ? 10 : Number((opt.find(o => /^-\d+$/.test(o)) || '-10').slice(1))
-      const k = knoten(w, loese(w, rest[0] || ''))
-      if (!k || k.typ !== 'datei') return fehler([`head: ${rest[0]}: No such file or directory`])
-      return ok(k.inhalt.replace(/\n$/, '').split('\n').slice(0, n))
+    case 'head':
+    case 'tail': {
+      const n = zahl(10)
+      if (!rest.length) return fehler([`usage: ${befehl} [-n count] file`])
+      const aus = []
+      for (const r of rest) {
+        const k = knoten(w, loese(w, r))
+        if (!k || k.typ !== 'datei') return fehler([`${befehl}: ${r}: No such file or directory`])
+        if (rest.length > 1) aus.push(`==> ${r} <==`)
+        const z = zeilenVon(k.inhalt)
+        aus.push(...(befehl === 'head' ? z.slice(0, n) : z.slice(-n)))
+      }
+      return ok(aus)
+    }
+
+    case 'wc': {
+      if (!rest.length) return fehler(['usage: wc [-l] file ...'])
+      const aus = []
+      for (const r of rest) {
+        const k = knoten(w, loese(w, r))
+        if (!k || k.typ !== 'datei') return fehler([`wc: ${r}: No such file or directory`])
+        const z = zeilenVon(k.inhalt)
+        const woerter = z.join(' ').split(/\s+/).filter(Boolean).length
+        aus.push(hat('l')
+          ? `${String(z.length).padStart(8)} ${r}`
+          : `${String(z.length).padStart(8)}${String(woerter).padStart(8)}${String(k.inhalt.length).padStart(8)} ${r}`)
+      }
+      return ok(aus)
+    }
+
+    case 'grep': {
+      const muster = rest[0]
+      const dateien = rest.slice(1)
+      if (!muster || !dateien.length) return fehler(['usage: grep [-in] pattern file ...'])
+      let re
+      try { re = new RegExp(muster, hat('i') ? 'i' : '') } catch { return fehler([`grep: ${muster}: invalid pattern`]) }
+      const aus = []
+      for (const r of dateien) {
+        const k = knoten(w, loese(w, r))
+        if (!k) return fehler([`grep: ${r}: No such file or directory`])
+        if (k.typ === 'ordner') { aus.push(`grep: ${r}: Is a directory`); continue }
+        zeilenVon(k.inhalt).forEach((z, i) => {
+          if (!re.test(z)) return
+          const vorn = (dateien.length > 1 ? `${r}:` : '') + (hat('n') ? `${i + 1}:` : '')
+          aus.push(vorn + z)
+        })
+      }
+      return ok(aus)
     }
 
     case 'echo': {
@@ -326,6 +412,27 @@ function posix (w, marken, roh) {
   }
 }
 
+/* ------------------------------------------------------------ Umbenennen */
+
+/**
+ * `Rename-Item` und `ren` benennen um, sie verschieben nicht: Das zweite
+ * Argument ist ein Name, kein Pfad. Genau dieser Unterschied zu `mv` geht in
+ * einer Nachbildung leicht verloren - hier nicht.
+ */
+function umbenennen (w, quelle, neu) {
+  if (!quelle || !neu) return { fehlt: 'argument' }
+  if (/[\\/]/.test(neu)) return { fehlt: 'pfadImNamen' }
+  const q = loese(w, quelle)
+  const kq = knoten(w, q)
+  if (!kq) return { fehlt: 'quelle' }
+  const e = elternteil(w, q)
+  if (!e || e.typ !== 'ordner') return { fehlt: 'quelle' }
+  if (e.kinder[neu]) return { fehlt: 'zielExistiert' }
+  e.kinder[neu] = kq
+  delete e.kinder[name(q)]
+  return { fehlt: null }
+}
+
 /* ====================================================== PowerShell-Shell */
 
 /**
@@ -341,38 +448,112 @@ const PS_ALIAS = {
   'remove-item': 'rm', ri: 'rm', del: 'rm', erase: 'rm', rm: 'rm', rmdir: 'rm', rd: 'rm',
   'copy-item': 'cp', ci: 'cp', copy: 'cp', cp: 'cp',
   'move-item': 'mv', mi: 'mv', move: 'mv', mv: 'mv',
-  'rename-item': 'mv', rni: 'mv', ren: 'mv',
+  'rename-item': 'rename', rni: 'rename', ren: 'rename',
   'clear-host': 'clear', cls: 'clear', clear: 'clear',
   'write-output': 'echo', 'write-host': 'echo', echo: 'echo',
   'new-item': 'new-item', ni: 'new-item',
   mkdir: 'mkdir', md: 'mkdir',
-  'set-content': 'set-content', 'add-content': 'add-content'
+  'set-content': 'set-content', 'add-content': 'add-content',
+  'select-string': 'grep', sls: 'grep',
+  'measure-object': 'wc', measure: 'wc'
 }
 
-/** Uebersetzt PowerShell-Parameter in die Kurzoptionen der Unix-Shells. */
-const PS_PARAM = {
-  '-recurse': '-r', '-force': '-f', '-all': '-a', '-hidden': '-a', '-confirm': '-i'
+/** Der Cmdlet-Name, mit dem PowerShell seine Meldungen einleitet. */
+const PS_NAME = {
+  pwd: 'Get-Location', ls: 'Get-ChildItem', cd: 'Set-Location', cat: 'Get-Content',
+  rm: 'Remove-Item', cp: 'Copy-Item', mv: 'Move-Item', rename: 'Rename-Item',
+  mkdir: 'New-Item', 'new-item': 'New-Item', 'set-content': 'Set-Content',
+  'add-content': 'Add-Content', echo: 'Write-Output', grep: 'Select-String',
+  wc: 'Measure-Object'
 }
 
-/** Parameter, die einen Wert nach sich fuehren. */
-const PS_WERT = ['-itemtype', '-path', '-value', '-destination', '-newname', '-totalcount', '-tail', '-encoding', '-first', '-last', '-literalpath']
+/**
+ * Parameter, die PowerShell kennt - und zwar je Cmdlet. Das ist der Punkt der
+ * Uebung: `Get-ChildItem -Force` gibt es, `-la` nicht, und `-f` ist bei
+ * Remove-Item mehrdeutig (Force oder Filter). Wer Unix-Kurzoptionen tippt,
+ * bekommt hier dieselbe Zurueckweisung wie draussen.
+ */
+const PS_PARAMETER = {
+  pwd: ['-psprovider'],
+  ls: ['-path', '-literalpath', '-force', '-recurse', '-hidden', '-directory', '-filter', '-include', '-exclude', '-erroraction'],
+  cd: ['-path', '-literalpath', '-passthru', '-erroraction'],
+  cat: ['-path', '-literalpath', '-totalcount', '-tail', '-encoding', '-raw', '-erroraction'],
+  rm: ['-path', '-literalpath', '-recurse', '-force', '-whatif', '-confirm', '-filter', '-include', '-exclude', '-erroraction'],
+  cp: ['-path', '-literalpath', '-destination', '-recurse', '-force', '-whatif', '-confirm', '-erroraction'],
+  mv: ['-path', '-literalpath', '-destination', '-force', '-whatif', '-confirm', '-erroraction'],
+  rename: ['-path', '-literalpath', '-newname', '-force', '-whatif', '-confirm', '-erroraction'],
+  'new-item': ['-path', '-name', '-itemtype', '-value', '-force', '-whatif', '-confirm', '-erroraction'],
+  mkdir: ['-path', '-force', '-value', '-erroraction'],
+  'set-content': ['-path', '-literalpath', '-value', '-encoding', '-force', '-whatif', '-erroraction'],
+  'add-content': ['-path', '-literalpath', '-value', '-encoding', '-force', '-whatif', '-erroraction'],
+  echo: ['-inputobject', '-noenumerate'],
+  grep: ['-pattern', '-path', '-literalpath', '-casesensitive', '-simplematch', '-erroraction'],
+  clear: []
+}
+
+/** Parameter, die einen Wert nach sich fuehren - unabhaengig vom Cmdlet. */
+const PS_WERT = ['-path', '-literalpath', '-value', '-itemtype', '-destination', '-newname',
+  '-totalcount', '-tail', '-encoding', '-filter', '-include', '-exclude', '-erroraction',
+  '-pattern', '-name', '-inputobject', '-psprovider']
+
+const PS_ALLE = [...new Set(Object.values(PS_PARAMETER).flat())]
+
+/** Loest eine Parameter-Abkuerzung auf: `-Rec` -> `-recurse`, `-f` -> mehrdeutig. */
+function psParameter (a, erlaubt) {
+  const k = a.toLowerCase()
+  if (erlaubt.includes(k)) return { param: k }
+  const treffer = erlaubt.filter(p => p.startsWith(k))
+  if (treffer.length === 1) return { param: treffer[0] }
+  if (treffer.length > 1) return { mehrdeutig: treffer }
+  return { unbekannt: true }
+}
+
+/** Uebersetzt eine Unix-Fehlermeldung in die Sprechweise von PowerShell. */
+function psFehler (abbildung, text, gegenstand) {
+  const n = PS_NAME[abbildung] || 'PowerShell'
+  const g = gegenstand || ''
+  if (/no such file or directory/i.test(text)) {
+    return fehler([`${n}: Cannot find path '${g}' because it does not exist.`])
+  }
+  if (/not a directory/i.test(text)) {
+    return fehler([`${n}: Cannot find path '${g}' because it does not exist.`])
+  }
+  if (/is a directory/i.test(text)) {
+    return fehler([`${n}: The item at '${g}' has children and the Recurse parameter was not specified.`])
+  }
+  if (/File exists/i.test(text)) {
+    return fehler([`${n}: An item with the specified name '${g}' already exists.`])
+  }
+  return fehler([text])
+}
 
 function powershell (w, marken, roh) {
   const kopf = (marken[0] || '').toLowerCase()
   const abbildung = PS_ALIAS[kopf]
   const rohArg = marken.slice(1)
+  const cmdlet = PS_NAME[abbildung] || marken[0]
 
   const arg = []
   const werte = {}
   let wasIf = false
   for (let i = 0; i < rohArg.length; i++) {
     const a = rohArg[i]
-    const klein = a.toLowerCase()
-    if (PS_WERT.includes(klein)) { werte[klein] = rohArg[++i]; continue }
-    if (klein === '-whatif') { wasIf = true; continue }
-    if (PS_PARAM[klein]) { arg.push(PS_PARAM[klein]); continue }
-    if (a.startsWith('-')) continue          // unbekannte Parameter still schlucken
-    arg.push(a)
+    if (!a.startsWith('-') || /^-\d/.test(a)) { arg.push(a); continue }
+    const p = psParameter(a, PS_PARAMETER[abbildung] || PS_ALLE)
+    if (p.mehrdeutig) {
+      return fehler([`${cmdlet}: Parameter cannot be processed because the parameter name '${a.slice(1)}' is ambiguous.`,
+        `Possible matches include: ${p.mehrdeutig.map(x => '-' + x.slice(1)).join(' ')}.`], 'psMehrdeutig')
+    }
+    if (p.unbekannt) {
+      return fehler([`${cmdlet}: A parameter cannot be found that matches parameter name '${a.slice(1)}'.`], 'psParameter')
+    }
+    if (PS_WERT.includes(p.param)) { werte[p.param] = rohArg[++i]; continue }
+    if (p.param === '-whatif') { wasIf = true; continue }
+    if (p.param === '-recurse') { arg.push('-r'); continue }
+    if (p.param === '-force') { arg.push('-f'); continue }
+    if (p.param === '-hidden') { arg.push('-a'); continue }
+    if (p.param === '-confirm') { arg.push('-i'); continue }
+    // Uebrige Schalter wirken hier nicht, sind aber gueltig.
   }
   const pfade = arg.filter(a => !a.startsWith('-'))
 
@@ -394,7 +575,7 @@ function powershell (w, marken, roh) {
     if (e.kinder[name(ziel)] && !arg.includes('-f')) {
       return fehler([`New-Item: The item '${pfad}' already exists.`])
     }
-    e.kinder[name(ziel)] = typ === 'directory' ? ordner() : datei('')
+    e.kinder[name(ziel)] = typ === 'directory' ? ordner() : datei(werte['-value'] ? werte['-value'] + '\n' : '')
     return ok([
       `    Verzeichnis: ${pfadText(w)}`, '',
       'Mode                 LastWriteTime         Length Name',
@@ -403,13 +584,32 @@ function powershell (w, marken, roh) {
     ])
   }
 
+  if (abbildung === 'rename') {
+    const quelle = werte['-path'] || werte['-literalpath'] || pfade[0]
+    const neu = werte['-newname'] || pfade[1]
+    const r = umbenennen(w, quelle, neu)
+    if (r.fehlt === 'argument') {
+      return fehler(["Rename-Item: Cannot bind argument to parameter 'NewName' because it is null."])
+    }
+    if (r.fehlt === 'pfadImNamen') {
+      return fehler([`Rename-Item: Cannot rename the specified target, because it represents a path or device name.`], 'renameNurName')
+    }
+    if (r.fehlt === 'quelle') {
+      return fehler([`Rename-Item: Cannot find path '${quelle}' because it does not exist.`])
+    }
+    if (r.fehlt === 'zielExistiert') {
+      return fehler([`Rename-Item: Cannot create a file when that file already exists.`])
+    }
+    return ok([])
+  }
+
   if (abbildung === 'set-content' || abbildung === 'add-content') {
     const pfad = werte['-path'] || pfade[0]
     const text = werte['-value'] ?? pfade[1] ?? ''
-    if (!pfad) return fehler([`${marken[0]}: Cannot bind argument to parameter 'Path' because it is null.`])
+    if (!pfad) return fehler([`${cmdlet}: Cannot bind argument to parameter 'Path' because it is null.`])
     const ziel = loese(w, pfad)
     const e = elternteil(w, ziel)
-    if (!e || e.typ !== 'ordner') return fehler([`${marken[0]}: Could not find a part of the path '${pfad}'.`])
+    if (!e || e.typ !== 'ordner') return fehler([`${cmdlet}: Could not find a part of the path '${pfad}'.`])
     const vorher = abbildung === 'add-content' && e.kinder[name(ziel)] ? e.kinder[name(ziel)].inhalt : ''
     e.kinder[name(ziel)] = datei(vorher + text + '\n')
     return ok([])
@@ -420,7 +620,9 @@ function powershell (w, marken, roh) {
     const k = knoten(w, zielPfad ? loese(w, zielPfad) : w.pfad)
     if (!k) return fehler([`Get-ChildItem: Cannot find path '${zielPfad}' because it does not exist.`])
     if (k.typ !== 'ordner') return ok([zielPfad])
-    const namen = Object.keys(k.kinder).sort((a, b) => a.localeCompare(b))
+    let namen = Object.keys(k.kinder).sort((a, b) => a.localeCompare(b))
+    // Ohne -Force bleiben versteckte Dateien aussen vor - wie im Original.
+    if (!arg.includes('-f') && !arg.includes('-a')) namen = namen.filter(n => !n.startsWith('.'))
     return ok([
       `    Verzeichnis: ${zielPfad ? pfadText(w) + trenner(w) + zielPfad.replace(/\//g, '\\') : pfadText(w)}`, '',
       'Mode                 LastWriteTime         Length Name',
@@ -436,18 +638,28 @@ function powershell (w, marken, roh) {
 
   if (abbildung === 'cat') {
     const zielPfad = werte['-path'] || werte['-literalpath'] || pfade[0]
-    const n = Number(werte['-totalcount'] || 0)
+    const n = Number(werte['-totalcount'] || werte['-first'] || 0)
     const k = knoten(w, loese(w, zielPfad || ''))
     if (!k) return fehler([`Get-Content: Cannot find path '${zielPfad}' because it does not exist.`])
     if (k.typ === 'ordner') return fehler([`Get-Content: Access to the path '${zielPfad}' is denied.`])
-    const zeilen = k.inhalt.replace(/\n$/, '').split('\n')
-    if (werte['-tail']) return ok(zeilen.slice(-Number(werte['-tail'])))
+    const zeilen = zeilenVon(k.inhalt)
+    if (werte['-tail'] || werte['-last']) return ok(zeilen.slice(-Number(werte['-tail'] || werte['-last'])))
     return ok(n ? zeilen.slice(0, n) : zeilen)
+  }
+
+  if (abbildung === 'grep') {
+    const muster = werte['-pattern'] || pfade[0]
+    const dateien = werte['-path'] ? [werte['-path']] : pfade.slice(1)
+    return posix(w, ['grep', muster, ...dateien], 'grep')
   }
 
   if (abbildung === 'mkdir') {
     // mkdir legt in PowerShell Zwischenordner ohnehin mit an.
-    return posix(w, ['mkdir', '-p', ...pfade], 'mkdir -p ' + pfade.join(' '))
+    const pf = werte['-path'] ? [werte['-path']] : pfade
+    for (const p of pf) {
+      if (knoten(w, loese(w, p))) return fehler([`New-Item: An item with the specified name '${p}' already exists.`])
+    }
+    return posix(w, ['mkdir', '-p', ...pf], 'mkdir -p ' + pf.join(' '))
   }
 
   if (abbildung === 'rm' && wasIf) {
@@ -455,13 +667,26 @@ function powershell (w, marken, roh) {
   }
 
   if (abbildung === 'cd') {
-    return posix(w, ['cd', ...(werte['-path'] ? [werte['-path']] : pfade)], 'cd')
+    const p = werte['-path'] || pfade[0]
+    if (!p) { w.pfad = []; return ok([]) }
+    const ziel = loese(w, p)
+    const k = knoten(w, ziel)
+    if (!k || k.typ !== 'ordner') {
+      return fehler([`Set-Location: Cannot find path '${p}' because it does not exist.`])
+    }
+    w.pfad = ziel
+    return ok([])
   }
 
   if (abbildung) {
-    const neu = [abbildung, ...arg]
+    const gegenstand = werte['-path'] || pfade[0] || ''
+    const eingesetzt = werte['-path'] ? [werte['-path'], ...pfade] : pfade
+    const zusatz = werte['-destination'] ? [werte['-destination']] : []
+    const neu = [abbildung, ...arg.filter(a => a.startsWith('-')), ...eingesetzt, ...zusatz]
     const rohNeu = abbildung === 'echo' ? roh.replace(/^\S+/, 'echo') : neu.join(' ')
-    return posix(w, neu, rohNeu)
+    const r = posix(w, neu, rohNeu)
+    if (r && r.zeilen.some(z => z.art === 'fehler')) return psFehler(abbildung, r.zeilen[0].text, gegenstand)
+    return r
   }
 
   if (kopf === 'get-command' || kopf === 'where.exe' || kopf === 'where') {
@@ -470,14 +695,33 @@ function powershell (w, marken, roh) {
   if (kopf === 'get-help') return { zeilen: [], hinweis: 'man' }
   if (kopf === '$profile') return ok([`C:\\Users\\${w.benutzer}\\Documents\\PowerShell\\Microsoft.PowerShell_profile.ps1`])
   if (kopf === 'python' || kopf === 'python3' || kopf === 'py') return posix(w, ['python3', ...marken.slice(1)], roh)
-  if (kopf === 'pip') return posix(w, marken, roh)
+  if (kopf === 'pip' || kopf === 'pip3') return posix(w, marken, roh)
   if (kopf === 'code') return { zeilen: [], hinweis: 'code' }
   if (kopf === 'wsl' || kopf === 'bash') return { zeilen: [], hinweis: 'wsl' }
   if (kopf === 'exit') return { zeilen: [], hinweis: 'exit' }
+  if (kopf === 'clear' || kopf === 'cls') return { zeilen: [], leeren: true }
+  if (kopf === 'history') return posix(w, ['history'], roh)
+  if (kopf === 'ii' || kopf === 'invoke-item' || kopf === 'explorer' || kopf === 'start') {
+    return { zeilen: [], hinweis: 'oeffnenWin' }
+  }
   return null
 }
 
 /* ================================================ Eingabeaufforderung (cmd) */
+
+/** Uebersetzt eine Unix-Fehlermeldung in die Sprechweise der Eingabeaufforderung. */
+function cmdFehler (text) {
+  if (/no such file or directory|not a directory/i.test(text)) {
+    return fehler(['Das System kann den angegebenen Pfad nicht finden.'])
+  }
+  if (/file exists/i.test(text)) {
+    return fehler(['Ein Unterverzeichnis oder eine Datei existiert bereits.'])
+  }
+  if (/is a directory/i.test(text)) {
+    return fehler(['Der Zugriff auf den Pfad wurde verweigert.'])
+  }
+  return fehler([text])
+}
 
 function cmd (w, marken, roh) {
   const kopf = (marken[0] || '').toLowerCase()
@@ -486,14 +730,88 @@ function cmd (w, marken, roh) {
   const pfade = marken.slice(1).filter(a => !a.startsWith('/'))
   const hat = (b) => schalter.some(s => s.includes(b))
 
+  /* -- Umleitung: der uebliche Weg, in cmd eine Datei anzulegen ----------- */
+  const um = roh.match(/^(.+?)\s*(>>?)\s*("[^"]*"|\S+)\s*$/)
+  if (um && !/^(git|docker)\b/i.test(um[1])) {
+    const qm = zerlege(um[1])
+    const qk = (qm[0] || '').toLowerCase()
+    const zielName = zerlege(um[3])[0]
+    const ziel = loese(w, zielName)
+    const e = elternteil(w, ziel)
+    if (!e || e.typ !== 'ordner') return fehler(['Das System kann den angegebenen Pfad nicht finden.'])
+    let text = null
+    if (qk === 'type' || qk === 'more') {
+      const q1 = (qm[1] || '').toLowerCase()
+      if (q1 === 'nul') text = ''
+      else {
+        const k = knoten(w, loese(w, qm[1] || ''))
+        if (!k || k.typ !== 'datei') return fehler(['Das System kann die angegebene Datei nicht finden.'])
+        text = k.inhalt
+      }
+    } else if (qk === 'echo.' || qk === 'echo:') text = '\n'
+    else if (qk === 'echo') text = qm.slice(1).join(' ') + '\n'
+    else if (qk === 'break' || qk === 'copy') text = ''
+    const anhaengen = um[2] === '>>'
+    const vorher = anhaengen && e.kinder[name(ziel)] ? e.kinder[name(ziel)].inhalt : ''
+    if (text !== null) {
+      e.kinder[name(ziel)] = datei(vorher + text)
+      return ok([])
+    }
+    // Jede andere Quelle: den linken Teil ausfuehren und seine Ausgabe schreiben.
+    const r = cmd(w, qm, um[1])
+    if (r && r.zeilen && r.zeilen.length && !r.zeilen.some(z => z.art === 'fehler')) {
+      e.kinder[name(ziel)] = datei(vorher + r.zeilen.map(z => z.text).join('\n') + '\n')
+      return ok([])
+    }
+    if (r) return r
+  }
+
+  /* -- copy nul datei.txt: die zweite gaengige Art, eine leere Datei anzulegen */
+  if ((kopf === 'copy' || kopf === 'fsutil') && pfade.some(p => p.toLowerCase() === 'nul')) {
+    const zielName = pfade.find(p => p.toLowerCase() !== 'nul')
+    if (!zielName) return fehler(['Die Syntax des Befehls ist falsch.'])
+    const ziel = loese(w, zielName)
+    const e = elternteil(w, ziel)
+    if (!e || e.typ !== 'ordner') return fehler(['Das System kann den angegebenen Pfad nicht finden.'])
+    e.kinder[name(ziel)] = datei('')
+    return ok(['        1 Datei(en) kopiert.'])
+  }
+
   const abb = {
     cd: 'cd', chdir: 'cd', dir: 'ls', md: 'mkdir', mkdir: 'mkdir',
-    type: 'cat', del: 'rm', erase: 'rm', copy: 'cp', move: 'mv', ren: 'mv', rename: 'mv',
-    cls: 'clear', echo: 'echo', rd: 'rm', rmdir: 'rm', more: 'cat'
+    type: 'cat', del: 'rm', erase: 'rm', copy: 'cp', move: 'mv',
+    ren: 'rename', rename: 'rename',
+    cls: 'clear', echo: 'echo', rd: 'rm', rmdir: 'rm', more: 'cat',
+    find: 'grep'
   }[kopf]
 
   // `cd` ohne Gegenstand gibt in cmd den Pfad aus, statt nach Hause zu wechseln.
   if (abb === 'cd' && !pfade.length) return ok([pfadText(w)])
+
+  // `type nul` gibt das leere Geraet aus, also nichts - und ist kein Fehler.
+  if (abb === 'cat' && pfade.length === 1 && pfade[0].toLowerCase() === 'nul') return ok([])
+
+  if (abb === 'rename') {
+    const r = umbenennen(w, pfade[0], pfade[1])
+    if (r.fehlt === 'argument') return fehler(['Die Syntax des Befehls ist falsch.'])
+    if (r.fehlt === 'pfadImNamen') {
+      return fehler(['Die Syntax für den Dateinamen, Verzeichnisnamen oder die Datenträgerbezeichnung ist falsch.'], 'renameNurName')
+    }
+    if (r.fehlt === 'quelle') return fehler(['Das System kann die angegebene Datei nicht finden.'])
+    if (r.fehlt === 'zielExistiert') {
+      return fehler([`Eine Datei oder ein Verzeichnis mit dem Namen "${pfade[1]}" ist bereits vorhanden.`])
+    }
+    return ok([])
+  }
+
+  if (abb === 'mkdir') {
+    // md legt Zwischenordner an - das ist der Unterschied zu mkdir ohne -p.
+    for (const p of pfade) {
+      if (knoten(w, loese(w, p))) return fehler(['Ein Unterverzeichnis oder eine Datei existiert bereits.'])
+    }
+    if (!pfade.length) return fehler(['Die Syntax des Befehls ist falsch.'])
+    return posix(w, ['mkdir', '-p', ...pfade], 'mkdir -p ' + pfade.join(' '))
+  }
 
   if (abb === 'ls') {
     const k = knoten(w, pfade[0] ? loese(w, pfade[0]) : w.pfad)
@@ -520,39 +838,55 @@ function cmd (w, marken, roh) {
   }
 
   if (abb === 'rm') {
-    const rekursiv = kopf === 'rd' || kopf === 'rmdir' || hat('s')
-    const r = posix(w, ['rm', ...(rekursiv ? ['-r'] : []), ...pfade], 'rm')
-    // Die Meldungen der Unix-Shell passen hier nicht; auf cmd-Deutsch umsetzen.
-    if (r.zeilen.some(z => z.art === 'fehler')) {
-      const text = r.zeilen[0].text
-      if (/is a directory/.test(text)) {
-        return fehler([`Der Zugriff auf ${pfade[0]} wurde verweigert.`,
+    const istVerzeichnisBefehl = kopf === 'rd' || kopf === 'rmdir'
+    if (istVerzeichnisBefehl) {
+      for (const p of pfade) {
+        const k = knoten(w, loese(w, p))
+        if (!k) return fehler(['Das System kann den angegebenen Pfad nicht finden.'])
+        if (k.typ !== 'ordner') return fehler(['Das Verzeichnis ist ungültig.'])
+        if (Object.keys(k.kinder).length && !hat('s')) {
+          return fehler(['Das Verzeichnis ist nicht leer.'], 'rdNichtLeer')
+        }
+      }
+      return posix(w, ['rm', '-r', ...pfade], 'rm -r')
+    }
+    // del verweigert Verzeichnisse - dafuer gibt es rd.
+    for (const p of pfade) {
+      const k = knoten(w, loese(w, p))
+      if (!k) return fehler(['Datei nicht gefunden'])
+      if (k.typ === 'ordner') {
+        return fehler([`Der Zugriff auf ${p} wurde verweigert.`,
           'Ein Verzeichnis wird mit  rd /s /q <name>  entfernt, nicht mit del.'])
       }
-      return fehler(['Datei nicht gefunden'])
     }
-    return r
+    return posix(w, ['rm', ...pfade], 'rm')
+  }
+
+  if (abb === 'grep') {
+    // find "text" datei.txt - die cmd-Fassung von grep, mit Anfuehrungszeichen.
+    const muster = pfade[0]
+    return posix(w, ['grep', muster, ...pfade.slice(1)], 'grep')
   }
 
   if (abb) {
     const r = posix(w, [abb, ...pfade], roh.replace(/^\S+/, abb))
-    if (r && r.zeilen.some(z => z.art === 'fehler')) {
-      const text = r.zeilen[0].text
-      if (/No such file or directory|not a directory/.test(text)) {
-        return fehler(['Das System kann den angegebenen Pfad nicht finden.'])
-      }
-      if (/File exists/.test(text)) {
-        return fehler(['Ein Unterverzeichnis oder eine Datei existiert bereits.'])
-      }
-    }
+    if (r && r.zeilen.some(z => z.art === 'fehler')) return cmdFehler(r.zeilen[0].text)
     return r
   }
 
   if (kopf === 'where') return ok([`C:\\Program Files\\${marken[1] || ''}\\${marken[1] || ''}.exe`])
   if (kopf === 'ver') return ok(['', 'Microsoft Windows [Version 10.0.26100.4351]'])
+  if (kopf === 'set' && !pfade.length) {
+    return ok([`USERPROFILE=${heimatText(w)}`, `CD=${pfadText(w)}`, 'OS=Windows_NT'])
+  }
   if (kopf === 'help') return { zeilen: [], hinweis: 'man' }
   if (kopf === 'exit') return { zeilen: [], hinweis: 'exit' }
   if (kopf === 'powershell' || kopf === 'pwsh') return { zeilen: [], hinweis: 'psWechsel' }
+  if (kopf === 'python' || kopf === 'python3' || kopf === 'py') return posix(w, ['python3', ...marken.slice(1)], roh)
+  if (kopf === 'pip' || kopf === 'pip3') return posix(w, marken, roh)
+  if (kopf === 'code') return { zeilen: [], hinweis: 'code' }
+  if (kopf === 'wsl' || kopf === 'bash') return { zeilen: [], hinweis: 'wsl' }
+  if (kopf === 'start' || kopf === 'explorer') return { zeilen: [], hinweis: 'oeffnenWin' }
   if (kopf === 'ls') return fehler(["'ls' ist entweder falsch geschrieben oder konnte nicht gefunden werden."], 'cmdKennLs')
   if (kopf === 'pwd') return fehler(["'pwd' ist entweder falsch geschrieben oder konnte nicht gefunden werden."], 'cmdKennLs')
   if (kopf === 'touch') return fehler(["'touch' ist entweder falsch geschrieben oder konnte nicht gefunden werden."], 'cmdKennTouch')
@@ -571,7 +905,7 @@ const GIT_FERN = 'https://github.com/studi/velocity-analyse.git'
  */
 function neuesRepo (w, mitVorgeschichte = false, fern = null) {
   const commits = mitVorgeschichte
-    ? [{ hash: '9c1f2ab', text: 'Erste Fassung der Auswertung', autor: 'Kursleitung' }]
+    ? [{ hash: '9c1f2ab', text: 'Erste Fassung der Auswertung', autor: 'Kursleitung', dateien: ['README.md', 'analyse.ipynb', '.gitignore'] }]
     : []
   return {
     zweig: 'main',
@@ -585,13 +919,28 @@ function neuesRepo (w, mitVorgeschichte = false, fern = null) {
 
 const zweigDaten = (g) => g.zweige[g.zweig]
 
+/** Alle Dateien unterhalb eines Eintrags, relativ zur Repository-Wurzel. */
+function dateienUnter (w, g, eintrag) {
+  const k = knoten(w, [...g.wurzel, ...eintrag.split('/')])
+  if (!k) return []
+  if (k.typ === 'datei') return [eintrag]
+  return Object.keys(k.kinder).sort((a, b) => a.localeCompare(b))
+    .flatMap(n => dateienUnter(w, g, eintrag + '/' + n))
+}
+
+/** Zeilen einer verfolgten Datei - fuer die Statistik von commit und merge. */
+function zeilenIn (w, g, pfad) {
+  const k = knoten(w, [...g.wurzel, ...pfad.split('/')])
+  return k && k.typ === 'datei' ? Math.max(1, zeilenVon(k.inhalt).length) : 1
+}
+
 /** Was liegt im Repository-Ordner und ist Git noch unbekannt? */
 function unverfolgt (w, g) {
   const k = knoten(w, g.wurzel)
   if (!k || k.typ !== 'ordner') return []
   return Object.keys(k.kinder)
     .filter(n => n !== '.git')
-    .filter(n => !g.verfolgt.includes(n))
+    .filter(n => !g.verfolgt.includes(n) && !g.verfolgt.some(v => v.startsWith(n + '/')))
     .filter(n => !g.index.includes(n))
     .sort((a, b) => a.localeCompare(b))
 }
@@ -657,6 +1006,10 @@ function git (w, marken) {
   }
   const g = w.git
   const z = zweigDaten(g)
+  const istOrdner = (n) => {
+    const k = knoten(w, [...g.wurzel, ...n.split('/')])
+    return k && k.typ === 'ordner'
+  }
 
   if (unter === 'status') {
     const offen = unverfolgt(w, g)
@@ -670,11 +1023,12 @@ function git (w, marken) {
     }
     if (g.index.length) {
       zeilen.push('Changes to be committed:', '  (use "git restore --staged <file>..." to unstage)')
-      zeilen.push(...g.index.map(f => `        new file:   ${f}`), '')
+      zeilen.push(...g.index.flatMap(f => dateienUnter(w, g, f).map(d => `        new file:   ${d}`)), '')
     }
     if (offen.length) {
       zeilen.push('Untracked files:', '  (use "git add <file>..." to include in what will be committed)')
-      zeilen.push(...offen.map(f => `        ${f}`), '')
+      // Git zeigt einen unbekannten Ordner als einen Eintrag mit Schraegstrich.
+      zeilen.push(...offen.map(f => `        ${f}${istOrdner(f) ? '/' : ''}`), '')
     }
     if (!g.index.length && !offen.length) zeilen.push('nothing to commit, working tree clean')
     else if (!g.index.length) zeilen.push('nothing added to commit but untracked files present (use "git add" to track)')
@@ -692,9 +1046,10 @@ function git (w, marken) {
       g.index.push(...offen)
       return ok([])
     }
-    const nicht = arg.filter(a => !a.startsWith('-') && !offen.includes(a) && !g.verfolgt.includes(a))
+    const sauber = arg.filter(a => !a.startsWith('-')).map(a => a.replace(/\/$/, ''))
+    const nicht = sauber.filter(a => !offen.includes(a) && !g.verfolgt.includes(a))
     if (nicht.length) return fehler([`fatal: pathspec '${nicht[0]}' did not match any files`])
-    for (const a of arg) if (offen.includes(a) && !g.index.includes(a)) g.index.push(a)
+    for (const a of sauber) if (offen.includes(a) && !g.index.includes(a)) g.index.push(a)
     return ok([])
   }
 
@@ -723,12 +1078,16 @@ function git (w, marken) {
         'Aborting commit due to empty commit message.'], 'commitOhneText')
     }
     const hash = Math.random().toString(16).slice(2, 9)
-    const n = g.index.length
-    z.commits.unshift({ hash, text, autor: 'Studi Beispiel', dateien: [...g.index] })
-    g.verfolgt.push(...g.index)
+    // Git zaehlt Dateien, keine Ordner - ein hinzugefuegter Ordner zerfaellt
+    // in die Dateien, die darin liegen.
+    const dateien = [...new Set(g.index.flatMap(e => dateienUnter(w, g, e)))]
+    const zeilen = dateien.reduce((s, d) => s + zeilenIn(w, g, d), 0)
+    z.commits.unshift({ hash, text, autor: 'Studi Beispiel', dateien })
+    g.verfolgt.push(...g.index, ...dateien)
     g.index = []
+    const n = dateien.length
     return ok([`[${g.zweig} ${hash}] ${text}`,
-      ` ${n} file${n > 1 ? 's' : ''} changed, ${n * 12} insertions(+)`])
+      ` ${n} file${n === 1 ? '' : 's'} changed, ${zeilen} insertion${zeilen === 1 ? '' : 's'}(+)`])
   }
 
   if (unter === 'log') {
@@ -789,10 +1148,14 @@ function git (w, marken) {
     if (!neueCommits.length) return ok(['Already up to date.'])
     const alt = z.commits[0]?.hash || '0000000'
     z.commits = [...neueCommits, ...z.commits]
-    const n = neueCommits.length
+    const dateien = [...new Set(neueCommits.flatMap(c => c.dateien || []))]
+    const gesamt = dateien.reduce((s, d) => s + zeilenIn(w, g, d), 0)
     return ok([`Updating ${alt}..${neueCommits[0].hash}`, 'Fast-forward',
-      ...neueCommits.flatMap(c => (c.dateien || ['analyse.ipynb']).map(d => ` ${d} | 24 ++++++++++++++++++++++`)),
-      ` ${n} file${n > 1 ? 's' : ''} changed, ${n * 24} insertions(+)`])
+      ...dateien.map(d => {
+        const n = zeilenIn(w, g, d)
+        return ` ${d} | ${String(n).padStart(2)} ${'+'.repeat(Math.min(n, 40))}`
+      }),
+      ` ${dateien.length} file${dateien.length === 1 ? '' : 's'} changed, ${gesamt} insertion${gesamt === 1 ? '' : 's'}(+)`])
   }
 
   if (unter === 'remote') {
@@ -847,10 +1210,30 @@ function git (w, marken) {
 
 /* =============================================================== docker */
 
+/** Zwoelf zufaellige Hexstellen - so sehen echte Container-Kennungen aus. */
+const neueId = () => Array.from({ length: 12 },
+  () => '0123456789abcdef'[Math.floor(Math.random() * 16)]).join('')
+
+/** Host- und Containerport ohne die vorangestellte Adresse. */
+const portPaar = (p) => (p || '').split(':').slice(-2).join(':')
+const hostPortVon = (p) => (p || '').split(':').slice(-2)[0]
+
+/** Die PORTS-Spalte von `docker ps`, mit oder ohne Bindungsadresse. */
+function portText (p) {
+  if (!p) return ''
+  const t = p.split(':')
+  if (t.length >= 3) return `${t[t.length - 3]}:${t[t.length - 2]}->${t[t.length - 1]}/tcp`
+  if (t.length === 2) return `0.0.0.0:${t[0]}->${t[1]}/tcp`
+  return p
+}
+
 function docker (w, marken) {
   const d = w.docker
-  let unter = marken[1]
-  let arg = marken.slice(2)
+  const unter = marken[1]
+  // `--name=web` und `--name web` sind dasselbe - beides muss ankommen.
+  const arg = marken.slice(2).flatMap(a => (/^--?[A-Za-z][\w-]*=/.test(a)
+    ? [a.slice(0, a.indexOf('=')), a.slice(a.indexOf('=') + 1)]
+    : [a]))
 
   if (!unter || unter === '--help') {
     return ok(['Usage:  docker [OPTIONS] COMMAND', '',
@@ -860,14 +1243,33 @@ function docker (w, marken) {
   }
   if (unter === '--version') return ok(['Docker version 28.6.1, build 4a4e5d2'])
 
+  /**
+   * Container nach Name oder Kennung suchen. Eine mehrdeutige Kennung weist
+   * Docker zurueck, statt irgendeinen Treffer zu nehmen.
+   */
+  const findeContainer = (n) => {
+    if (!n) return { fehlt: true }
+    const exakt = d.container.find(c => c.name === n)
+    if (exakt) return { c: exakt }
+    const treffer = d.container.filter(c => c.id.startsWith(n))
+    if (treffer.length > 1) return { mehrdeutig: true }
+    if (!treffer.length) return { fehlt: true }
+    return { c: treffer[0] }
+  }
+  const containerFehler = (r, n) => r.mehrdeutig
+    ? fehler([`Error response from daemon: multiple IDs found with provided prefix: ${n}`])
+    : fehler([`Error response from daemon: No such container: ${n}`], 'containerFehlt')
+
   const zieheAbbild = (bezeichner) => {
-    const [n, t] = bezeichner.split(':')
+    const teil = bezeichner.split(':')
+    const t = teil.length > 1 ? teil.pop() : null
+    const n = teil.join(':')
     const stamm = DOCKER_ABBILDER[n]
     if (!stamm) return null
     const tag = t || stamm.tag
     const voll = `${n}:${tag}`
     if (!d.abbilder.some(a => a.voll === voll)) {
-      d.abbilder.push({ voll, name: n, tag, groesse: stamm.groesse, id: Math.random().toString(16).slice(2, 14) })
+      d.abbilder.push({ voll, name: n, tag, groesse: stamm.groesse, id: neueId() })
     }
     return voll
   }
@@ -876,41 +1278,43 @@ function docker (w, marken) {
     const b = arg.find(a => !a.startsWith('-'))
     const voll = zieheAbbild(b || '')
     if (!voll) return fehler([`Error response from daemon: pull access denied for ${b}, repository does not exist`], 'abbildUnbekannt')
-    return ok([`${voll.split(':')[1]}: Pulling from library/${voll.split(':')[0]}`,
+    return ok([`${voll.split(':').pop()}: Pulling from library/${voll.split(':')[0]}`,
       'Digest: sha256:9b1f...c0de', `Status: Downloaded newer image for ${voll}`, `docker.io/library/${voll}`])
   }
 
   if (unter === 'images') {
     if (!d.abbilder.length) return ok(['REPOSITORY   TAG       IMAGE ID       CREATED       SIZE'])
     return ok(['REPOSITORY   TAG          IMAGE ID       CREATED       SIZE',
-      ...d.abbilder.map(a => `${a.name.padEnd(12)} ${a.tag.padEnd(12)} ${a.id.slice(0, 12)}   2 weeks ago   ${a.groesse}`)])
+      ...d.abbilder.map(a => `${a.name.padEnd(12)} ${a.tag.padEnd(12)} ${a.id}   2 weeks ago   ${a.groesse}`)])
   }
 
   if (unter === 'run') {
-    const nurName = (a) => !a.startsWith('-')
-    const abbildIdx = arg.findIndex((a, i) => nurName(a) &&
-      !['-p', '-v', '-e', '--name', '--platform', '--user'].includes(arg[i - 1]))
+    const wertFlaggen = ['-p', '-v', '-e', '--name', '--platform', '--user', '--network', '--restart', '--env', '--volume', '--publish']
+    const abbildIdx = arg.findIndex((a, i) => !a.startsWith('-') && !wertFlaggen.includes(arg[i - 1]))
     if (abbildIdx < 0) return fehler(['docker: "docker run" requires at least 1 argument.'])
     const bezeichner = arg[abbildIdx]
     const voll = zieheAbbild(bezeichner)
     if (!voll) return fehler([`Unable to find image '${bezeichner}' locally`,
       `docker: Error response from daemon: pull access denied for ${bezeichner.split(':')[0]}.`], 'abbildUnbekannt')
 
-    const hole = (flagge) => { const i = arg.indexOf(flagge); return i > -1 ? arg[i + 1] : null }
+    const hole = (...flaggen) => {
+      for (const f of flaggen) { const i = arg.indexOf(f); if (i > -1) return arg[i + 1] }
+      return null
+    }
     // Mehrere gleiche Flaggen sind erlaubt: -e dreimal, -v zweimal, -p zweimal.
-    const alle = (flagge) => arg.reduce((aus, a, i) => (arg[i - 1] === flagge ? [...aus, a] : aus), [])
+    const alle = (...flaggen) => arg.reduce((aus, a, i) => (flaggen.includes(arg[i - 1]) ? [...aus, a] : aus), [])
     const nameC = (hole('--name') || voll.split(':')[0].replace(/\//g, '_') + '_' + Math.random().toString(36).slice(2, 7))
-    const port = hole('-p')
-    const baender = alle('-v')
+    const port = hole('-p', '--publish')
+    const baender = alle('-v', '--volume')
     const band = baender[0] || null
-    const umgebung = alle('-e')
+    const umgebung = alle('-e', '--env')
     const imHintergrund = arg.includes('-d') || arg.includes('--detach')
     const wegDanach = arg.includes('--rm')
     const interaktiv = arg.some(a => a === '-it' || a === '-i' || a === '-ti')
 
     if (port) {
-      const hostPort = port.split(':').slice(-2)[0]
-      if (d.container.some(c => c.laeuft && c.port && c.port.split(':').slice(-2)[0] === hostPort)) {
+      const hostPort = hostPortVon(port)
+      if (d.container.some(c => c.laeuft && c.port && hostPortVon(c.port) === hostPort)) {
         return fehler([`docker: Error response from daemon: driver failed programming external connectivity on endpoint ${nameC}:`,
           `Bind for 0.0.0.0:${hostPort} failed: port is already allocated.`], 'portBelegt')
       }
@@ -925,7 +1329,7 @@ function docker (w, marken) {
           !d.volumen.includes(bandName)) d.volumen.push(bandName)
     }
 
-    const id = (d.naechsteId++).toString(16).padStart(12, '0')
+    const id = neueId()
     const eintrag = {
       id, name: nameC, abbild: voll, port, band, baender, umgebung,
       laeuft: !wegDanach || imHintergrund, wegDanach
@@ -953,18 +1357,19 @@ function docker (w, marken) {
   }
 
   if (unter === 'ps') {
-    const alle = arg.includes('-a') || arg.includes('--all')
-    const liste = d.container.filter(c => alle || c.laeuft)
-    const kopf = 'CONTAINER ID   IMAGE              STATUS         PORTS                    NAMES'
+    const alleZeigen = arg.includes('-a') || arg.includes('--all')
+    const liste = d.container.filter(c => alleZeigen || c.laeuft)
+    const kopf = 'CONTAINER ID   IMAGE              STATUS         PORTS                          NAMES'
     if (!liste.length) return ok([kopf])
     return ok([kopf, ...liste.map(c =>
-      `${c.id.slice(0, 12)}   ${c.abbild.padEnd(18)} ${(c.laeuft ? 'Up 2 minutes' : 'Exited (0) 1 min ago').padEnd(14)} ${(c.port ? c.port.replace(/^(\d+):(\d+)$/, '0.0.0.0:$1->$2/tcp') : '').padEnd(24)} ${c.name}`)])
+      `${c.id}   ${c.abbild.padEnd(18)} ${(c.laeuft ? 'Up 2 minutes' : 'Exited (0) 1 min ago').padEnd(14)} ${portText(c.port).padEnd(30)} ${c.name}`)])
   }
 
   if (unter === 'logs') {
     const n = arg.find(a => !a.startsWith('-'))
-    const c = d.container.find(x => x.name === n || x.id.startsWith(n || ''))
-    if (!c) return fehler([`Error response from daemon: No such container: ${n}`], 'containerFehlt')
+    const g = findeContainer(n)
+    if (!g.c) return containerFehler(g, n)
+    const c = g.c
     if (c.abbild.startsWith('postgres')) {
       return ok(['PostgreSQL init process complete; ready for start up.',
         'LOG:  starting PostgreSQL 16.4 on x86_64-pc-linux-gnu',
@@ -976,8 +1381,8 @@ function docker (w, marken) {
       const zeilen = [
         'Initializing n8n process',
         'n8n ready on 0.0.0.0, port 5678',
-        `Editor is now accessible via:`,
-        `http://localhost:${c.port ? c.port.split(':').slice(-2)[0] : '5678'}/`
+        'Editor is now accessible via:',
+        `http://localhost:${hostPortVon(c.port) || '5678'}/`
       ]
       if (!schluessel) {
         zeilen.splice(1, 0, 'No encryption key found - generating one and saving it to ~/.n8n/config')
@@ -989,30 +1394,30 @@ function docker (w, marken) {
 
   if (unter === 'exec') {
     const n = arg.find(a => !a.startsWith('-') && !['-it', '-i', '-t'].includes(a))
-    const c = d.container.find(x => x.name === n || x.id.startsWith(n || ''))
-    if (!c) return fehler([`Error response from daemon: No such container: ${n}`], 'containerFehlt')
-    if (!c.laeuft) return fehler([`Error response from daemon: Container ${n} is not running`], 'containerAus')
+    const g = findeContainer(n)
+    if (!g.c) return containerFehler(g, n)
+    if (!g.c.laeuft) return fehler([`Error response from daemon: Container ${n} is not running`], 'containerAus')
     return { zeilen: [], hinweis: 'interaktiv' }
   }
 
   if (unter === 'stop' || unter === 'start') {
     const n = arg.find(a => !a.startsWith('-'))
-    const c = d.container.find(x => x.name === n || x.id.startsWith(n || ''))
-    if (!c) return fehler([`Error response from daemon: No such container: ${n}`], 'containerFehlt')
-    c.laeuft = unter === 'start'
+    const g = findeContainer(n)
+    if (!g.c) return containerFehler(g, n)
+    g.c.laeuft = unter === 'start'
     return ok([n])
   }
 
   if (unter === 'rm') {
-    const zwingen = arg.includes('-f')
+    const zwingen = arg.includes('-f') || arg.includes('--force')
     const n = arg.find(a => !a.startsWith('-'))
-    const i = d.container.findIndex(x => x.name === n || x.id.startsWith(n || ''))
-    if (i < 0) return fehler([`Error response from daemon: No such container: ${n}`], 'containerFehlt')
-    if (d.container[i].laeuft && !zwingen) {
-      return fehler([`Error response from daemon: You cannot remove a running container ${d.container[i].id}.`,
+    const g = findeContainer(n)
+    if (!g.c) return containerFehler(g, n)
+    if (g.c.laeuft && !zwingen) {
+      return fehler([`Error response from daemon: You cannot remove a running container ${g.c.id}.`,
         'Stop the container before attempting removal or force remove'], 'rmLaeuft')
     }
-    d.container.splice(i, 1)
+    d.container.splice(d.container.indexOf(g.c), 1)
     return ok([n])
   }
 
@@ -1030,10 +1435,34 @@ function docker (w, marken) {
     if (arg[0] === 'ls') {
       return ok(['DRIVER    VOLUME NAME', ...d.volumen.map(v => `local     ${v}`)])
     }
-    if (arg[0] === 'create') { if (!d.volumen.includes(arg[1])) d.volumen.push(arg[1]); return ok([arg[1]]) }
+    if (arg[0] === 'create') {
+      const v = arg[1]
+      if (!v) return fehler(['docker: "docker volume create" requires at most 1 argument.'])
+      if (!d.volumen.includes(v)) d.volumen.push(v)
+      return ok([v])
+    }
+    if (arg[0] === 'inspect') {
+      const v = arg[1]
+      if (!d.volumen.includes(v)) return fehler([`Error response from daemon: get ${v}: no such volume`])
+      return ok(['[', '    {', `        "Name": "${v}",`, '        "Driver": "local",',
+        `        "Mountpoint": "/var/lib/docker/volumes/${v}/_data"`, '    }', ']'])
+    }
     if (arg[0] === 'rm') {
-      d.volumen = d.volumen.filter(v => v !== arg[1])
-      return ok([arg[1]])
+      const v = arg[1]
+      if (!d.volumen.includes(v)) return fehler([`Error response from daemon: get ${v}: no such volume`])
+      // Ein eingehaengtes Band laesst sich nicht entfernen - erst der Container.
+      const nutzer = d.container.filter(c => (c.baender || []).some(b => b.split(':')[0] === v))
+      if (nutzer.length) {
+        return fehler([`Error response from daemon: remove ${v}: volume is in use - [${nutzer.map(c => c.id).join(', ')}]`],
+          'bandInBenutzung')
+      }
+      d.volumen = d.volumen.filter(x => x !== v)
+      return ok([v])
+    }
+    if (arg[0] === 'prune') {
+      const frei = d.volumen.filter(v => !d.container.some(c => (c.baender || []).some(b => b.split(':')[0] === v)))
+      d.volumen = d.volumen.filter(v => !frei.includes(v))
+      return ok(['Deleted Volumes:', ...frei, '', 'Total reclaimed space: 41.2MB'])
     }
     return ok(['Usage:  docker volume COMMAND'])
   }
@@ -1041,11 +1470,11 @@ function docker (w, marken) {
   if (unter === 'build') {
     const t = arg[arg.indexOf('-t') + 1]
     const k = knoten(w, w.pfad)
-    if (!k || !k.kinder['Dockerfile']) {
+    if (!k || k.typ !== 'ordner' || !k.kinder.Dockerfile) {
       return fehler(['ERROR: failed to solve: failed to read dockerfile: open Dockerfile: no such file or directory'], 'keinDockerfile')
     }
-    const voll = t || 'sha256:' + Math.random().toString(16).slice(2, 14)
-    d.abbilder.push({ voll, name: (t || 'unbenannt').split(':')[0], tag: (t || ':latest').split(':')[1] || 'latest', groesse: '186MB', id: Math.random().toString(16).slice(2, 14) })
+    const voll = t || 'sha256:' + neueId()
+    d.abbilder.push({ voll, name: (t || 'unbenannt').split(':')[0], tag: (t || ':latest').split(':')[1] || 'latest', groesse: '186MB', id: neueId() })
     return ok(['[+] Building 12.4s (9/9) FINISHED',
       ' => [internal] load build definition from Dockerfile        0.0s',
       ' => [1/4] FROM docker.io/library/python:3.12-slim           3.1s',
@@ -1062,28 +1491,29 @@ function docker (w, marken) {
     if (arg[0] === 'up') {
       zieheAbbild('postgres'); zieheAbbild('adminer')
       d.compose = true
-      if (!d.volumen.includes('pgdata')) d.volumen.push('pgdata')
+      // Compose stellt dem Bandnamen aus der Datei den Projektnamen voran.
+      if (!d.volumen.includes(COMPOSE_BAND)) d.volumen.push(COMPOSE_BAND)
       d.container = d.container.filter(c => !c.compose)
       d.container.push(
-        { id: (d.naechsteId++).toString(16).padStart(12, '0'), name: 'projekt-db-1', abbild: 'postgres:16', port: '5432:5432', band: 'pgdata:/var/lib/postgresql/data', laeuft: true, compose: true },
-        { id: (d.naechsteId++).toString(16).padStart(12, '0'), name: 'projekt-adminer-1', abbild: 'adminer:5', port: '8081:8080', laeuft: true, compose: true })
-      return ok(['[+] Running 3/3', ' ✔ Volume "projekt_pgdata"   Created',
-        ' ✔ Container projekt-db-1       Started', ' ✔ Container projekt-adminer-1  Started'])
+        { id: neueId(), name: `${COMPOSE_PROJEKT}-db-1`, abbild: 'postgres:16', port: '127.0.0.1:5432:5432', band: `${COMPOSE_BAND}:/var/lib/postgresql/data`, baender: [`${COMPOSE_BAND}:/var/lib/postgresql/data`], umgebung: ['POSTGRES_PASSWORD=geheim', 'POSTGRES_DB=analytics'], laeuft: true, compose: true },
+        { id: neueId(), name: `${COMPOSE_PROJEKT}-adminer-1`, abbild: 'adminer:5', port: '127.0.0.1:8081:8080', baender: [], umgebung: [], laeuft: true, compose: true })
+      return ok(['[+] Running 3/3', ` ✔ Volume "${COMPOSE_BAND}"        Created`,
+        ` ✔ Container ${COMPOSE_PROJEKT}-db-1       Started`, ` ✔ Container ${COMPOSE_PROJEKT}-adminer-1  Started`])
     }
     if (arg[0] === 'down') {
       const mitBaendern = arg.includes('-v') || arg.includes('--volumes')
       d.container = d.container.filter(c => !c.compose)
-      const zeilen = ['[+] Running 3/3', ' ✔ Container projekt-adminer-1  Removed',
-        ' ✔ Container projekt-db-1       Removed', ' ✔ Network projekt_default      Removed']
+      const zeilen = ['[+] Running 3/3', ` ✔ Container ${COMPOSE_PROJEKT}-adminer-1  Removed`,
+        ` ✔ Container ${COMPOSE_PROJEKT}-db-1       Removed`, ` ✔ Network ${COMPOSE_PROJEKT}_default      Removed`]
       if (mitBaendern) {
-        d.volumen = d.volumen.filter(v => v !== 'pgdata')
-        zeilen.push(' ✔ Volume projekt_pgdata       Removed')
+        d.volumen = d.volumen.filter(v => v !== COMPOSE_BAND)
+        zeilen.push(` ✔ Volume ${COMPOSE_BAND}        Removed`)
         return { zeilen: zeilen.map(t => ({ art: 'aus', text: t })), hinweis: 'composeDownV' }
       }
       return ok(zeilen)
     }
     if (arg[0] === 'ps') return docker(w, ['docker', 'ps'])
-    if (arg[0] === 'logs') return docker(w, ['docker', 'logs', 'projekt-db-1'])
+    if (arg[0] === 'logs') return docker(w, ['docker', 'logs', `${COMPOSE_PROJEKT}-db-1`])
     return ok(['Usage:  docker compose [OPTIONS] COMMAND'])
   }
 
@@ -1101,7 +1531,9 @@ function docker (w, marken) {
       const weg = d.container.filter(c => !c.laeuft).length
       d.container = d.container.filter(c => c.laeuft)
       if (alles) d.abbilder = d.abbilder.filter(a => d.container.some(c => c.abbild === a.voll))
-      if (arg.includes('--volumes')) d.volumen = []
+      if (arg.includes('--volumes')) {
+        d.volumen = d.volumen.filter(v => d.container.some(c => (c.baender || []).some(b => b.split(':')[0] === v)))
+      }
       return ok(['Deleted Containers:', ...Array(weg).fill('  (1 Container entfernt)'),
         '', 'Total reclaimed space: 612.4MB'])
     }
@@ -1109,7 +1541,7 @@ function docker (w, marken) {
 
   if (unter === 'stats') {
     return ok(['CONTAINER ID   NAME            CPU %     MEM USAGE / LIMIT     MEM %',
-      ...d.container.filter(c => c.laeuft).map(c => `${c.id.slice(0, 12)}   ${c.name.padEnd(15)} 0.14%     48.2MiB / 7.67GiB     0.61%`)])
+      ...d.container.filter(c => c.laeuft).map(c => `${c.id}   ${c.name.padEnd(15)} 0.14%     48.2MiB / 7.67GiB     0.61%`)])
   }
 
   return fehler([`docker: '${unter}' is not a docker command.`, "See 'docker --help'"])
@@ -1122,10 +1554,11 @@ function docker (w, marken) {
  * `hinweis` ist ein Schluessel, den die Oberflaeche uebersetzt.
  */
 export function fuehreAus (welt, zeile) {
-  const roh = zeile.trim()
-  if (!roh) return { zeilen: [] }
-  welt.historie.push(roh)
+  const eingetippt = zeile.trim()
+  if (!eingetippt) return { zeilen: [] }
+  welt.historie.push(eingetippt)
 
+  const roh = ersetzeUmgebung(welt, eingetippt)
   const marken = zerlege(roh)
   const kopf = marken[0].toLowerCase()
 

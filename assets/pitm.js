@@ -15,6 +15,7 @@
  */
 
 import { neueWelt, zuruecksetzen as weltZuruecksetzen, fuehreAus, prompt, pfadText } from './terminal.js'
+import { zustandTrifft, schrittErfuellt } from './pruefung.js'
 
 /* ------------------------------------------------------------------ Sprache */
 
@@ -155,6 +156,7 @@ const TERMINAL_HINWEISE = {
   unbekannt:      { de: 'Diese Konsole ist nachgebildet und kennt nur die Befehle, die in den Labs vorkommen. Die Schreibweise stimmt aber mit der echten überein – ein Tippfehler wird hier genauso hart zurückgewiesen.', en: 'This console is a model and only knows the commands the labs use. The spelling matches the real thing, though – a typo is rejected here just as harshly.' },
   cmdKennLs:      { de: 'In der Eingabeaufforderung heißt der Befehl "dir". "ls" versteht nur PowerShell (als Alias) und die Unix-Shells.', en: 'In Command Prompt the command is "dir". Only PowerShell (as an alias) and the Unix shells understand "ls".' },
   oeffnenMac:     { de: '"open" übergibt an den Finder – in dieser Nachbildung passiert dabei nichts Sichtbares.', en: '"open" hands over to Finder – nothing visible happens in this model.' },
+  oeffnenWin:     { de: '"ii .", "explorer ." und "start ." übergeben an den Explorer – in dieser Nachbildung passiert dabei nichts Sichtbares.', en: '"ii .", "explorer ." and "start ." hand over to File Explorer – nothing visible happens in this model.' },
   python:         { de: 'Die Python-Sitzung selbst ist hier nicht nachgebildet. Versuchen Sie "python3 --version".', en: 'The Python session itself is not modelled here. Try "python3 --version".' },
   code:           { de: '"code ." öffnet den aktuellen Ordner in Visual Studio Code – der Punkt ist das Verzeichnis, nicht ein Satzzeichen.', en: '"code ." opens the current folder in Visual Studio Code – the dot is the directory, not punctuation.' },
   man:            { de: 'Hilfeseiten sind hier nicht hinterlegt. Auf dem eigenen Rechner ist "man <befehl>" bzw. "Get-Help <befehl>" der erste Griff.', en: 'Manual pages are not included here. On your own machine "man <command>" or "Get-Help <command>" is the first thing to reach for.' },
@@ -168,7 +170,12 @@ const TERMINAL_HINWEISE = {
   commitOhneText: { de: 'Ein Commit ohne Nachricht ist ein Commit ohne Begründung. Verwenden Sie "git commit -m \\"…\\"".', en: 'A commit without a message is a commit without a reason. Use "git commit -m \\"…\\"".' },
   zweigFehlt:     { de: 'Der Zweig existiert nicht. Neu anlegen und wechseln in einem Schritt: "git switch -c <name>".', en: 'The branch does not exist. Create and switch in one step: "git switch -c <name>".' },
   pushOhneRemote: { de: 'Ein lokales Repository kennt von sich aus keinen Server. "git remote add origin <url>" stellt die Verbindung her.', en: 'A local repository knows no server by itself. "git remote add origin <url>" establishes the link.' },
-  abbildUnbekannt:{ de: 'Diese Nachbildung kennt nur wenige Abbilder: hello-world, postgres, nginx, python, adminer, ubuntu.', en: 'This model knows only a few images: hello-world, postgres, nginx, python, adminer, ubuntu.' },
+  psParameter:    { de: 'PowerShell prüft Parameter, statt sie zu übergehen. Unix-Kurzoptionen wie -la gibt es hier nicht: Get-ChildItem kennt -Force für versteckte Dateien und -Recurse für Unterordner.', en: 'PowerShell checks parameters instead of ignoring them. Unix short options such as -la do not exist here: Get-ChildItem has -Force for hidden files and -Recurse for subfolders.' },
+  psMehrdeutig:   { de: 'Abkürzungen sind in PowerShell erlaubt, solange sie eindeutig bleiben. Schreiben Sie den Parameter aus – etwa -Force statt -f.', en: 'Abbreviations are allowed in PowerShell as long as they stay unambiguous. Write the parameter out – e.g. -Force instead of -f.' },
+  renameNurName:  { de: 'Umbenennen ist nicht Verschieben: Der zweite Wert ist ein Name, kein Pfad. Für einen anderen Ordner nehmen Sie Move-Item bzw. move.', en: 'Renaming is not moving: the second value is a name, not a path. For a different folder use Move-Item or move.' },
+  rdNichtLeer:    { de: 'rd entfernt nur leere Verzeichnisse. Mit  rd /s /q <name>  geht auch ein gefüllter Ordner – dann aber ohne Rückfrage.', en: 'rd only removes empty directories. With  rd /s /q <name>  a filled folder goes too – but then without asking.' },
+  bandInBenutzung:{ de: 'Ein eingehängtes Band lässt sich nicht entfernen. Erst den Container weg (docker rm), dann das Band – genau diese Reihenfolge schützt vor Datenverlust.', en: 'A mounted volume cannot be removed. First the container (docker rm), then the volume – that order is precisely what protects you from data loss.' },
+  abbildUnbekannt:{ de: 'Diese Nachbildung kennt nur wenige Abbilder: hello-world, postgres, nginx, python, adminer, ubuntu, n8nio/n8n.', en: 'This model knows only a few images: hello-world, postgres, nginx, python, adminer, ubuntu, n8nio/n8n.' },
   portBelegt:     { de: 'Ein Host-Port lässt sich nur einmal vergeben. Weichen Sie aus: "-p 15432:5432" bindet denselben Container-Port an einen anderen Port des Rechners.', en: 'A host port can only be assigned once. Move aside: "-p 15432:5432" binds the same container port to a different port on the machine.' },
   nameBelegt:     { de: 'Containernamen sind eindeutig. Entfernen Sie den alten mit "docker rm -f <name>" oder wählen Sie einen anderen Namen.', en: 'Container names are unique. Remove the old one with "docker rm -f <name>" or choose a different name.' },
   containerFehlt: { de: 'Diesen Container gibt es nicht. "docker ps -a" listet auch die gestoppten.', en: 'No such container. "docker ps -a" also lists the stopped ones.' },
@@ -461,8 +468,10 @@ function baueTerminal (ziel, opt = {}) {
       `${schritte.filter(s => s.fertig).length} / ${schritte.length}`))
     auftragKasten.append(kopfz)
     const ol = el('ol')
+    // Die Schritte werden der Reihe nach abgearbeitet; der naechste ist markiert.
+    const naechster = schritte.find(s => !s.fertig)
     for (const s of schritte) {
-      const li = el('li', s.fertig ? 'erledigt' : null, txt(s.text))
+      const li = el('li', s.fertig ? 'erledigt' : (s === naechster ? 'aktuell' : null), txt(s.text))
       ol.append(li)
     }
     auftragKasten.append(ol)
@@ -473,56 +482,35 @@ function baueTerminal (ziel, opt = {}) {
 
   /* -- Zustandspruefung --------------------------------------------------- */
 
-  /**
-   * Prueft eine deklarative Bedingung gegen die Welt. Absichtlich klein
-   * gehalten: Es geht darum, ob ein Ziel erreicht ist, nicht darum, auf
-   * welchem Weg.
-   */
-  const zustandPasst = (z) => {
-    if (!z) return true
-    if (z.pfad != null && welt.pfad.join('/') !== z.pfad) return false
-    if (z.datei) {
-      const teile = z.datei.split('/')
-      let k = welt.wurzel
-      for (const t of teile) {
-        if (!k || k.typ !== 'ordner' || !k.kinder[t]) return false
-        k = k.kinder[t]
-      }
-      if (z.dateiTyp && k.typ !== z.dateiTyp) return false
-    }
-    if (z.gitRepo && !welt.git) return false
-    const zweig = welt.git ? welt.git.zweige[welt.git.zweig] : null
-    if (z.gitCommits != null && (zweig?.commits.length || 0) < z.gitCommits) return false
-    if (z.gitZweig && welt.git?.zweig !== z.gitZweig) return false
-    if (z.gitIndexLeer && welt.git && welt.git.index.length) return false
-    if (z.gitIndexGefuellt && !(welt.git && welt.git.index.length)) return false
-    if (z.gitVeroeffentlicht && (!zweig || !zweig.commits.length || zweig.gepusht < zweig.commits.length)) return false
-    if (z.containerLaeuft && !welt.docker.container.some(c => c.name === z.containerLaeuft && c.laeuft)) return false
-    if (z.containerWeg && welt.docker.container.some(c => c.name === z.containerWeg)) return false
-    if (z.volumen && !welt.docker.volumen.includes(z.volumen)) return false
-    if (z.abbild && !welt.docker.abbilder.some(a => a.voll === z.abbild || a.name === z.abbild)) return false
-    if (z.portGebunden && !welt.docker.container.some(c => c.laeuft && c.port === z.portGebunden)) return false
-    if (z.umgebung && !welt.docker.container.some(c =>
-      (c.umgebung || []).some(e => e.startsWith(z.umgebung)))) return false
-    if (z.bandAn && !welt.docker.container.some(c =>
-      (c.baender || []).some(b => b.startsWith(z.bandAn + ':')))) return false
-    return true
-  }
+  const zustandPasst = (z) => zustandTrifft(welt, z)
 
-  const pruefeSchritte = (zeile) => {
-    let etwasNeu = false
-    for (const s of schritte) {
-      if (s.fertig) continue
-      const musterPasst = !s.muster || new RegExp(s.muster).test(zeile)
-      if (musterPasst && zustandPasst(s.zustand)) { s.fertig = true; etwasNeu = true }
-    }
-    if (etwasNeu) zeichneAuftrag()
-    if (schritte.length && schritte.every(s => s.fertig) && opt.beiFertig) opt.beiFertig()
+  /** Der Schritt, der als naechster abzuarbeiten ist. */
+  const offenerSchritt = () => schritte.find(s => !s.fertig) || null
+
+  /**
+   * Haken setzen - und zwar nur am ersten offenen Schritt. Sonst gelten
+   * spaetere Schritte als erledigt, sobald ihr Zustand zufaellig einmal passt;
+   * "Zurueck ins Heimatverzeichnis" waere schon vor dem ersten Wechsel erfuellt.
+   *
+   * `vorher` sagt, ob die Bedingung schon vor diesem Befehl galt. Ein Schritt
+   * ohne Muster verlangt eine Aenderung: Er zaehlt erst, wenn dieser Befehl den
+   * Zustand hergestellt hat.
+   */
+  const pruefeSchritte = (zeile, vorher) => {
+    const s = offenerSchritt()
+    if (!s) return
+    if (!schrittErfuellt(welt, s, zeile, vorher)) return
+    s.fertig = true
+    zeichneAuftrag()
+    if (schritte.every(x => x.fertig) && opt.beiFertig) opt.beiFertig()
   }
 
   /* -- Eingabe ------------------------------------------------------------ */
 
   const verarbeite = (roh) => {
+    // Zustand des naechsten offenen Schrittes VOR dem Befehl festhalten.
+    const offen = offenerSchritt()
+    const vorher = offen ? zustandPasst(offen.zustand) : false
     schreibe('eingabe-zeile', `${prompt(welt)} ${roh}`)
     const r = fuehreAus(welt, roh)
     if (r.leeren) schirm.replaceChildren()
@@ -531,7 +519,7 @@ function baueTerminal (ziel, opt = {}) {
       schreibe('dim', '→ ' + txt(TERMINAL_HINWEISE[r.hinweis]))
     }
     zeichneKopf()
-    pruefeSchritte(roh.trim())
+    pruefeSchritte(roh.trim(), vorher)
   }
 
   eingabe.addEventListener('keydown', (e) => {
@@ -630,6 +618,16 @@ async function saeen (db) {
 }
 
 /** Baut eine Ergebnistabelle. Zahlen rechtsbuendig, NULL erkennbar. */
+/**
+ * Die Werte einer Ergebniszeile in Spaltenreihenfolge. Abfragen laufen mit
+ * rowMode 'array', also sind Zeilen Felder; ein Objekt kann aber noch von
+ * anderswo kommen, dann entscheidet die Spaltenliste.
+ */
+function werteVon (zeile, fields = []) {
+  if (Array.isArray(zeile)) return zeile
+  return fields.length ? fields.map(f => zeile[f.name]) : Object.values(zeile)
+}
+
 function ergebnisTabelle (res, maxZeilen = 200) {
   const wrap = el('div', 'result-table')
   const tab = el('table')
@@ -640,7 +638,7 @@ function ergebnisTabelle (res, maxZeilen = 200) {
   const tbody = el('tbody')
   for (const zeile of res.rows.slice(0, maxZeilen)) {
     const tr = el('tr')
-    for (const wert of Object.values(zeile)) {
+    for (const wert of werteVon(zeile, res.fields)) {
       const td = el('td')
       if (wert === null || wert === undefined) { td.className = 'null'; td.textContent = 'NULL' }
       else if (wert instanceof Date) td.textContent = wert.toISOString().slice(0, 10)
@@ -660,7 +658,7 @@ function ergebnisTabelle (res, maxZeilen = 200) {
 
 /** Vergleicht zwei Ergebnisse zeilenweise; Reihenfolge nur, wenn gefordert. */
 function gleich (a, b, sortiert) {
-  const norm = (r) => r.rows.map(z => Object.values(z).map(v =>
+  const norm = (r) => r.rows.map(z => werteVon(z, r.fields).map(v =>
     v === null || v === undefined ? '␀'
       : v instanceof Date ? v.toISOString().slice(0, 10)
         : typeof v === 'number' ? Number(v).toFixed(4)
@@ -965,9 +963,11 @@ function baueBox (uebung, ctx) {
       return zeile
     }
 
+    // rowMode 'array' statt Objekten: Sonst fallen gleichnamige Spalten
+    // zusammen - `SELECT name, name` liefert als Objekt nur einen Wert.
     const fuehre = async (db, sql) => {
-      if (!/;\s*\S/.test(sql)) return await db.query(sql)
-      const teile = await db.exec(sql)
+      if (!/;\s*\S/.test(sql)) return await db.query(sql, [], { rowMode: 'array' })
+      const teile = await db.exec(sql, { rowMode: 'array' })
       return [...teile].reverse().find(t => t.fields && t.fields.length) || teile[teile.length - 1] || { fields: [], rows: [] }
     }
 
