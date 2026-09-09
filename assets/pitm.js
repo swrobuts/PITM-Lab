@@ -153,14 +153,14 @@ const T = {
 /** Hinweise der Umgebung zu Terminaleingaben. Erscheinen gedimmt unter der Ausgabe. */
 const TERMINAL_HINWEISE = {
   unbekannt:      { de: 'Diese Konsole ist nachgebildet und kennt nur die Befehle, die in den Labs vorkommen. Die Schreibweise stimmt aber mit der echten überein – ein Tippfehler wird hier genauso hart zurückgewiesen.', en: 'This console is a model and only knows the commands the labs use. The spelling matches the real thing, though – a typo is rejected here just as harshly.' },
-  cmdKennLs:      { de: 'In der Eingabeaufforderung heißt der Befehl "dir". "ls" versteht nur PowerShell (als Alias) und die Unix-Schalen.', en: 'In Command Prompt the command is "dir". Only PowerShell (as an alias) and the Unix shells understand "ls".' },
+  cmdKennLs:      { de: 'In der Eingabeaufforderung heißt der Befehl "dir". "ls" versteht nur PowerShell (als Alias) und die Unix-Shells.', en: 'In Command Prompt the command is "dir". Only PowerShell (as an alias) and the Unix shells understand "ls".' },
   oeffnenMac:     { de: '"open" übergibt an den Finder – in dieser Nachbildung passiert dabei nichts Sichtbares.', en: '"open" hands over to Finder – nothing visible happens in this model.' },
   python:         { de: 'Die Python-Sitzung selbst ist hier nicht nachgebildet. Versuchen Sie "python3 --version".', en: 'The Python session itself is not modelled here. Try "python3 --version".' },
   code:           { de: '"code ." öffnet den aktuellen Ordner in Visual Studio Code – der Punkt ist das Verzeichnis, nicht ein Satzzeichen.', en: '"code ." opens the current folder in Visual Studio Code – the dot is the directory, not punctuation.' },
   man:            { de: 'Hilfeseiten sind hier nicht hinterlegt. Auf dem eigenen Rechner ist "man <befehl>" bzw. "Get-Help <befehl>" der erste Griff.', en: 'Manual pages are not included here. On your own machine "man <command>" or "Get-Help <command>" is the first thing to reach for.' },
   exit:           { de: 'Die Sitzung bleibt offen – schließen lässt sich hier nichts.', en: 'The session stays open – there is nothing to close here.' },
   wsl:            { de: 'Das Windows-Subsystem für Linux ist hier nicht nachgebildet. Auf dem eigenen Rechner landen Sie damit in einer bash und arbeiten von dort an wie unter macOS – für Docker unter Windows der übliche Weg.', en: 'The Windows Subsystem for Linux is not modelled here. On your own machine it puts you into a bash and from there you work as on macOS – the usual route for Docker on Windows.' },
-  psWechsel:      { de: 'Ein Wechsel der Schale ist hier nicht nachgebildet. Nutzen Sie den Schalter über den Befehlskarten – der Dateibaum bleibt dabei erhalten.', en: 'Switching shells is not modelled here. Use the switch above the command cards – the file tree is kept.' },
+  psWechsel:      { de: 'Ein Wechsel der Shell ist hier nicht nachgebildet. Nutzen Sie den Schalter über den Befehlskarten – der Dateibaum bleibt dabei erhalten.', en: 'Switching shells is not modelled here. Use the switch above the command cards – the file tree is kept.' },
   cmdKennTouch:   { de: 'Die Eingabeaufforderung hat kein touch. Eine leere Datei entsteht dort mit  type nul > name.txt  – oder Sie wechseln zu PowerShell und nehmen New-Item.', en: 'Command Prompt has no touch. An empty file is created there with  type nul > name.txt  – or you switch to PowerShell and use New-Item.' },
   interaktiv:     { de: 'Interaktive Sitzungen im Container sind hier nicht nachgebildet. Auf dem eigenen Rechner landen Sie jetzt in einer Eingabeaufforderung innerhalb des Containers; "exit" bringt Sie zurück.', en: 'Interactive sessions inside the container are not modelled here. On your own machine you would now be at a prompt inside the container; "exit" brings you back.' },
   keinRepo:       { de: 'Ohne "git init" oder "git clone" gibt es kein Repository – Git verwaltet einen Ordner erst, wenn er darum gebeten wurde.', en: 'Without "git init" or "git clone" there is no repository – Git manages a folder only once it has been asked to.' },
@@ -403,8 +403,8 @@ function baueTerminal (ziel, opt = {}) {
   const kopf = el('div', 'terminal-kopf')
   const ampel = el('span', 'ampel')
   ampel.append(el('i'), el('i'), el('i'))
-  const schale = el('span', 'schale')
-  kopf.append(ampel, schale, el('span', 'spacer'))
+  const shell = el('span', 'shell')
+  kopf.append(ampel, shell, el('span', 'spacer'))
 
   const btnLeeren = zwei(el('button', 'btn-mini'), T.terminalLeeren)
   const btnZurueck = zwei(el('button', 'btn-mini'), T.terminalZuruck)
@@ -448,7 +448,7 @@ function baueTerminal (ziel, opt = {}) {
   }
 
   const zeichneKopf = () => {
-    schale.textContent = `${OS_NAMEN[welt.os]} — ${pfadText(welt)}`
+    shell.textContent = `${OS_NAMEN[welt.os]} — ${pfadText(welt)}`
     promptSpan.textContent = prompt(welt)
   }
 
@@ -541,7 +541,7 @@ function baueTerminal (ziel, opt = {}) {
       if (roh.trim()) verarbeite(roh)
       return
     }
-    // Pfeil hoch/runter blaettert durch die Historie, wie in einer echten Schale.
+    // Pfeil hoch/runter blaettert durch die Historie, wie in einer echten Shell.
     if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
       e.preventDefault()
       const h = welt.historie
@@ -572,7 +572,7 @@ function baueTerminal (ziel, opt = {}) {
       welt.os = aktuellesOs()
       zeichneKopf()
       schreibe('dim', '→ ' + (aktuelleSprache() === 'de'
-        ? `Schale gewechselt: ${OS_NAMEN[welt.os]}. Der Dateibaum bleibt.`
+        ? `Shell gewechselt: ${OS_NAMEN[welt.os]}. Der Dateibaum bleibt.`
         : `Shell changed: ${OS_NAMEN[welt.os]}. The file tree stays.`))
     })
   }

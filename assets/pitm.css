@@ -442,7 +442,7 @@ tr:nth-child(even) td { background: var(--bg-soft); }
 .terminal-kopf .ampel i:nth-child(2) { background: #FEBC2E; }
 .terminal-kopf .ampel i:nth-child(3) { background: #28C840; }
 .terminal-kopf .spacer { flex: 1; }
-.terminal-kopf .schale {
+.terminal-kopf .shell {
   font-family: var(--mono); color: var(--term-fg);
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }

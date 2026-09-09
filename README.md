@@ -8,7 +8,7 @@ Interaktive Lernumgebung zur Werkzeuglandschaft eines Analytics-Projekts für da
 Zehn Labs führen von der Werkzeugübersicht über Kommandozeile, Notebook, Versionierung,
 Entwicklungsumgebung, Container, gehostete Datenbank und Datenbank-Werkzeug bis zu grafischer
 Modellierung und Automatisierung. **54 Übungen** in fünf Formen, jede mit sofortiger Rückmeldung;
-eine **nachgebildete Kommandozeile** mit drei Schalen, `git` und `docker`; ein **echter
+eine **nachgebildete Kommandozeile** mit drei Shells, `git` und `docker`; ein **echter
 PostgreSQL-Server im Browser** (PGlite) auf den Daten der Fallstudie Velo City.
 
 Die Umgebung ist zweisprachig (Deutsch / Englisch) und läuft als statische Seite auf GitHub
@@ -40,7 +40,7 @@ lab-09-n8n.html               Trigger, Item, Credential, Webhook, Error Workflow
 assets/
   pitm.css                    Gemeinsames Stylesheet: Indigo #2E2A72, Bernstein #FFC300
   pitm.js                     Laufzeit: Sprache, OS-Umschaltung, LABS, Übungsboxen, Fortschritt
-  terminal.js                 Nachgebildete Schale: zsh, PowerShell, cmd.exe, git, docker
+  terminal.js                 Nachgebildete Shell: zsh, PowerShell, cmd.exe, git, docker
   pglite/                     PostgreSQL als WebAssembly (PGlite), lokal statt vom CDN
 
 data/
@@ -57,7 +57,7 @@ data/
 | `quiz` | Fragen mit Einfach- oder Mehrfachauswahl beantworten | Vergleich mit `richtig`; Erklärung nach der Prüfung |
 | `zuordnen` | Begriffe, Symptome oder Knoten auf Kategorien ziehen | Paarweise gegen `ziel`; falsche Zuordnungen werden markiert |
 | `checkliste` | Schritte an der Bedienoberfläche abarbeiten und bestätigen | Selbstbestätigung, mit Prüffrage je Schritt |
-| `terminal` | Befehle in der nachgebildeten Schale eingeben | Muster **und** Zustand der Welt (Pfad, Datei, Repo, Container, Band) |
+| `terminal` | Befehle in der nachgebildeten Shell eingeben | Muster **und** Zustand der Welt (Pfad, Datei, Repo, Container, Band) |
 | `sql` | Eine Abfrage gegen echtes PostgreSQL schreiben | Abfrage und Referenzlösung laufen; Zeilenmengen werden verglichen |
 
 Eine Übung sieht so aus (Auszug, Typ `terminal`):
@@ -86,7 +86,7 @@ eine SQL-Konsole als `<div data-sql-konsole></div>`.
 
 ## Die nachgebildete Kommandozeile
 
-`assets/terminal.js` ist eine Schale ohne Server: ein Dateibaum im Speicher, drei Dialekte und
+`assets/terminal.js` ist eine Shell ohne Server: ein Dateibaum im Speicher, drei Dialekte und
 zwei Werkzeuge, die unabhängig vom Dialekt arbeiten.
 
 | Teil | Was er kennt |

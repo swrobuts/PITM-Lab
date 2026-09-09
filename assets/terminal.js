@@ -7,14 +7,14 @@
  * wer hier `git commit` ohne vorheriges `git add` versucht, soll dieselbe
  * Zurueckweisung sehen wie draussen, ohne dass ein Rechner Schaden nimmt.
  *
- * Drei Schalen werden unterschieden, weil sich die Studierenden auf drei
+ * Drei Shells werden unterschieden, weil sich die Studierenden auf drei
  * verschiedenen Systemen anmelden:
  *
  *   mac  zsh unter macOS (und weitgehend deckungsgleich: bash unter Linux)
  *   win  Windows PowerShell
  *   cmd  Windows Eingabeaufforderung (cmd.exe)
  *
- * Die Werkzeugbefehle `git` und `docker` sind schalenunabhaengig - genau das
+ * Die Werkzeugbefehle `git` und `docker` sind shellunabhaengig - genau das
  * ist ihre Eigenschaft und soll auch so erfahrbar sein.
  *
  * Ausgaben der nachgebauten Werkzeuge bleiben englisch, weil die echten
@@ -157,7 +157,7 @@ const fehler = (zeilen, hinweis) => ({
 })
 const gemischt = (zeilen) => ({ zeilen })
 
-/* =========================================================== POSIX-Schale */
+/* =========================================================== POSIX-Shell */
 
 function posix (w, marken, roh) {
   const [befehl, ...arg] = marken
@@ -326,7 +326,7 @@ function posix (w, marken, roh) {
   }
 }
 
-/* ====================================================== PowerShell-Schale */
+/* ====================================================== PowerShell-Shell */
 
 /**
  * PowerShell fuehrt fuer die gaengigen Unix-Befehle Aliase - genau das soll die
@@ -349,7 +349,7 @@ const PS_ALIAS = {
   'set-content': 'set-content', 'add-content': 'add-content'
 }
 
-/** Uebersetzt PowerShell-Parameter in die Kurzoptionen der Unix-Schalen. */
+/** Uebersetzt PowerShell-Parameter in die Kurzoptionen der Unix-Shells. */
 const PS_PARAM = {
   '-recurse': '-r', '-force': '-f', '-all': '-a', '-hidden': '-a', '-confirm': '-i'
 }
@@ -522,7 +522,7 @@ function cmd (w, marken, roh) {
   if (abb === 'rm') {
     const rekursiv = kopf === 'rd' || kopf === 'rmdir' || hat('s')
     const r = posix(w, ['rm', ...(rekursiv ? ['-r'] : []), ...pfade], 'rm')
-    // Die Meldungen der Unix-Schale passen hier nicht; auf cmd-Deutsch umsetzen.
+    // Die Meldungen der Unix-Shell passen hier nicht; auf cmd-Deutsch umsetzen.
     if (r.zeilen.some(z => z.art === 'fehler')) {
       const text = r.zeilen[0].text
       if (/is a directory/.test(text)) {

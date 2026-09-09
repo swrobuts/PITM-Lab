@@ -106,7 +106,7 @@
         "cmd": { "befehl": "type nul > notiz.txt\necho Kickoff 14.10. > notiz.txt\necho Zwischenstand 18.11. >> notiz.txt", "teile": [
           { "was": "type nul >", "bedeutet": { "de": "Der übliche Umweg, um in der Eingabeaufforderung eine leere Datei zu erzeugen — ein touch gibt es nicht.", "en": "The usual detour to create an empty file in Command Prompt — there is no touch." } },
           { "was": "echo", "bedeutet": { "de": "Gibt Text aus. Anführungszeichen würden hier mitgeschrieben, deshalb stehen sie nicht dabei.", "en": "Prints text. Quotation marks would be written along here, which is why they are omitted." } },
-          { "was": ">  bzw.  >>", "bedeutet": { "de": "Überschreiben beziehungsweise anhängen — wie in den Unix-Schalen.", "en": "Overwrite or append — as in the Unix shells." } }
+          { "was": ">  bzw.  >>", "bedeutet": { "de": "Überschreiben beziehungsweise anhängen — wie in den Unix-Shells.", "en": "Overwrite or append — as in the Unix shells." } }
         ] }
       }
     },
@@ -175,7 +175,7 @@
         ] },
         "win": { "befehl": "Move-Item notiz.txt Dokumente\\termine.txt", "teile": [
           { "was": "Move-Item", "bedeutet": { "de": "PowerShell-Name. Kurzformen: mv, move, mi.", "en": "The PowerShell name. Short forms: mv, move, mi." } },
-          { "was": "Rename-Item", "bedeutet": { "de": "Nur umbenennen, ohne zu verschieben — in PowerShell ein eigener Befehl, anders als in den Unix-Schalen.", "en": "Rename only, without moving — a separate command in PowerShell, unlike in the Unix shells." } }
+          { "was": "Rename-Item", "bedeutet": { "de": "Nur umbenennen, ohne zu verschieben — in PowerShell ein eigener Befehl, anders als in den Unix-Shells.", "en": "Rename only, without moving — a separate command in PowerShell, unlike in the Unix shells." } }
         ] },
         "cmd": { "befehl": "move notiz.txt Dokumente\\termine.txt", "teile": [
           { "was": "move", "bedeutet": { "de": "Verschiebt und benennt um.", "en": "Moves and renames." } },
@@ -211,7 +211,7 @@
       "typ": "terminal",
       "titel": { "de": "Sich orientieren", "en": "Find your bearings" },
       "aufgabe": {
-        "de": "<p>Drei Handgriffe, mit denen jede Sitzung an einer Konsole beginnt: Wo bin ich, was liegt hier, wie komme ich woandershin. Arbeiten Sie sich in den Ordner <code>velocity/analytics</code> vor und sehen Sie sich an, was dort liegt.</p><p>Der Schalter in den Befehlskarten oben wechselt auch hier die Schale — probieren Sie die Aufgabe gern in beiden Fassungen.</p>",
+        "de": "<p>Drei Handgriffe, mit denen jede Sitzung an einer Konsole beginnt: Wo bin ich, was liegt hier, wie komme ich woandershin. Arbeiten Sie sich in den Ordner <code>velocity/analytics</code> vor und sehen Sie sich an, was dort liegt.</p><p>Der Schalter in den Befehlskarten oben wechselt auch hier die Shell — probieren Sie die Aufgabe gern in beiden Fassungen.</p>",
         "en": "<p>Three actions every console session begins with: where am I, what is here, how do I get somewhere else. Work your way into the folder <code>velocity/analytics</code> and look at what is there.</p><p>The switch in the command cards above changes the shell here too — feel free to do the exercise in both versions.</p>"
       },
       "begruessung": [
@@ -329,9 +329,9 @@
     {
       "id": "P01-05",
       "typ": "quiz",
-      "titel": { "de": "Drei Schalen, drei Eigenheiten", "en": "Three shells, three peculiarities" },
+      "titel": { "de": "Drei Shells, drei Eigenheiten", "en": "Three shells, three peculiarities" },
       "aufgabe": {
-        "de": "<p>Die Unterschiede zwischen den Schalen sind gering, aber sie tauchen genau dann auf, wenn man eine Anleitung befolgt, die für ein anderes System geschrieben wurde.</p>",
+        "de": "<p>Die Unterschiede zwischen den Shells sind gering, aber sie tauchen genau dann auf, wenn man eine Anleitung befolgt, die für ein anderes System geschrieben wurde.</p>",
         "en": "<p>The differences between the shells are small, but they surface exactly when following a guide written for a different system.</p>"
       },
       "fragen": [
