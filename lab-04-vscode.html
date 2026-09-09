@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="de" data-lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lab 04 · Visual Studio Code · PITM-Lab</title>
+  <meta name="pitm:titel-en" content="Lab 04 · Visual Studio Code · PITM-Lab" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/pitm.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%232E2A72'/><text x='16' y='23' font-family='sans-serif' font-size='18' font-weight='bold' text-anchor='middle' fill='%23FFC300'>P</text></svg>" />
+</head>
+<body class="lab-page" data-lab="lab-04">
+
+<header class="header">
+  <div class="header-left">
+    <a class="header-logo" href="index.html" data-lab-link><span class="mark">PITM</span>-Lab</a>
+    <a class="header-back" href="index.html" data-lab-link>
+      <span lang="de">← Zur Übersicht</span><span lang="en">← Back to overview</span>
+    </a>
+  </div>
+  <div class="header-right">
+    <button class="lang-btn active" data-lang-btn="de" aria-pressed="true">DE</button>
+    <button class="lang-btn" data-lang-btn="en" aria-pressed="false">EN</button>
+  </div>
+</header>
+
+<nav class="sidebar" aria-label="Lab-Navigation">
+  <div class="sidebar-title"><span lang="de">Abschnitte</span><span lang="en">Sections</span></div>
+  <a class="sidebar-link" href="#was"><span lang="de">Ein Editor, der zur Umgebung wird</span><span lang="en">An editor that becomes an environment</span></a>
+  <a class="sidebar-link" href="#inbetrieb"><span lang="de">Inbetriebnahme</span><span lang="en">Setting it up</span></a>
+  <a class="sidebar-link" href="#ordner"><span lang="de">Ordner, nicht Datei</span><span lang="en">Folder, not file</span></a>
+  <a class="sidebar-link" href="#umgebung"><span lang="de">Die eigene Umgebung</span><span lang="en">A project's own environment</span></a>
+  <a class="sidebar-link" href="#modulenotfound"><span lang="de">ModuleNotFoundError</span><span lang="en">ModuleNotFoundError</span></a>
+  <a class="sidebar-link" href="#griffe"><span lang="de">Die vierzehn Handgriffe</span><span lang="en">The fourteen actions</span></a>
+  <a class="sidebar-link" href="#notebooks"><span lang="de">Notebooks im Editor</span><span lang="en">Notebooks in the editor</span></a>
+  <a class="sidebar-link" href="#erweiterungen"><span lang="de">Erweiterungen und Vertrauen</span><span lang="en">Extensions and trust</span></a>
+  <a class="sidebar-link" href="#uebungen"><span lang="de">Übungen</span><span lang="en">Exercises</span></a>
+  <a class="sidebar-link" href="#zusammenfassung"><span lang="de">Zusammenfassung</span><span lang="en">Summary</span></a>
+</nav>
+
+<div class="lab-header">
+  <div class="lab-num-big">04</div>
+  <h1 class="lab-title">Visual Studio Code</h1>
+  <p class="lab-intro">
+    <span lang="de">Colab braucht keine Installation, dafür gehört der Rechner Google. Ein Editor auf dem eigenen
+      Gerät kehrt das um: Alles liegt bei Ihnen, dafür müssen Sie es einrichten. Der Aufwand besteht im Wesentlichen
+      aus einer Entscheidung, die neunzig Prozent aller Anfängerprobleme erklärt – nämlich <em>welches Python</em>
+      gerade rechnet. Dieses Lab dreht sich um diese eine Frage und um die Handgriffe, mit denen sie sich jederzeit
+      beantworten lässt.</span>
+    <span lang="en">Colab needs no installation, but the machine belongs to Google. An editor on your own device
+      reverses that: everything is yours, but you have to set it up. The effort essentially consists of one decision
+      that explains ninety percent of all beginners' problems – namely <em>which Python</em> is computing right now.
+      This lab revolves around that one question and the actions that answer it at any moment.</span>
+  </p>
+  <div class="lernziele">
+    <span class="lernziel-chip"><span lang="de">Ordner statt Datei</span><span lang="en">Folder, not file</span></span>
+    <span class="lernziel-chip">venv · Interpreter</span>
+    <span class="lernziel-chip">Command Palette</span>
+    <span class="lernziel-chip"><span lang="de">Notebooks · Kernel</span><span lang="en">Notebooks · kernel</span></span>
+    <span class="lernziel-chip">Workspace Trust</span>
+  </div>
+  <div data-einordnung></div>
+</div>
+
+<main class="main-content">
+
+  <section class="section-block" id="was">
+    <h2><span lang="de">Ein Editor, der zur Umgebung wird</span><span lang="en">An editor that becomes an environment</span></h2>
+    <p>
+      <span lang="de">Visual Studio Code ist im Kern ein Texteditor. Alles, was ihn zur Entwicklungsumgebung macht –
+        Python-Unterstützung, Fehlersuche, Notebook-Ansicht, Datenbankzugriff –, kommt über Erweiterungen hinzu. Das
+        erklärt beides: warum er so klein startet und warum zwei Installationen völlig verschieden aussehen
+        können.</span>
+      <span lang="en">Visual Studio Code is at heart a text editor. Everything that makes it a development environment –
+        Python support, debugging, notebook view, database access – is added through extensions. That explains both: why
+        it starts so small and why two installations can look completely different.</span>
+    </p>
+    <div class="info-box">
+      <h3><span lang="de">Zwei Lizenzen, ein Programm</span><span lang="en">Two licences, one program</span></h3>
+      <p><span lang="de">Der Quellcode steht unter der MIT-Lizenz auf GitHub. Das Programm, das man von
+        <code>code.visualstudio.com</code> herunterlädt, ist etwas anderes: Microsofts eigener Bau, unter Microsofts
+        Lizenzbedingungen, mit Telemetrie und Markenzeichen. Beides ist kostenlos, aber nur eines ist Open Source.
+        Wer die freie Fassung will, nimmt <strong>VSCodium</strong> – derselbe Quellcode, MIT-lizenziert gebaut, ohne
+        Telemetrie; der Preis ist ein kleinerer Erweiterungskatalog, weil der Microsoft-Marktplatz laut seinen
+        Bedingungen nur mit Microsofts Programmen genutzt werden darf.</span>
+      <span lang="en">The source code is on GitHub under the MIT licence. The program you download from
+        <code>code.visualstudio.com</code> is something else: Microsoft's own build, under Microsoft's licence terms,
+        with telemetry and trademarks. Both are free of charge, but only one is open source. Whoever wants the free
+        version takes <strong>VSCodium</strong> – the same source, built under MIT, without telemetry; the price is a
+        smaller extension catalogue, because the Microsoft marketplace may, by its terms, only be used with Microsoft's
+        products.</span></p>
+    </div>
+    <div class="auswahl-hinweis">
+      <p><span lang="de"><strong>Hinweis.</strong> Bei den in dieser Lernumgebung gezeigten Tools handelt es sich um eine
+        Auswahl – diese ist weder als Empfehlung noch als Werbung zu verstehen. Alternativen auf derselben Ebene:
+        VSCodium, PyCharm (für Studierende über das JetBrains-Bildungsprogramm kostenfrei), Zed, Neovim. Was Sie hier
+        über Umgebungen und Interpreter lernen, gilt in allen.</span>
+      <span lang="en"><strong>Note.</strong> The tools shown in this learning environment are a selection – it is meant
+        neither as a recommendation nor as advertising. Alternatives on the same layer: VSCodium, PyCharm (free for
+        students through the JetBrains education programme), Zed, Neovim. What you learn here about environments and
+        interpreters applies in all of them.</span></p>
+    </div>
+    <div class="warn-box">
+      <p><span lang="de">Für Rechnerpools relevant: Microsoft führt Anwendungsvirtualisierung, nicht-persistente
+        virtuelle Maschinen, Windows Server und geteilte Desktops mit mehreren gleichzeitigen Nutzern ausdrücklich als
+        <em>nicht unterstützt</em>. Das ist genau die Architektur vieler Hochschulpools – Probleme dort sind also nicht
+        unbedingt Ihre Schuld.</span>
+      <span lang="en">Relevant for computer pools: Microsoft expressly lists application virtualisation,
+        non-persistent virtual machines, Windows Server and shared desktops with several concurrent users as <em>not
+        supported</em>. That is exactly the architecture of many university pools – so problems there are not
+        necessarily your fault.</span></p>
+    </div>
+  </section>
+
+  <section class="section-block" id="inbetrieb">
+    <h2><span lang="de">Inbetriebnahme</span><span lang="en">Setting it up</span></h2>
+    <p>
+      <span lang="de">Drei Dinge werden gebraucht, und nur eines davon ist der Editor: Python, Git und VS Code. Python
+        kommt <strong>nicht</strong> mit dem Editor – das ist die erste Überraschung für alle, die von Colab
+        kommen.</span>
+      <span lang="en">Three things are needed, and only one of them is the editor: Python, Git and VS Code. Python does
+        <strong>not</strong> come with the editor – that is the first surprise for anyone arriving from Colab.</span>
+    </p>
+    <div data-befehl="B01"></div>
+    <p>
+      <span lang="de">Danach zwei Erweiterungen, mehr nicht: <strong>Python</strong> (<code>ms-python.python</code>,
+        bringt Pylance und den Debugger mit) und <strong>Jupyter</strong> (<code>ms-toolsai.jupyter</code>). Alles
+        Weitere kommt, wenn es gebraucht wird – dazu unten der Abschnitt über Erweiterungen.</span>
+      <span lang="en">Then two extensions, no more: <strong>Python</strong> (<code>ms-python.python</code>, bringing
+        Pylance and the debugger with it) and <strong>Jupyter</strong> (<code>ms-toolsai.jupyter</code>). Everything else
+        comes when it is needed – see the section on extensions below.</span>
+    </p>
+    <div data-befehl="B02"></div>
+  </section>
+
+  <section class="section-block" id="ordner">
+    <h2><span lang="de">Ordner, nicht Datei</span><span lang="en">Folder, not file</span></h2>
+    <p>
+      <span lang="de">Der häufigste Bedienfehler des ersten Tages: eine Datei im Dateimanager doppelklicken. VS Code
+        öffnet sie – und weiß nichts über das Projekt drumherum. Kein Dateibaum, keine Umgebungserkennung, keine
+        Git-Ansicht, und relative Pfade im Code beziehen sich auf etwas Unerwartetes.</span>
+      <span lang="en">The most common operating error of day one: double-clicking a file in the file manager. VS Code
+        opens it – and knows nothing about the project around it. No file tree, no environment detection, no Git view,
+        and relative paths in the code refer to something unexpected.</span>
+    </p>
+    <div class="concept-box">
+      <h3><span lang="de">Die Regel</span><span lang="en">The rule</span></h3>
+      <p><span lang="de">Immer den <strong>Projektordner</strong> öffnen, nie eine einzelne Datei. Aus der Konsole
+        geht das mit <code>code .</code> – der Punkt ist wieder das aktuelle Verzeichnis, wie in Lab 01. Der Ordner ist
+        gleichzeitig der Bezugspunkt für alles andere: das Repository, die virtuelle Umgebung, die relativen Pfade und
+        die projektbezogenen Einstellungen.</span>
+      <span lang="en">Always open the <strong>project folder</strong>, never a single file. From the console that is
+        <code>code .</code> – the dot is again the current directory, as in lab 01. The folder is at the same time the
+        point of reference for everything else: the repository, the virtual environment, the relative paths and the
+        project-specific settings.</span></p>
+    </div>
+    <p>
+      <span lang="de">Ein Blick in die <strong>Statusleiste</strong> unten sagt danach jederzeit, wo Sie stehen: links
+        der Git-Zweig, rechts der gewählte Python-Interpreter, das Zeilenende (<code>LF</code> oder <code>CRLF</code>)
+        und die Zeichenkodierung. Vier Angaben, die zusammen die meisten Rätsel des Tages auflösen.</span>
+      <span lang="en">A glance at the <strong>status bar</strong> at the bottom then tells you at any moment where you
+        stand: on the left the Git branch, on the right the selected Python interpreter, the line ending
+        (<code>LF</code> or <code>CRLF</code>) and the character encoding. Four pieces of information that together
+        resolve most of the day's puzzles.</span>
+    </p>
+  </section>
+
+  <section class="section-block" id="umgebung">
+    <h2><span lang="de">Die eigene Umgebung</span><span lang="en">A project's own environment</span></h2>
+    <p>
+      <span lang="de">Eine <strong>virtuelle Umgebung</strong> ist ein Ordner im Projekt, der eine eigene
+        Python-Installation samt eigenen Paketen enthält. Das klingt nach Umstand und ist eine der besten
+        Angewohnheiten überhaupt: Projekt A braucht <code>pandas 2.2</code>, Projekt B braucht <code>pandas 1.5</code>,
+        und ohne getrennte Umgebungen schließen sich die beiden gegenseitig aus.</span>
+      <span lang="en">A <strong>virtual environment</strong> is a folder in the project holding its own Python
+        installation with its own packages. That sounds like a nuisance and is one of the best habits there is: project
+        A needs <code>pandas 2.2</code>, project B needs <code>pandas 1.5</code>, and without separate environments the
+        two exclude each other.</span>
+    </p>
+    <div data-befehl="B03"></div>
+    <div data-befehl="B04"></div>
+    <div class="tip-box">
+      <p><span lang="de">Der Ordner <code>.venv</code> gehört <strong>nicht</strong> ins Repository – er ist
+        plattformabhängig und mehrere Hundert Megabyte groß. Was hineingehört, ist die Liste der Pakete:
+        <code>pip freeze &gt; requirements.txt</code>. Damit stellt jemand anderes dieselbe Umgebung mit
+        <code>pip install -r requirements.txt</code> her. In Lab 03 stand <code>.venv/</code> deshalb in der
+        <code>.gitignore</code> – hier sehen Sie, warum.</span>
+      <span lang="en">The <code>.venv</code> folder does <strong>not</strong> belong in the repository – it is
+        platform-dependent and several hundred megabytes in size. What does belong there is the list of packages:
+        <code>pip freeze &gt; requirements.txt</code>. With it, somebody else recreates the same environment using
+        <code>pip install -r requirements.txt</code>. In lab 03 <code>.venv/</code> was in the <code>.gitignore</code>
+        for that reason – here you see why.</span></p>
+    </div>
+  </section>
+
+  <section class="section-block" id="modulenotfound">
+    <h2><span lang="de">ModuleNotFoundError</span><span lang="en">ModuleNotFoundError</span></h2>
+    <p>
+      <span lang="de">Die häufigste Fehlermeldung des Semesters, und fast immer dieselbe Ursache: <code>pip</code> hat
+        in eine Umgebung installiert und der Editor rechnet in einer anderen. Die Meldung lautet dann sinngemäß „das
+        Paket, das ich gerade installiert habe, gibt es nicht“ – und genau das stimmt auch, aus Sicht des
+        Interpreters.</span>
+      <span lang="en">The most common error message of the semester, and almost always the same cause: <code>pip</code>
+        installed into one environment and the editor is computing in another. The message then effectively reads “the
+        package I just installed does not exist” – and that is exactly right, from the interpreter's point of
+        view.</span>
+    </p>
+    <div class="challenge-box">
+      <h3><span lang="de">Die Diagnose in drei Zeilen</span><span lang="en">The diagnosis in three lines</span></h3>
+      <div class="code-block">python -c "import sys; print(sys.executable)"     ← welches Python rechnet gerade?
+pip -V                                            ← wohin installiert pip?
+                                                     Beide Pfade müssen auf .venv zeigen.</div>
+      <p><span lang="de">Zeigen die zwei Pfade auf verschiedene Orte, ist die Ursache gefunden. Drei Gegenmittel, in
+        dieser Reihenfolge: den Interpreter in der Statusleiste auf <code>.venv</code> stellen; das Terminal schließen
+        und neu öffnen, damit es die Umgebung übernimmt; im Zweifel <code>python -m pip install …</code> statt
+        <code>pip install …</code> verwenden – so installiert genau das Python, das gerade läuft.</span>
+      <span lang="en">If the two paths point to different places, the cause is found. Three remedies, in this order: set
+        the interpreter in the status bar to <code>.venv</code>; close the terminal and reopen it so it picks up the
+        environment; when in doubt use <code>python -m pip install …</code> instead of <code>pip install …</code> – that
+        way exactly the Python currently running does the installing.</span></p>
+    </div>
+    <p>
+      <span lang="de">Der Prompt im Terminal ist dabei der schnellste Hinweis: Steht dort <code>(.venv)</code> am
+        Anfang der Zeile, ist die Umgebung aktiv. Fehlt es, ist sie es nicht – ganz gleich, was der Editor oben
+        anzeigt.</span>
+      <span lang="en">The terminal prompt is the fastest clue: if <code>(.venv)</code> stands at the start of the line,
+        the environment is active. If it is missing, it is not – regardless of what the editor displays at the
+        top.</span>
+    </p>
+  </section>
+
+  <section class="section-block" id="griffe">
+    <h2><span lang="de">Die vierzehn Handgriffe</span><span lang="en">The fourteen actions</span></h2>
+    <p>
+      <span lang="de">Ein einziger davon macht alle anderen entbehrlich: die <strong>Befehlspalette</strong>. Sie
+        findet jeden Befehl über seinen Namen, sodass man keine Menüs durchsuchen und keine Tastenkürzel lernen
+        muss.</span>
+      <span lang="en">One of them makes all the others dispensable: the <strong>command palette</strong>. It finds every
+        command by name, so there are no menus to search and no shortcuts to learn.</span>
+    </p>
+    <div data-befehl="B05"></div>
+    <div data-befehl="B06"></div>
+    <div data-befehl="B07"></div>
+  </section>
+
+  <section class="section-block" id="notebooks">
+    <h2><span lang="de">Notebooks im Editor</span><span lang="en">Notebooks in the editor</span></h2>
+    <p>
+      <span lang="de">Eine <code>.ipynb</code>-Datei öffnet VS Code als Notebook, mit Zellen und Ausgaben wie in
+        Colab. Es gibt aber einen zusätzlichen Begriff, der in Colab fehlt, weil es dort nur eine Umgebung gibt: den
+        <strong>Kernel</strong>. Oben rechts steht, welcher gewählt ist – und der muss auf <code>.venv</code>
+        zeigen, sonst gilt derselbe <code>ModuleNotFoundError</code> wie oben, nur an anderer Stelle.</span>
+      <span lang="en">VS Code opens an <code>.ipynb</code> file as a notebook, with cells and outputs as in Colab. There
+        is one additional concept, though, absent in Colab because there is only one environment there: the
+        <strong>kernel</strong>. The top right says which one is selected – and it has to point to <code>.venv</code>,
+        otherwise the same <code>ModuleNotFoundError</code> as above applies, just in a different place.</span>
+    </p>
+    <div data-befehl="B08"></div>
+    <div class="info-box">
+      <h3><span lang="de">Was der Editor besser kann als Colab</span><span lang="en">What the editor does better than Colab</span></h3>
+      <ul>
+        <li><span lang="de">Das <strong>Variablen-Panel</strong> zeigt alle Objekte im Kernel. Ein Doppelklick auf einen DataFrame öffnet den <strong>Data Viewer</strong> – eine sortierbare, filterbare Tabelle. Für die explorative Datenanalyse aus der Vorlesung ist das das nützlichste Fenster überhaupt.</span><span lang="en">The <strong>variables panel</strong> shows all objects in the kernel. A double-click on a DataFrame opens the <strong>data viewer</strong> – a sortable, filterable table. For the exploratory data analysis of the lecture it is the single most useful window.</span></li>
+        <li><span lang="de">Der <strong>Debugger</strong> arbeitet auch in Notebook-Zellen: Haltepunkt setzen, schrittweise ausführen, Variablen ansehen. Wer einmal so einen Fehler gefunden hat, streicht <code>print()</code> aus der Fehlersuche.</span><span lang="en">The <strong>debugger</strong> works in notebook cells too: set a breakpoint, step through, inspect variables. Whoever has found a bug that way once drops <code>print()</code> from debugging.</span></li>
+        <li><span lang="de">Die <strong>Git-Ansicht</strong> steht daneben. Ein Notebook mit eingerichtetem <code>nbstripout</code> aus Lab 03 zeigt hier lesbare Unterschiede – zellweise statt tausend Zeilen JSON.</span><span lang="en">The <strong>Git view</strong> sits alongside. A notebook with <code>nbstripout</code> set up from lab 03 shows readable diffs here – cell by cell instead of a thousand lines of JSON.</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="section-block" id="erweiterungen">
+    <h2><span lang="de">Erweiterungen und Vertrauen</span><span lang="en">Extensions and trust</span></h2>
+    <p>
+      <span lang="de">Erweiterungen laufen <strong>ohne Sandbox</strong> mit Ihren Benutzerrechten. Eine Erweiterung
+        kann jede Datei lesen, die Sie lesen können, und ins Netz senden, was sie will. Das ist kein theoretisches
+        Risiko: 2025 und 2026 wurden im Marktplatz Erweiterungen mit gültigen Zugangsschlüsseln gefunden, und ein
+        übernommenes Veröffentlichungs-Token erlaubt es, Schadcode über die automatische Aktualisierung
+        auszuliefern.</span>
+      <span lang="en">Extensions run <strong>without a sandbox</strong> with your user rights. An extension can read
+        every file you can read and send whatever it wants to the network. That is not a theoretical risk: in 2025 and
+        2026 extensions with valid access keys were found in the marketplace, and a compromised publisher token allows
+        malicious code to be delivered through the automatic update.</span>
+    </p>
+    <div class="karten">
+      <div class="karte">
+        <div class="kopfzeile"><span lang="de">Wenige, geprüfte</span><span lang="en">Few, checked</span></div>
+        <p><span lang="de">Herausgeber, Installationszahl und Verweis auf das Quell-Repository prüfen. Namensdubletten
+          sind dokumentiert – der Name allein ist kein Beleg. Für diesen Kurs genügen Python und Jupyter.</span>
+        <span lang="en">Check the publisher, the install count and the link to the source repository. Name duplicates
+          are documented – the name alone is no proof. For this course Python and Jupyter are enough.</span></p>
+      </div>
+      <div class="karte">
+        <div class="kopfzeile">Workspace Trust</div>
+        <p><span lang="de">Beim Öffnen eines fremden Ordners fragt VS Code, ob Sie ihm vertrauen. Im eingeschränkten
+          Modus sind Terminal, Aufgaben, Debugger und KI-Agenten abgeschaltet. Bei einem geklonten Übungsrepository
+          lohnt es, den Modus zunächst zu behalten und erst nach einem Blick in die Dateien freizugeben.</span>
+        <span lang="en">When opening an unfamiliar folder VS Code asks whether you trust it. In restricted mode
+          terminal, tasks, debugger and AI agents are switched off. With a cloned exercise repository it is worth
+          keeping the mode at first and only releasing it after a look at the files.</span></p>
+      </div>
+      <div class="karte">
+        <div class="kopfzeile">Telemetrie</div>
+        <p><span lang="de">Microsoft erhebt Nutzungsdaten; die Lizenzbedingungen fassen die Nutzung als Einwilligung.
+          Abschalten mit <code>"telemetry.telemetryLevel": "off"</code>. Wichtig: Das gilt <em>nicht</em> für
+          Erweiterungen – die regeln ihre Datenerhebung selbst.</span>
+        <span lang="en">Microsoft collects usage data; the licence terms treat use as consent. Switch it off with
+          <code>"telemetry.telemetryLevel": "off"</code>. Important: that does <em>not</em> cover extensions – they
+          govern their own data collection.</span></p>
+      </div>
+      <div class="karte">
+        <div class="kopfzeile">Settings Sync</div>
+        <p><span lang="de">Synchronisiert Einstellungen, Tastenkürzel und Erweiterungen über ein Microsoft- oder
+          GitHub-Konto. Bequem – und ein Grund mehr, <strong>keine Zugangsdaten in <code>settings.json</code></strong>
+          zu schreiben: Die Datei wird mitsynchronisiert.</span>
+        <span lang="en">Synchronises settings, keybindings and extensions through a Microsoft or GitHub account.
+          Convenient – and one more reason to write <strong>no credentials into
+          <code>settings.json</code></strong>: the file is synchronised along.</span></p>
+      </div>
+      <div class="karte">
+        <div class="kopfzeile"><span lang="de">KI-Assistenz</span><span lang="en">AI assistance</span></div>
+        <p><span lang="de">GitHub Copilot ist über GitHub Education für Studierende kostenfrei und überträgt
+          Code-Kontext an GitHub und Microsoft. Bei Übungsdaten ohne Personenbezug ist das unkritisch. Bei einer
+          Abschlussarbeit mit Unternehmensdaten ist es eine Verarbeitung, die geklärt sein muss – dieselbe Frage wie
+          in Lab 02.</span>
+        <span lang="en">GitHub Copilot is free for students via GitHub Education and transmits code context to GitHub
+          and Microsoft. With exercise data free of personal reference that is harmless. In a thesis with company data
+          it is a processing operation that has to be cleared – the same question as in lab 02.</span></p>
+      </div>
+      <div class="karte">
+        <div class="kopfzeile"><span lang="de">Zeilenenden</span><span lang="en">Line endings</span></div>
+        <p><span lang="de">Windows beendet Zeilen mit <code>CRLF</code>, macOS und Linux mit <code>LF</code>. In einer
+          Gruppe mit gemischten Systemen meldet Git dann ganze Dateien als geändert, obwohl niemand etwas getippt
+          hat. Gegenmittel: <code>"files.eol": "\n"</code> und eine <code>.gitattributes</code> im
+          Repository.</span>
+        <span lang="en">Windows ends lines with <code>CRLF</code>, macOS and Linux with <code>LF</code>. In a group with
+          mixed systems Git then reports whole files as changed although nobody typed anything. Remedy:
+          <code>"files.eol": "\n"</code> and a <code>.gitattributes</code> in the repository.</span></p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section-block" id="uebungen">
+    <h2><span lang="de">Übungen</span><span lang="en">Exercises</span></h2>
+    <p>
+      <span lang="de">Fünf Übungen. Die ersten zwei arbeiten Sie am eigenen Rechner ab – dafür brauchen Sie VS Code
+        installiert. Die drei anderen prüfen, ob die Diagnose sitzt.</span>
+      <span lang="en">Five exercises. You work through the first two on your own machine – for those you need VS Code
+        installed. The other three test whether the diagnosis has taken hold.</span>
+    </p>
+    <div data-uebung="P04-01"></div>
+    <div data-uebung="P04-02"></div>
+    <div data-uebung="P04-03"></div>
+    <div data-uebung="P04-04"></div>
+    <div data-uebung="P04-05"></div>
+    <div data-fortschritt></div>
+  </section>
+
+  <section class="section-block" id="zusammenfassung">
+    <h2><span lang="de">Zusammenfassung</span><span lang="en">Summary</span></h2>
+    <ul>
+      <li><span lang="de">VS Code ist ein Editor; zur Entwicklungsumgebung wird er über Erweiterungen. Python und Git kommen nicht mit und werden getrennt installiert.</span><span lang="en">VS Code is an editor; extensions turn it into a development environment. Python and Git do not come with it and are installed separately.</span></li>
+      <li><span lang="de">Immer den Projektordner öffnen, nie eine einzelne Datei. Die Statusleiste sagt danach jederzeit: Zweig, Interpreter, Zeilenende, Kodierung.</span><span lang="en">Always open the project folder, never a single file. The status bar then tells you at any moment: branch, interpreter, line ending, encoding.</span></li>
+      <li><span lang="de">Jedes Projekt bekommt seine eigene virtuelle Umgebung. Sie gehört nicht ins Repository – die <code>requirements.txt</code> schon.</span><span lang="en">Every project gets its own virtual environment. It does not belong in the repository – the <code>requirements.txt</code> does.</span></li>
+      <li><span lang="de"><code>ModuleNotFoundError</code> heißt fast immer: falscher Interpreter oder falsches Terminal. Die Diagnose sind zwei Zeilen – <code>sys.executable</code> und <code>pip -V</code> müssen auf <code>.venv</code> zeigen.</span><span lang="en"><code>ModuleNotFoundError</code> almost always means: wrong interpreter or wrong terminal. The diagnosis is two lines – <code>sys.executable</code> and <code>pip -V</code> must point to <code>.venv</code>.</span></li>
+      <li><span lang="de">Bei Notebooks kommt der Kernel als dritte Stelle hinzu, an der die Umgebung stimmen muss. Dafür gibt es das Variablen-Panel und den Data Viewer – das nützlichste Fenster für explorative Analyse.</span><span lang="en">With notebooks the kernel comes in as a third place where the environment has to be right. In exchange there is the variables panel and the data viewer – the most useful window for exploratory analysis.</span></li>
+      <li><span lang="de">Erweiterungen laufen ohne Sandbox mit Ihren Rechten. Wenige, geprüfte; Workspace Trust bewusst beantworten; keine Zugangsdaten in <code>settings.json</code>, weil sie synchronisiert wird.</span><span lang="en">Extensions run without a sandbox with your rights. Few, checked; answer Workspace Trust deliberately; no credentials in <code>settings.json</code>, because it gets synchronised.</span></li>
+    </ul>
+    <div data-lab-nav></div>
+  </section>
+
+</main>
+
+<footer class="footer">
+  <p>
+    <span lang="de">PITM-Lab · Lab 04 · THWS Business School · Stand 09/2026</span>
+    <span lang="en">PITM-Lab · Lab 04 · THWS Business School · as of 09/2026</span>
+  </p>
+</footer>
+
+<script type="module" src="assets/pitm.js"></script>
+</body>
+</html>

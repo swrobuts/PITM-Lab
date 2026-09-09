@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="de" data-lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lab 08 · KNIME und Dataiku · PITM-Lab</title>
+  <meta name="pitm:titel-en" content="Lab 08 · KNIME and Dataiku · PITM-Lab" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/pitm.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%232E2A72'/><text x='16' y='23' font-family='sans-serif' font-size='18' font-weight='bold' text-anchor='middle' fill='%23FFC300'>P</text></svg>" />
+</head>
+<body class="lab-page" data-lab="lab-08">
+
+<header class="header">
+  <div class="header-left">
+    <a class="header-logo" href="index.html" data-lab-link><span class="mark">PITM</span>-Lab</a>
+    <a class="header-back" href="index.html" data-lab-link>
+      <span lang="de">← Zur Übersicht</span><span lang="en">← Back to overview</span>
+    </a>
+  </div>
+  <div class="header-right">
+    <button class="lang-btn active" data-lang-btn="de" aria-pressed="true">DE</button>
+    <button class="lang-btn" data-lang-btn="en" aria-pressed="false">EN</button>
+  </div>
+</header>
+
+<nav class="sidebar" aria-label="Lab-Navigation">
+  <div class="sidebar-title"><span lang="de">Abschnitte</span><span lang="en">Sections</span></div>
+  <a class="sidebar-link" href="#warum"><span lang="de">Knoten statt Zeilen</span><span lang="en">Nodes instead of lines</span></a>
+  <a class="sidebar-link" href="#begriffe"><span lang="de">Die fünf Begriffe</span><span lang="en">The five concepts</span></a>
+  <a class="sidebar-link" href="#inbetrieb"><span lang="de">Inbetriebnahme</span><span lang="en">Setting it up</span></a>
+  <a class="sidebar-link" href="#erste"><span lang="de">Die erste Kette</span><span lang="en">The first chain</span></a>
+  <a class="sidebar-link" href="#crisp"><span lang="de">Nodes entlang CRISP-DM</span><span lang="en">Nodes along CRISP-DM</span></a>
+  <a class="sidebar-link" href="#modell"><span lang="de">Lernen und anwenden</span><span lang="en">Learning and applying</span></a>
+  <a class="sidebar-link" href="#leakage"><span lang="de">Die Reihenfolge, an der es hängt</span><span lang="en">The order it all hangs on</span></a>
+  <a class="sidebar-link" href="#python"><span lang="de">KNIME und Python</span><span lang="en">KNIME and Python</span></a>
+  <a class="sidebar-link" href="#dataiku"><span lang="de">Dataiku im Vergleich</span><span lang="en">Dataiku in comparison</span></a>
+  <a class="sidebar-link" href="#daten"><span lang="de">Weitergabe und Datenschutz</span><span lang="en">Sharing and data protection</span></a>
+  <a class="sidebar-link" href="#uebungen"><span lang="de">Übungen</span><span lang="en">Exercises</span></a>
+  <a class="sidebar-link" href="#zusammenfassung"><span lang="de">Zusammenfassung</span><span lang="en">Summary</span></a>
+</nav>
+
+<div class="lab-header">
+  <div class="lab-num-big">08</div>
+  <h1 class="lab-title">
+    <span lang="de">KNIME und Dataiku</span>
+    <span lang="en">KNIME and Dataiku</span>
+  </h1>
+  <p class="lab-intro">
+    <span lang="de">Ein vollständiger Analytics-Ablauf – einlesen, bereinigen, trainieren, bewerten – ohne eine Zeile
+      Code: Das ist das Versprechen grafischer Analytics-Plattformen, und es wird eingehalten. Der Gewinn ist nicht die
+      gesparte Tipparbeit, sondern die Sichtbarkeit: Ein Ablauf als Knotengraph zeigt jedem im Projekt, was in welcher
+      Reihenfolge geschieht. Und genau darum dreht sich dieses Lab. Denn eine Reihenfolge entscheidet darüber, ob ein
+      Modell etwas gelernt hat oder ob es die Antwort kannte.</span>
+    <span lang="en">A complete analytics flow – read, clean, train, evaluate – without a line of code: that is the promise
+      of graphical analytics platforms, and it is kept. The gain is not the typing saved but the visibility: a flow as a
+      node graph shows everyone on the project what happens in which order. And that is exactly what this lab revolves
+      around. Because one ordering decides whether a model has learned something or knew the answer.</span>
+  </p>
+  <div class="lernziele">
+    <span class="lernziel-chip">Workflow · Node · Port</span>
+    <span class="lernziel-chip"><span lang="de">Ampel und Reset</span><span lang="en">Traffic light and reset</span></span>
+    <span class="lernziel-chip">Learner · Predictor · Scorer</span>
+    <span class="lernziel-chip">Partitioning</span>
+    <span class="lernziel-chip">Data Leakage</span>
+  </div>
+  <div data-einordnung></div>
+</div>
+
+<main class="main-content">
+
+  <section class="section-block" id="warum">
+    <h2><span lang="de">Knoten statt Zeilen</span><span lang="en">Nodes instead of lines</span></h2>
+    <p>
+      <span lang="de">Die Vorlesung nennt in ihrer Werkzeugübersicht eine eigene Ebene für <em>Analytics-Plattformen</em>:
+        Umgebungen, die Datenaufbereitung, Modellbildung und den Betrieb der Modelle in einem Ablauf verbinden. KNIME und
+        Dataiku sind deren bekannteste Vertreter. Was sie von einem Notebook unterscheidet, ist nicht die Mächtigkeit –
+        es ist die Darstellung.</span>
+      <span lang="en">In its tool overview the lecture names a layer of its own for <em>analytics platforms</em>:
+        environments that connect data preparation, model building and model operation in one flow. KNIME and Dataiku are
+        their best-known representatives. What distinguishes them from a notebook is not power – it is
+        representation.</span>
+    </p>
+    <div class="concept-box">
+      <h3><span lang="de">Was ein Knotengraph leistet, was ein Notebook nicht leistet</span><span lang="en">What a node graph does that a notebook does not</span></h3>
+      <ul>
+        <li><span lang="de"><strong>Der Ablauf ist sichtbar.</strong> Ein Notebook liest man von oben nach unten und
+          muss den Datenfluss im Kopf rekonstruieren. Ein Graph zeigt ihn – auch jemandem, der kein Python liest. In
+          einer Projektbesprechung mit dem Fachbereich ist das der ganze Unterschied.</span>
+        <span lang="en"><strong>The flow is visible.</strong> A notebook is read top to bottom and you have to
+          reconstruct the data flow in your head. A graph shows it – even to somebody who does not read Python. In a
+          project meeting with the business side, that is the whole difference.</span></li>
+        <li><span lang="de"><strong>Zwischenergebnisse bleiben stehen.</strong> Jeder Knoten hält sein Ergebnis vor und
+          zeigt es auf Klick. Die Frage „wie viele Zeilen sind nach diesem Filter noch da?“ kostet einen Rechtsklick
+          statt einer neuen Zelle.</span>
+        <span lang="en"><strong>Intermediate results persist.</strong> Every node holds its result and shows it on click.
+          The question “how many rows are left after this filter?” costs one right-click instead of a new cell.</span></li>
+        <li><span lang="de"><strong>Der Zustand ist unmissverständlich.</strong> Die Ampel an jedem Knoten sagt, ob er
+          ausgeführt wurde. Das Problem aus Lab 02 – sichtbare Ausgabe ohne lebende Variable – ist hier nicht
+          möglich.</span>
+        <span lang="en"><strong>The state is unambiguous.</strong> The traffic light on every node says whether it has
+          been executed. The problem from lab 02 – visible output without a live variable – is impossible
+          here.</span></li>
+      </ul>
+      <p><span lang="de">Der Preis: Was in drei Zeilen pandas steht, braucht mitunter fünf Knoten. Und ein Graph mit
+        achtzig Knoten ist genauso unlesbar wie ein Notebook mit achtzig Zellen – dagegen helfen Components, dazu
+        unten.</span>
+      <span lang="en">The price: what fits in three lines of pandas sometimes needs five nodes. And a graph with eighty
+        nodes is just as unreadable as a notebook with eighty cells – components help against that, see below.</span></p>
+    </div>
+    <div class="auswahl-hinweis">
+      <p><span lang="de"><strong>Hinweis.</strong> Bei den in dieser Lernumgebung gezeigten Tools handelt es sich um eine
+        Auswahl – diese ist weder als Empfehlung noch als Werbung zu verstehen. KNIME steht hier ausführlich, weil es
+        ohne Konto, ohne Server und ohne Kosten auf jedem Rechner läuft und unter einer freien Lizenz steht; Dataiku
+        steht daneben, weil es dasselbe Feld mit einem anderen Entwurf besetzt. Weitere Vertreter derselben Ebene:
+        Altair RapidMiner, Orange, Apache Spark.</span>
+      <span lang="en"><strong>Note.</strong> The tools shown in this learning environment are a selection – it is meant
+        neither as a recommendation nor as advertising. KNIME is treated at length here because it runs on any machine
+        without an account, without a server and without cost, and is under a free licence; Dataiku stands beside it
+        because it occupies the same field with a different design. Further representatives of the same layer: Altair
+        RapidMiner, Orange, Apache Spark.</span></p>
+    </div>
+  </section>
+
+  <section class="section-block" id="begriffe">
+    <h2><span lang="de">Die fünf Begriffe</span><span lang="en">The five concepts</span></h2>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th><span lang="de">Begriff</span><span lang="en">Concept</span></th>
+            <th><span lang="de">Was es ist</span><span lang="en">What it is</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Workspace</strong></td>
+            <td><span lang="de">Ein Ordner auf Ihrem Rechner, in dem alle Workflows, Knoteneinstellungen und
+              Zwischenergebnisse liegen. Beim Start gefragt. <strong>Aktenschrank</strong> – nicht das Projekt.</span>
+            <span lang="en">A folder on your machine holding all workflows, node settings and intermediate results. Asked
+              for at start-up. The <strong>filing cabinet</strong> – not the project.</span></td>
+          </tr>
+          <tr>
+            <td><strong>Workflow</strong></td>
+            <td><span lang="de">Ein Ablauf: der gerichtete Graph aus Knoten. Ein <strong>Ordner im Aktenschrank</strong>.
+              Weitergegeben wird er als <code>.knwf</code>-Datei, nicht als Ordner.</span>
+            <span lang="en">A flow: the directed graph of nodes. A <strong>folder in the cabinet</strong>. It is passed on
+              as a <code>.knwf</code> file, not as a folder.</span></td>
+          </tr>
+          <tr>
+            <td><strong>Node</strong></td>
+            <td><span lang="de">Ein Arbeitsschritt: lesen, filtern, rechnen, lernen, schreiben. Wird konfiguriert
+              (Doppelklick) und ausgeführt (<code>F7</code>).</span>
+            <span lang="en">One step of work: read, filter, compute, learn, write. It is configured (double-click) and
+              executed (<code>F7</code>).</span></td>
+          </tr>
+          <tr>
+            <td><strong>Port</strong></td>
+            <td><span lang="de">Ein typisierter Ein- oder Ausgang. Ein Ausgang lässt sich nur mit einem Eingang
+              <em>desselben Typs</em> verbinden – deshalb lassen sich manche Knoten gar nicht falsch verkabeln.</span>
+            <span lang="en">A typed input or output. An output can only be connected to an input <em>of the same
+              type</em> – which is why some nodes cannot be miswired at all.</span></td>
+          </tr>
+          <tr>
+            <td><span lang="de"><strong>Ampel</strong></span><span lang="en"><strong>Traffic light</strong></span></td>
+            <td><span lang="de"><span style="color:#B23B1E">●</span> rot: nicht konfiguriert &nbsp;·&nbsp;
+              <span style="color:#B8860B">●</span> gelb: konfiguriert, nicht ausgeführt &nbsp;·&nbsp;
+              <span style="color:#2F7D32">●</span> grün: ausgeführt</span>
+            <span lang="en"><span style="color:#B23B1E">●</span> red: not configured &nbsp;·&nbsp;
+              <span style="color:#B8860B">●</span> yellow: configured, not executed &nbsp;·&nbsp;
+              <span style="color:#2F7D32">●</span> green: executed</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="concept-box">
+      <h3><span lang="de">Vier Arten von Ports – und warum das wichtig ist</span><span lang="en">Four kinds of port – and why that matters</span></h3>
+      <ul>
+        <li><span lang="de"><strong>Datenport</strong> (schwarzes Dreieck) – eine Tabelle.</span><span lang="en"><strong>Data port</strong> (black triangle) – a table.</span></li>
+        <li><span lang="de"><strong>Modellport</strong> (farbiges Quadrat) – ein trainiertes Modell. Vom <em>Learner</em> zum <em>Predictor</em>.</span><span lang="en"><strong>Model port</strong> (coloured square) – a trained model. From <em>learner</em> to <em>predictor</em>.</span></li>
+        <li><span lang="de"><strong>Flow-Variable-Port</strong> (roter Kreis) – ein Parameter, der Knoteneinstellungen zur Laufzeit überschreibt.</span><span lang="en"><strong>Flow variable port</strong> (red circle) – a parameter overriding node settings at runtime.</span></li>
+        <li><span lang="de"><strong>Datenbankport</strong> – eine Verbindung oder eine noch nicht ausgeführte Abfrage.</span><span lang="en"><strong>Database port</strong> – a connection or a query not yet executed.</span></li>
+      </ul>
+      <p><span lang="de">Gefüllte Ports sind Pflicht, leere optional. Der Modellport ist der Grund, warum sich
+        <em>Learner</em> und <em>Predictor</em> nicht verwechseln lassen: Wer sie vertauscht, kann sie gar nicht
+        verbinden.</span>
+      <span lang="en">Filled ports are mandatory, empty ones optional. The model port is the reason <em>learner</em> and
+        <em>predictor</em> cannot be confused: whoever swaps them cannot connect them at all.</span></p>
+    </div>
+    <div class="info-box">
+      <h3><span lang="de">Metanode oder Component?</span><span lang="en">Metanode or component?</span></h3>
+      <p><span lang="de">Beide fassen mehrere Knoten zu einem zusammen und machen einen großen Ablauf lesbar. Der
+        Unterschied: Eine <strong>Metanode</strong> ist eine reine optische Bündelung – Flow-Variablen laufen hindurch.
+        Eine <strong>Component</strong> ist gekapselt: Sie hat einen eigenen Konfigurationsdialog, eine eigene Ansicht
+        und lässt sich weitergeben und wiederverwenden. Für eine Bereinigungskette, die in mehreren Projekten gebraucht
+        wird, ist die Component das Richtige.</span>
+      <span lang="en">Both bundle several nodes into one and make a large flow readable. The difference: a
+        <strong>metanode</strong> is purely visual grouping – flow variables pass through. A <strong>component</strong> is
+        encapsulated: it has its own configuration dialogue, its own view, and can be shared and reused. For a cleaning
+        chain needed across several projects, the component is the right thing.</span></p>
+    </div>
+  </section>
+
+  <section class="section-block" id="inbetrieb">
+    <h2><span lang="de">Inbetriebnahme</span><span lang="en">Setting it up</span></h2>
+    <p>
+      <span lang="de">Herunterladen, entpacken, starten – kein Konto, keine Lizenzdatei, keine Anmeldung. Die
+        <strong>KNIME Analytics Platform</strong> steht unter der GPLv3 mit einer Ausnahme für die Knoten-Schnittstelle,
+        die auch geschlossene Erweiterungen erlaubt. Sie ist auf dem Desktop unbegrenzt kostenfrei: keine Grenze bei
+        Datenmenge, Laufzeit oder Nutzerzahl. Java kommt mit; es muss nichts vorinstalliert sein.</span>
+      <span lang="en">Download, unpack, start – no account, no licence file, no sign-in. The <strong>KNIME Analytics
+        Platform</strong> is under GPLv3 with an exception for the node API that also permits closed extensions. On the
+        desktop it is free without limits: no cap on data volume, runtime or number of users. Java comes with it; nothing
+        needs to be pre-installed.</span>
+    </p>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th></th>
+            <th><span lang="de">Wert</span><span lang="en">Value</span></th>
+            <th><span lang="de">Anmerkung</span><span lang="en">Note</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span lang="de">Fassungen</span><span lang="en">Release lines</span></td>
+            <td><span lang="de">STS alle 6 Wochen, LTS alle 6 Monate</span><span lang="en">STS every 6 weeks, LTS every 6 months</span></td>
+            <td><span lang="de">Für einen Kurs die <strong>LTS</strong>-Linie: Die Knotenmenge bleibt über ein Semester gleich.</span><span lang="en">For a course the <strong>LTS</strong> line: the set of nodes stays the same across a semester.</span></td>
+          </tr>
+          <tr>
+            <td><span lang="de">Betriebssysteme</span><span lang="en">Operating systems</span></td>
+            <td>Windows 10/11 · macOS 14/15 (x86_64 und arm64) · Ubuntu 20.04/22.04 · RHEL 8/9</td>
+            <td><span lang="de">Auf Apple Silicon sind einzelne Erweiterungen eingeschränkt unterstützt.</span><span lang="en">On Apple Silicon some extensions have limited support.</span></td>
+          </tr>
+          <tr>
+            <td><span lang="de">Arbeitsspeicher</span><span lang="en">Memory</span></td>
+            <td><span lang="de">praktisch 8 GB Minimum, 16 GB angenehm</span><span lang="en">practically 8 GB minimum, 16 GB comfortable</span></td>
+            <td><span lang="de">Voreinstellung ist <code>-Xmx1024m</code> – siehe Karte unten.</span><span lang="en">The default is <code>-Xmx1024m</code> – see the card below.</span></td>
+          </tr>
+          <tr>
+            <td>Hub-Konto</td>
+            <td><span lang="de">für den lokalen Betrieb <strong>nicht</strong> nötig</span><span lang="en"><strong>not</strong> needed for local operation</span></td>
+            <td><span lang="de">Nur für das Teilen von Workflows und den KI-Assistenten.</span><span lang="en">Only for sharing workflows and the AI assistant.</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div data-befehl="B01"></div>
+    <div class="warn-box">
+      <p><span lang="de">Den Workspace <strong>nicht</strong> in einen synchronisierenden Cloud-Ordner legen. OneDrive,
+        Dropbox und Konsorten sperren Dateien und erzeugen Konfliktkopien, während KNIME Zwischenergebnisse
+        schreibt – die Folge sind Workflows, die sich nicht mehr öffnen lassen. Ein lokaler Ordner, und die Weitergabe
+        läuft über den Export als <code>.knwf</code>.</span>
+      <span lang="en">Do <strong>not</strong> put the workspace in a synchronising cloud folder. OneDrive, Dropbox and
+        the like lock files and create conflict copies while KNIME writes intermediate results – the consequence is
+        workflows that can no longer be opened. A local folder, and sharing goes through the export as a
+        <code>.knwf</code>.</span></p>
+    </div>
+  </section>
+
+  <section class="section-block" id="erste">
+    <h2><span lang="de">Die erste Kette</span><span lang="en">The first chain</span></h2>
+    <p>
+      <span lang="de">Einlesen, filtern, gruppieren, schreiben. Vier Schritte, die in jedem Analytics-Projekt vorkommen –
+        und die dieselbe Aufgabe lösen wie die Abfrage aus Lab 06, nur eben als Graph.</span>
+      <span lang="en">Read, filter, group, write. Four steps that occur in every analytics project – and that solve the
+        same task as the query from lab 06, just as a graph.</span>
+    </p>
+    <div data-befehl="B02"></div>
+    <div data-befehl="B03"></div>
+    <div class="tip-box">
+      <p><span lang="de">Der lehrreichste Handgriff ist der unscheinbarste: <strong>nach jedem Knoten die
+        Zeilenzahl ablesen.</strong> Rechtsklick auf den Knoten, unterster Menüpunkt, Tabelle ansehen. Ein Filter, der
+        aus 1.500 Zeilen 3 macht, ist ein Fehler – aber nur, wenn man hinsieht. Der <em>Node Monitor</em> zeigt dasselbe
+        ohne Fensterwechsel.</span>
+      <span lang="en">The most instructive action is the most inconspicuous: <strong>read off the row count after every
+        node.</strong> Right-click the node, bottom menu entry, view the table. A filter that turns 1,500 rows into 3 is a
+        bug – but only if you look. The <em>node monitor</em> shows the same without switching windows.</span></p>
+    </div>
+  </section>
+
+  <section class="section-block" id="crisp">
+    <h2><span lang="de">Nodes entlang CRISP-DM</span><span lang="en">Nodes along CRISP-DM</span></h2>
+    <p>
+      <span lang="de">Die sechs Phasen aus der Vorlesung lassen sich unmittelbar auf Knotengruppen abbilden. Diese
+        Tabelle ist die Landkarte für den Rest des Labs – und ein Nachschlagewerk für eigene Abläufe.</span>
+      <span lang="en">The six phases from the lecture map directly onto groups of nodes. This table is the map for the
+        rest of the lab – and a reference for your own flows.</span>
+    </p>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th><span lang="de">Phase</span><span lang="en">Phase</span></th>
+            <th><span lang="de">Nodes</span><span lang="en">Nodes</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>2 Data Understanding</strong></td>
+            <td><code>CSV Reader</code> · <code>Excel Reader</code> · <code>PostgreSQL Connector</code> → <code>DB Table Selector</code> → <code>DB Reader</code> · <code>Statistics</code> · <code>Data Explorer</code></td>
+          </tr>
+          <tr>
+            <td><strong>3 Data Preparation</strong></td>
+            <td><code>Row Filter</code> · <code>Column Filter</code> · <code>Missing Value</code> · <code>String to Number</code> · <code>Rule Engine</code> · <code>Math Formula</code> · <code>GroupBy</code> · <code>Pivot</code> · <code>Joiner</code> · <code>Concatenate</code> · <code>Normalizer</code> · <code>Partitioning</code></td>
+          </tr>
+          <tr>
+            <td><strong>4 Modeling</strong></td>
+            <td><code>Decision Tree Learner</code> → <code>Decision Tree Predictor</code> · <code>Random Forest Learner</code>/<code>Predictor</code> · <code>Linear Regression Learner</code> → <code>Regression Predictor</code> · <code>k-Means</code> → <code>Cluster Assigner</code></td>
+          </tr>
+          <tr>
+            <td><strong>5 Evaluation</strong></td>
+            <td><code>Scorer</code> (Klassifikation: Confusion Matrix, Accuracy) · <code>Numeric Scorer</code> (Regression: R², RMSE, MAE) · <code>ROC Curve</code></td>
+          </tr>
+          <tr>
+            <td><strong>6 Deployment</strong></td>
+            <td><code>CSV Writer</code> · <code>Excel Writer</code> · <code>DB Writer</code> · <code>Table View</code> · <code>Bar Chart</code> · <code>Scatter Plot</code> – in einer Component zu einem Dashboard verbunden</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="info-box">
+      <p><span lang="de">Phase 1, das <em>Business Understanding</em>, hat keinen Knoten – und das ist keine Lücke des
+        Werkzeugs. Sie besteht darin, eine Geschäftsfrage in ein messbares Ziel zu übersetzen, und das tut kein Programm.
+        Was KNIME dafür anbietet, ist die Workflow-Beschreibung im <em>Description</em>-Fenster: der Ort, an dem die
+        Frage, die Zielgröße und das Abnahmekriterium stehen sollten. Ein Workflow ohne diesen Text ist ein Ablauf ohne
+        Auftrag.</span>
+      <span lang="en">Phase 1, <em>business understanding</em>, has no node – and that is not a gap in the tool. It
+        consists of translating a business question into a measurable goal, and no program does that. What KNIME offers
+        for it is the workflow description in the <em>description</em> panel: the place where the question, the target
+        variable and the acceptance criterion should stand. A workflow without that text is a flow without a
+        brief.</span></p>
+    </div>
+  </section>
+
+  <section class="section-block" id="modell">
+    <h2><span lang="de">Lernen und anwenden</span><span lang="en">Learning and applying</span></h2>
+    <p>
+      <span lang="de">Die Paarung <em>Learner</em> und <em>Predictor</em> ist der Kern der Modellierung in KNIME und
+        macht eine Unterscheidung sichtbar, die in einer Zeile <code>model.fit(X, y)</code> untergeht: Trainieren und
+        Anwenden sind zwei Schritte mit zwei verschiedenen Datenmengen.</span>
+      <span lang="en">The pairing of <em>learner</em> and <em>predictor</em> is the core of modelling in KNIME and makes
+        visible a distinction that gets lost in a line of <code>model.fit(X, y)</code>: training and applying are two
+        steps with two different sets of data.</span>
+    </p>
+    <div data-befehl="B04"></div>
+    <div data-befehl="B05"></div>
+  </section>
+
+  <section class="section-block" id="leakage">
+    <h2><span lang="de">Die Reihenfolge, an der es hängt</span><span lang="en">The order it all hangs on</span></h2>
+    <p>
+      <span lang="de">Hier kommt der Grund, warum dieses Lab in einem Kurs über Vorgehensmodelle steht und nicht in
+        einem Software-Kurs. Ein grafischer Ablauf macht die Reihenfolge sichtbar – und damit auch den Fehler, der die
+        meisten Modelle unbrauchbar macht, bevor sie überhaupt schlecht sind.</span>
+      <span lang="en">Here comes the reason this lab sits in a course about process models and not in a software course. A
+        graphical flow makes the order visible – and with it the mistake that renders most models useless before they are
+        even bad.</span>
+    </p>
+    <div class="warn-box">
+      <h3><span lang="de">Data Leakage: das Modell kannte die Antwort</span><span lang="en">Data leakage: the model knew the answer</span></h3>
+      <p><span lang="de">Die Vorlesung formuliert es an der Fallstudie so: „Gelangen Endzeit, gefahrene Distanz oder der
+        tatsächliche Preis ins Training oder in die Prüfung, entsteht Data Leakage: Das Modell nutzt Wissen über das
+        Ergebnis, das es vorhersagen soll.“ In KNIME hat dieser Fehler eine Gestalt – er ist eine Verbindung, die eine
+        Ebene zu früh ansetzt.</span>
+      <span lang="en">The lecture puts it this way, using the case study: “If end time, distance travelled or the actual
+        price get into the training or the test, data leakage arises: the model uses knowledge about the outcome it is
+        supposed to predict.” In KNIME this mistake has a shape – it is a connection that starts one level too
+        early.</span></p>
+    </div>
+    <div data-befehl="B06"></div>
+    <p>
+      <span lang="de">Der Unterschied ist eine Verbindung – und im Ergebnis ein Modell, das im Test glänzt und im
+        Betrieb versagt. Das Tückische daran: Die falsche Fassung liefert die <em>besseren</em> Zahlen. Wer keinen Blick
+        für die Reihenfolge hat, hält sie für die gelungene Variante. Genau deshalb ist die Übung P08-04 unten so
+        gebaut, dass man beide nebeneinander sieht.</span>
+      <span lang="en">The difference is one connection – and in the result a model that shines in the test and fails in
+        operation. The insidious part: the wrong version delivers the <em>better</em> numbers. Whoever has no eye for the
+        order takes it for the successful variant. That is exactly why exercise P08-04 below is built so that you see both
+        side by side.</span>
+    </p>
+    <div class="challenge-box">
+      <h3><span lang="de">Vier Formen desselben Fehlers</span><span lang="en">Four forms of the same mistake</span></h3>
+      <ul>
+        <li><span lang="de"><strong>Normalisierung vor dem Split.</strong> Der <code>Normalizer</code> berechnet Minimum
+          und Maximum über <em>alle</em> Zeilen – also auch über die Testmenge. Richtig: nach dem Split, und auf die
+          Testmenge nur <code>Normalizer (Apply)</code> mit dem Modell aus dem Training.</span>
+        <span lang="en"><strong>Normalisation before the split.</strong> The <code>Normalizer</code> computes minimum and
+          maximum over <em>all</em> rows – including the test set. Correct: after the split, and on the test set only
+          <code>Normalizer (Apply)</code> with the model from the training.</span></li>
+        <li><span lang="de"><strong>Fehlende Werte vor dem Split ersetzen.</strong> Ein Median über alle Zeilen enthält
+          Information aus der Testmenge. Dieselbe Struktur wie oben, dieselbe Lösung.</span>
+        <span lang="en"><strong>Replacing missing values before the split.</strong> A median over all rows contains
+          information from the test set. Same structure as above, same solution.</span></li>
+        <li><span lang="de"><strong>Die Zielgröße im Merkmalssatz.</strong> Accuracy nahe 100 % ist kein Erfolg, sondern
+          ein Befund: Ein <code>Column Filter</code> vor dem Learner fehlt. Auch IDs gehören hinaus – eine laufende
+          Nummer, die mit der Zielgröße korreliert, ist derselbe Fehler in Verkleidung.</span>
+        <span lang="en"><strong>The target variable in the feature set.</strong> Accuracy near 100 % is not a success but
+          a finding: a <code>Column Filter</code> before the learner is missing. IDs belong out too – a running number
+          correlating with the target is the same mistake in disguise.</span></li>
+        <li><span lang="de"><strong>Zeitliche Information aus der Zukunft.</strong> Wer die Fahrtdauer vorhersagen will,
+          darf die Endzeit nicht kennen. Der Prüfsatz: Steht dieses Merkmal zum Zeitpunkt der Vorhersage tatsächlich
+          zur Verfügung? Bei einer Prognose entscheidet das über Brauchbarkeit – und diese Frage stellt kein
+          Werkzeug.</span>
+        <span lang="en"><strong>Temporal information from the future.</strong> Whoever wants to predict a ride's duration
+          may not know the end time. The test: is this feature actually available at the moment of prediction? In a
+          forecast that decides usability – and no tool asks the question.</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="section-block" id="python">
+    <h2><span lang="de">KNIME und Python</span><span lang="en">KNIME and Python</span></h2>
+    <p>
+      <span lang="de">Die Entscheidung ist kein Entweder-oder. Beides lässt sich in einem Ablauf mischen, und die
+        Arbeitsteilung ergibt sich aus den Stärken: KNIME für Aufbereitung, Nachvollziehbarkeit und alles, was Menschen
+        ohne Programmierkenntnisse lesen sollen; Python für Spezialverfahren, Bibliotheken ohne eigenen Knoten und
+        eigene Darstellungen.</span>
+      <span lang="en">The decision is not either-or. Both can be mixed in one flow, and the division of labour follows
+        from the strengths: KNIME for preparation, traceability and everything people without programming skills should
+        read; Python for specialised methods, libraries without their own node and custom visualisations.</span>
+    </p>
+    <div data-befehl="B07"></div>
+  </section>
+
+  <section class="section-block" id="dataiku">
+    <h2><span lang="de">Dataiku im Vergleich</span><span lang="en">Dataiku in comparison</span></h2>
+    <p>
+      <span lang="de">Dataiku besetzt dasselbe Feld mit einem anderen Entwurf, und der Vergleich lohnt, weil er zeigt,
+        welche Entscheidungen ein Werkzeug dieser Ebene überhaupt zu treffen hat.</span>
+      <span lang="en">Dataiku occupies the same field with a different design, and the comparison pays off because it
+        shows which decisions a tool on this layer has to make at all.</span>
+    </p>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr><th></th><th>KNIME</th><th>Dataiku</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span lang="de">Bauform</span><span lang="en">Form</span></td>
+            <td><span lang="de">Anwendung auf dem Desktop</span><span lang="en">Desktop application</span></td>
+            <td><span lang="de">Serverinstanz, bedient im Browser</span><span lang="en">Server instance, used in the browser</span></td>
+          </tr>
+          <tr>
+            <td><span lang="de">Kernobjekte</span><span lang="en">Core objects</span></td>
+            <td>Workflow · Node · Port</td>
+            <td>Project → Flow → Dataset → Recipe</td>
+          </tr>
+          <tr>
+            <td><span lang="de">Zwischenergebnis</span><span lang="en">Intermediate result</span></td>
+            <td><span lang="de">am Port des Knotens, flüchtig</span><span lang="en">at the node's port, transient</span></td>
+            <td><span lang="de">ein <em>Dataset</em>: benanntes, dauerhaftes Objekt</span><span lang="en">a <em>dataset</em>: a named, persistent object</span></td>
+          </tr>
+          <tr>
+            <td><span lang="de">Zusammenarbeit</span><span lang="en">Collaboration</span></td>
+            <td><span lang="de">über den Hub (kostenpflichtig ab Team-Plan)</span><span lang="en">through the Hub (chargeable from the team plan)</span></td>
+            <td><span lang="de">eingebaut – ein Projekt ist mehrbenutzerfähig</span><span lang="en">built in – a project is multi-user by design</span></td>
+          </tr>
+          <tr>
+            <td><span lang="de">Lizenz</span><span lang="en">Licence</span></td>
+            <td><span lang="de">GPLv3, quelloffen</span><span lang="en">GPLv3, open source</span></td>
+            <td><span lang="de">proprietär; Free Edition kostenfrei, aber nicht quelloffen</span><span lang="en">proprietary; Free Edition free of charge but not open source</span></td>
+          </tr>
+          <tr>
+            <td><span lang="de">Einstieg</span><span lang="en">Getting started</span></td>
+            <td><span lang="de">Installer starten, loslegen</span><span lang="en">start the installer, begin</span></td>
+            <td><span lang="de">Instanz bereitstellen oder Cloud-Bereich anlegen, Nutzer einrichten</span><span lang="en">provision an instance or create a cloud space, set up users</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      <span lang="de">Die Begriffe übersetzen sich weitgehend: Ein <code>CSV Reader</code> entspricht einem
+        <em>Dataset</em> mit Dateiverbindung, <code>Row Filter</code>, <code>GroupBy</code> und <code>Joiner</code>
+        entsprechen den <em>Visual Recipes</em>, das Paar Learner/Predictor entspricht dem Weg über <em>Lab → Visual ML
+        → Score Recipe</em>. Ein Gegenstück ohne Entsprechung in KNIME ist das <em>Prepare Recipe</em>: ein Stapel
+        einzelner Umformungsschritte mit fortlaufender Vorschau, für den in KNIME eine Kette aus
+        <code>String Manipulation</code>, <code>Rule Engine</code> und <code>Math Formula</code> steht.</span>
+      <span lang="en">The concepts translate largely: a <code>CSV Reader</code> corresponds to a <em>dataset</em> with a
+        file connection, <code>Row Filter</code>, <code>GroupBy</code> and <code>Joiner</code> correspond to the
+        <em>visual recipes</em>, the learner/predictor pair corresponds to the route through <em>Lab → Visual ML → Score
+        Recipe</em>. One counterpart without an equivalent in KNIME is the <em>prepare recipe</em>: a stack of individual
+        transformation steps with a running preview, for which KNIME uses a chain of
+        <code>String Manipulation</code>, <code>Rule Engine</code> and <code>Math Formula</code>.</span>
+    </p>
+    <div class="warn-box">
+      <p><span lang="de">Zur Verfügbarkeit, Stand 09/2026: Die Cloud-Testversion läuft <strong>14 Tage</strong>. Das
+        <strong>Academic Program</strong> gibt kostenfreie Einzellizenzen für ein Jahr, ist auf der Anbieterseite aber
+        als <em>„currently at capacity“</em> gekennzeichnet – eine faktische Warteliste. Für ein Pflichtmodul ist das
+        keine tragfähige Grundlage; als Vergleichs- und Anschauungsobjekt taugt es gut. Wer die Bedienung ohne Lizenz
+        üben will, findet in der <strong>Dataiku Academy</strong> Kurse mit eigenem Zugang.</span>
+      <span lang="en">On availability, as of 09/2026: the cloud trial runs <strong>14 days</strong>. The
+        <strong>academic program</strong> grants free individual licences for a year but is marked on the vendor's page as
+        <em>“currently at capacity”</em> – a de facto waiting list. That is no sound basis for a compulsory module; as an
+        object of comparison and demonstration it serves well. Whoever wants to practise the interface without a licence
+        finds courses with their own access in the <strong>Dataiku Academy</strong>.</span></p>
+    </div>
+  </section>
+
+  <section class="section-block" id="daten">
+    <h2><span lang="de">Weitergabe und Datenschutz</span><span lang="en">Sharing and data protection</span></h2>
+    <div class="karten">
+      <div class="karte">
+        <div class="kopfzeile"><span lang="de">Läuft lokal</span><span lang="en">Runs locally</span></div>
+        <p><span lang="de">Die Analytics Platform ist eine Desktop-Anwendung. Daten werden im lokalen Workspace
+          verarbeitet und gespeichert; es gibt keinen Zwang zu Konto oder Cloud. Damit ist sie unter den Werkzeugen
+          dieses Kurses das mit der einfachsten Datenschutzlage – der Vergleich mit Lab 02 und Lab 06 lohnt.</span>
+        <span lang="en">The Analytics Platform is a desktop application. Data is processed and stored in the local
+          workspace; there is no compulsion to an account or the cloud. Among this course's tools it therefore has the
+          simplest data protection situation – the comparison with labs 02 and 06 is worth making.</span></p>
+      </div>
+      <div class="karte">
+        <div class="kopfzeile"><span lang="de">Weitergeben heißt exportieren</span><span lang="en">Sharing means exporting</span></div>
+        <p><span lang="de">Ein Workflow wird über <code>File → Export KNIME Workflow…</code> als <code>.knwf</code>
+          weitergegeben, nicht als Ordner. <strong>Wichtig: das Häkchen „Reset Workflow(s) before export“</strong> –
+          sonst wandern alle Zwischenergebnisse mit, und damit möglicherweise Daten, die in der Abgabe nichts zu suchen
+          haben. Dasselbe Problem wie die Zellausgaben in einem Notebook, Lab 03.</span>
+        <span lang="en">A workflow is shared through <code>File → Export KNIME Workflow…</code> as a <code>.knwf</code>,
+          not as a folder. <strong>Important: the checkbox “Reset Workflow(s) before export”</strong> – otherwise all
+          intermediate results travel along, and with them possibly data that has no business being in a submission. The
+          same problem as cell outputs in a notebook, lab 03.</span></p>
+      </div>
+      <div class="karte">
+        <div class="kopfzeile"><span lang="de">Öffentlicher Hub-Bereich</span><span lang="en">Public hub space</span></div>
+        <p><span lang="de">Nach der Registrierung entstehen automatisch ein privater und ein <strong>öffentlicher</strong>
+          Bereich. Ein Upload in den öffentlichen ist eine Veröffentlichung – mit eingebetteten Daten, Pfaden und
+          möglicherweise Zugangsdaten. Kursabgaben gehören nach Moodle, nicht auf den Community Hub.</span>
+        <span lang="en">After registering, a private and a <strong>public</strong> space are created automatically. An
+          upload to the public one is a publication – with embedded data, paths and possibly credentials. Course
+          submissions belong in Moodle, not on the Community Hub.</span></p>
+      </div>
+      <div class="karte">
+        <div class="kopfzeile"><span lang="de">Telemetrie und KI</span><span lang="en">Telemetry and AI</span></div>
+        <p><span lang="de">Die Nutzungsdatenerhebung ist eine Zustimmungsfrage und unter <code>File →
+          Preferences</code> zu finden; Knoteneinstellungen und Daten sind laut Hersteller ausdrücklich nicht Teil davon.
+          Der KI-Assistent muss eigens installiert und eingeschaltet werden und sendet Anfragen an externe Dienste –
+          für Daten mit Personenbezug also nicht geeignet.</span>
+        <span lang="en">Usage data collection is a consent question found under <code>File → Preferences</code>; node
+          settings and data are expressly not part of it according to the vendor. The AI assistant has to be installed and
+          switched on separately and sends requests to external services – so not suitable for data with personal
+          reference.</span></p>
+      </div>
+      <div class="karte">
+        <div class="kopfzeile"><span lang="de">Zwischenergebnisse auf der Platte</span><span lang="en">Intermediate results on disk</span></div>
+        <p><span lang="de">KNIME legt Zwischenergebnisse im Workspace ab – auch bei sensiblen Daten. Zwei Maßnahmen:
+          Workspace auf einem verschlüsselten Datenträger, und Workflows nach der Arbeit mit <code>F8</code>
+          zurücksetzen, damit die Daten nicht in der Ablage bleiben.</span>
+        <span lang="en">KNIME writes intermediate results into the workspace – with sensitive data too. Two measures:
+          workspace on an encrypted volume, and reset workflows with <code>F8</code> after working, so the data does not
+          stay in storage.</span></p>
+      </div>
+      <div class="karte">
+        <div class="kopfzeile"><span lang="de">Pseudonymisieren im Ablauf</span><span lang="en">Pseudonymising in the flow</span></div>
+        <p><span lang="de">Wenn echte Daten unvermeidbar sind: Direktidentifikatoren mit <code>Column Filter</code>
+          entfernen, Schlüssel mit <code>String Manipulation</code> hashen, Geburtsdaten mit <code>Auto-Binner</code> zu
+          Altersklassen zusammenfassen. Datensparsamkeit heißt hier: früh im Ablauf reduzieren, nicht am Ende.</span>
+        <span lang="en">When real data is unavoidable: remove direct identifiers with <code>Column Filter</code>, hash
+          keys with <code>String Manipulation</code>, group dates of birth into age bands with <code>Auto-Binner</code>.
+          Data minimisation here means: reduce early in the flow, not at the end.</span></p>
+      </div>
+    </div>
+    <div class="info-box">
+      <p><span lang="de">Zwei Angebote, die sich lohnen: die <strong>KNIME Educators Alliance</strong> stellt Lehrenden
+        Foliensätze, Beispiel-Workflows und Übungen unter Creative-Commons-Lizenz bereit. Und die Zertifizierung
+        <strong>L1</strong> ist kostenlos, dauert dreißig Minuten und deckt genau den Stoff dieses Labs ab –
+        Datenzugriff, Bereinigung, Verknüpfung, Visualisierung. Für eine Bewerbung ist ein L1 kein Ausweis von
+        Können, aber ein Beleg dafür, dass man das Werkzeug kennt.</span>
+      <span lang="en">Two offers worth knowing: the <strong>KNIME Educators Alliance</strong> provides teachers with slide
+        sets, example workflows and exercises under a Creative Commons licence. And the <strong>L1</strong> certification
+        is free, takes thirty minutes and covers exactly this lab's material – data access, cleaning, joining,
+        visualisation. For a job application an L1 is no proof of skill, but it is evidence that you know the
+        tool.</span></p>
+    </div>
+  </section>
+
+  <section class="section-block" id="uebungen">
+    <h2><span lang="de">Übungen</span><span lang="en">Exercises</span></h2>
+    <p>
+      <span lang="de">Sechs Übungen: eine Zuordnung der Knoten zu den CRISP-DM-Phasen, zwei Checklisten, die Sie in
+        KNIME abarbeiten, und drei Verständnisfragen. Die vierte ist die wichtigste des Labs – sie behandelt den Fehler,
+        der bessere Zahlen liefert.</span>
+      <span lang="en">Six exercises: a matching of nodes to CRISP-DM phases, two checklists you work through in KNIME, and
+        three comprehension questions. The fourth is the lab's most important – it deals with the mistake that delivers
+        better numbers.</span>
+    </p>
+    <div data-uebung="P08-01"></div>
+    <div data-uebung="P08-02"></div>
+    <div data-uebung="P08-03"></div>
+    <div data-uebung="P08-04"></div>
+    <div data-uebung="P08-05"></div>
+    <div data-uebung="P08-06"></div>
+    <div data-fortschritt></div>
+  </section>
+
+  <section class="section-block" id="zusammenfassung">
+    <h2><span lang="de">Zusammenfassung</span><span lang="en">Summary</span></h2>
+    <ul>
+      <li><span lang="de">Ein Knotengraph macht den Datenfluss sichtbar – auch für Leute, die keinen Code lesen. Das ist der eigentliche Gewinn einer Analytics-Plattform, nicht die gesparte Tipparbeit.</span><span lang="en">A node graph makes the data flow visible – including to people who do not read code. That is an analytics platform's actual gain, not the typing saved.</span></li>
+      <li><span lang="de">Workspace ist der Aktenschrank, Workflow der Ordner darin. Weitergegeben wird ein <code>.knwf</code> mit dem Häkchen „vorher zurücksetzen“ – sonst wandern Zwischenergebnisse mit.</span><span lang="en">The workspace is the filing cabinet, the workflow the folder in it. What is shared is a <code>.knwf</code> with the “reset before export” checkbox – otherwise intermediate results travel along.</span></li>
+      <li><span lang="de">Rot heißt nicht konfiguriert, gelb konfiguriert und nicht ausgeführt, grün ausgeführt. Ein Reset löscht die Ergebnisse aller nachfolgenden Knoten und ist kein Rückgängig.</span><span lang="en">Red means not configured, yellow configured and not executed, green executed. A reset clears the results of all downstream nodes and is not an undo.</span></li>
+      <li><span lang="de">Learner und Predictor sind zwei Knoten mit zwei Datenmengen: Der Learner bekommt das Training, der Predictor das Modell und den Test. Der Modellport verhindert, dass man sie vertauscht.</span><span lang="en">Learner and predictor are two nodes with two sets of data: the learner gets the training data, the predictor the model and the test data. The model port prevents swapping them.</span></li>
+      <li><span lang="de">Normalisieren und Ersetzen fehlender Werte gehören <em>nach</em> das <code>Partitioning</code>, nicht davor. Die falsche Reihenfolge liefert die besseren Zahlen – das macht sie gefährlich.</span><span lang="en">Normalising and replacing missing values belong <em>after</em> the <code>Partitioning</code>, not before. The wrong order delivers the better numbers – that is what makes it dangerous.</span></li>
+      <li><span lang="de">KNIME steht unter der GPLv3 und ist auf dem Desktop unbegrenzt kostenfrei. Dataiku besetzt dasselbe Feld serverbasiert und proprietär; sein Academic Program ist derzeit ausgeschöpft und für ein Pflichtmodul keine Grundlage.</span><span lang="en">KNIME is under GPLv3 and free without limits on the desktop. Dataiku occupies the same field server-based and proprietary; its academic program is currently at capacity and no basis for a compulsory module.</span></li>
+    </ul>
+    <div data-lab-nav></div>
+  </section>
+
+</main>
+
+<footer class="footer">
+  <p>
+    <span lang="de">PITM-Lab · Lab 08 · THWS Business School · Stand 09/2026</span>
+    <span lang="en">PITM-Lab · Lab 08 · THWS Business School · as of 09/2026</span>
+  </p>
+</footer>
+
+<script type="module" src="assets/pitm.js"></script>
+</body>
+</html>

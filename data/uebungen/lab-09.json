@@ -1,0 +1,850 @@
+{
+  "konsolen": {
+    "frei": {
+      "begruessung": [
+        {
+          "de": "Freie Konsole mit nachgebildetem docker. Zusätzlich bekannt: n8nio/n8n.",
+          "en": "Free console with docker modelled in. Additionally known: n8nio/n8n."
+        },
+        {
+          "de": "Probieren Sie:  docker run -d --name n8n -p 5678:5678 n8nio/n8n   und danach   docker logs n8n",
+          "en": "Try:  docker run -d --name n8n -p 5678:5678 n8nio/n8n   and then   docker logs n8n"
+        }
+      ]
+    }
+  },
+  "befehle": {
+    "B01": {
+      "titel": {
+        "de": "n8n starten – die kurze Fassung und ihr Preis",
+        "en": "Starting n8n – the short version and its price"
+      },
+      "befehl": "# Die Fassung, die überall zu lesen ist:\ndocker run -it --rm -p 5678:5678 n8nio/n8n\n\n#      │        │      └── Editor danach: http://localhost:5678\n#      │        └───────── Container wird beim Beenden gelöscht\n#      └────────────────── läuft im Vordergrund, Strg+C beendet ihn\n\n# Was dabei verloren geht: Abläufe, Zugangsdaten, Laufprotokolle.\n# Alles lag im Container. Der Container ist weg.",
+      "teile": [
+        {
+          "was": "--rm",
+          "bedeutet": {
+            "de": "Löscht den Container beim Beenden. Für einen ersten Blick richtig, für alles danach falsch: n8n legt Abläufe und Zugangsdaten in einer Datei im Container ab, und die geht mit. Dieselbe Lektion wie beim Postgres-Container in Lab 05.",
+            "en": "Deletes the container when it stops. Right for a first look, wrong for everything after: n8n stores workflows and credentials in a file inside the container, and it goes with it. The same lesson as with the Postgres container in lab 05."
+          }
+        },
+        {
+          "was": "-it",
+          "bedeutet": {
+            "de": "Hält den Container im Vordergrund und zeigt die Protokollausgabe direkt an. Für den Betrieb nimmt man stattdessen -d und liest mit docker logs.",
+            "en": "Keeps the container in the foreground and shows the log output directly. For production you use -d instead and read with docker logs."
+          }
+        },
+        {
+          "was": "5678",
+          "bedeutet": {
+            "de": "Der Standardport. Belegt? Dann auf der linken Seite ausweichen: -p 15678:5678. Die rechte Zahl gehört dem Container und bleibt.",
+            "en": "The default port. Taken? Then move aside on the left: -p 15678:5678. The right-hand number belongs to the container and stays."
+          }
+        },
+        {
+          "was": "n8nio/n8n",
+          "bedeutet": {
+            "de": "Das Abbild ohne Versionsangabe holt latest – bei einem Werkzeug mit wöchentlichen Fassungen eine schlechte Idee. Im Betrieb eine Fassung festnageln, etwa n8nio/n8n:1.paar.punkt, und Aktualisierungen bewusst durchführen.",
+            "en": "The image without a version pulls latest – with a tool releasing weekly, a bad idea. In production pin a version, e.g. n8nio/n8n:1.x.y, and update deliberately."
+          }
+        }
+      ]
+    },
+    "B02": {
+      "titel": {
+        "de": "Die Fassung, die einen Neustart übersteht",
+        "en": "The version that survives a restart"
+      },
+      "befehl": "# 1  Schlüssel einmal erzeugen und in den Passwortmanager legen\nopenssl rand -hex 32\n#   → 9f3c1b...  (64 Zeichen)\n#   Windows PowerShell:\n#   -join ((1..32) | % { '{0:x2}' -f (Get-Random -Max 256) })\n\n# 2  Band anlegen (docker tut das auch selbst, aber so steht der Name fest)\ndocker volume create n8n_data\n\n# 3  Starten\ndocker run -d --name n8n \\\n  -p 127.0.0.1:5678:5678 \\\n  -v n8n_data:/home/node/.n8n \\\n  -e N8N_ENCRYPTION_KEY=9f3c1b... \\\n  -e GENERIC_TIMEZONE=Europe/Berlin \\\n  -e TZ=Europe/Berlin \\\n  --restart unless-stopped \\\n  n8nio/n8n\n\n# 4  Nachsehen, was er sagt\ndocker logs n8n",
+      "ausgabe": "Initializing n8n process\nn8n ready on 0.0.0.0, port 5678\nEditor is now accessible via:\nhttp://localhost:5678/",
+      "teile": [
+        {
+          "was": "N8N_ENCRYPTION_KEY",
+          "bedeutet": {
+            "de": "Der Schlüssel, mit dem die Zugangsdaten verschlüsselt werden. Ohne Angabe erzeugt n8n beim ersten Start einen und legt ihn in /home/node/.n8n/config ab – also im Band. Geht das Band verloren oder wird der Schlüssel später anders gesetzt, meldet n8n „Credentials could not be decrypted“, und alle Zugangsdaten müssen neu angelegt werden.",
+            "en": "The key the credentials are encrypted with. Without it n8n generates one on first start and puts it in /home/node/.n8n/config – i.e. in the volume. If the volume is lost or the key is later set differently, n8n reports “Credentials could not be decrypted”, and all credentials have to be created again."
+          }
+        },
+        {
+          "was": "/home/node/.n8n",
+          "bedeutet": {
+            "de": "Das Datenverzeichnis im Container: Abläufe, Zugangsdaten, Laufprotokolle und – ohne eigene Datenbank – die SQLite-Datei. Genau dieser Pfad muss auf ein Band, kein anderer.",
+            "en": "The data directory inside the container: workflows, credentials, run logs and – without an own database – the SQLite file. Exactly this path has to sit on a volume, no other."
+          }
+        },
+        {
+          "was": "127.0.0.1:",
+          "bedeutet": {
+            "de": "Bindet den Port nur an den eigenen Rechner. Ohne diesen Zusatz ist eine Instanz ohne Zugriffsschutz im ganzen Netz erreichbar – und wer sie öffnet, hat Zugriff auf alle gespeicherten Zugangsdaten. Für den Betrieb kommt ein Reverse-Proxy mit TLS davor.",
+            "en": "Binds the port to your own machine only. Without this prefix an instance without access protection is reachable across the whole network – and whoever opens it has access to all stored credentials. For production a reverse proxy with TLS goes in front."
+          }
+        },
+        {
+          "was": "TZ und GENERIC_TIMEZONE",
+          "bedeutet": {
+            "de": "Beide werden gebraucht: GENERIC_TIMEZONE stellt die Zeitzone der Zeitpläne, TZ die des Containers und damit der Protokollzeitstempel. Fehlen sie, rechnet n8n in UTC – ein Zeitplan „06:00“ feuert im Sommer um acht.",
+            "en": "Both are needed: GENERIC_TIMEZONE sets the time zone of the schedules, TZ that of the container and thus of the log timestamps. Without them n8n works in UTC – a schedule of “06:00” fires at eight in summer."
+          }
+        },
+        {
+          "was": "--restart unless-stopped",
+          "bedeutet": {
+            "de": "Startet den Container nach einem Neustart des Rechners von selbst wieder. Ohne das läuft ein zeitgesteuerter Ablauf ab dem nächsten Morgen nicht mehr, und niemand merkt es.",
+            "en": "Starts the container again by itself after the machine reboots. Without it a scheduled workflow stops running from the next morning on, and nobody notices."
+          }
+        },
+        {
+          "was": "Sicherung",
+          "bedeutet": {
+            "de": "Das Band gehört in die Sicherung: docker run --rm -v n8n_data:/daten -v \"$PWD\":/aus alpine tar czf /aus/n8n-sicherung.tar.gz -C /daten . – Schlüssel getrennt davon aufbewahren, sonst liegen Schloss und Schlüssel im selben Umschlag.",
+            "en": "The volume belongs in your backup: docker run --rm -v n8n_data:/data -v \"$PWD\":/out alpine tar czf /out/n8n-backup.tar.gz -C /data . – keep the key separately, otherwise lock and key sit in the same envelope."
+          }
+        }
+      ]
+    },
+    "B03": {
+      "titel": {
+        "de": "Trigger und Abruf einstellen",
+        "en": "Setting up the trigger and the fetch"
+      },
+      "prompt": "☰",
+      "befehl": "Schedule Trigger\n  Trigger Rule:  Days   ·   Trigger at Hour: 6   ·   Minute: 0\n  (Workflow Settings → Timezone: Europe/Berlin — je Ablauf, zusätzlich zu TZ)\n\nHTTP Request\n  Method:  GET\n  URL:     https://api.open-meteo.com/v1/forecast\n  Send Query Parameters:  ✓\n     latitude        49.79\n     longitude        9.95\n     daily           temperature_2m_max,precipitation_sum\n     timezone        Europe/Berlin\n  Settings → Retry On Fail: ✓   Max Tries: 3   Wait Between Tries: 5000 ms\n\n  ▸ Execute step   → Ausgabe ansehen, BEVOR der nächste Knoten gebaut wird",
+      "teile": [
+        {
+          "was": "Execute step",
+          "bedeutet": {
+            "de": "Führt nur diesen einen Knoten aus und zeigt seine Ausgabe. Das ist die Arbeitsweise, die man sich angewöhnen sollte: Knoten bauen, ausführen, Ausgabe lesen, nächsten Knoten bauen. Wer erst vier Knoten baut und dann ausführt, sucht den Fehler in vier Knoten.",
+            "en": "Runs only this one node and shows its output. That is the habit worth forming: build a node, run it, read the output, build the next. Whoever builds four nodes first and then runs them is looking for the mistake in four nodes."
+          }
+        },
+        {
+          "was": "Offene Schnittstelle",
+          "bedeutet": {
+            "de": "Dieser Wetterdienst antwortet ohne Schlüssel und ohne Konto – deshalb steht er hier: Die Übung soll den Ablauf zeigen, nicht eine Anmeldung. Sobald eine Schnittstelle einen Schlüssel braucht, gehört der in ein Credential, nicht in das URL-Feld.",
+            "en": "This weather service answers without a key and without an account – that is why it is used here: the exercise is about the workflow, not about signing up. As soon as an interface needs a key, that key belongs in a credential, not in the URL field."
+          }
+        },
+        {
+          "was": "Retry On Fail",
+          "bedeutet": {
+            "de": "Wiederholt den Knoten bei einem Fehlschlag. Eine Schnittstelle, die einmal nicht antwortet, ist meist beim zweiten Versuch da. Ersetzt keine Fehlerbehandlung, halbiert aber die Meldungen.",
+            "en": "Repeats the node on failure. An interface that does not answer once is usually there on the second attempt. Replaces no error handling, but halves the number of alerts."
+          }
+        },
+        {
+          "was": "Zeitzone zweimal",
+          "bedeutet": {
+            "de": "Die Umgebungsvariable gilt für die Instanz, die Einstellung unter Workflow Settings für den einzelnen Ablauf. Wer nur eine von beiden setzt, hat auf einer fremden Instanz wieder UTC.",
+            "en": "The environment variable applies to the instance, the setting under Workflow Settings to the individual workflow. Setting only one of them means UTC again on somebody else's instance."
+          }
+        }
+      ]
+    },
+    "B04": {
+      "titel": {
+        "de": "Zieltabelle anlegen und schreiben",
+        "en": "Creating the target table and writing to it"
+      },
+      "befehl": "-- Vorher in DataGrip oder im Supabase-Editor (PostgreSQL):\ncreate table if not exists wetter (\n  datum          date        not null,\n  temp_max       numeric(4,1),\n  niederschlag   numeric(5,1),\n  abgerufen_am   timestamptz not null default now(),\n  primary key (datum)\n);\n\n-- Danach im Postgres-Knoten:\n--   Operation:  Insert\n--   Table:      public.wetter\n--   Mapping:    datum → {{ $json.datum }}   temp_max → {{ $json.temp_max }}   ...\n--   Options → Skip on Conflict:  ✓",
+      "teile": [
+        {
+          "was": "primary key (datum)",
+          "bedeutet": {
+            "de": "Der Schlüssel macht den Ablauf wiederholbar: Läuft er zweimal am selben Tag, entsteht keine zweite Zeile. Ohne Schlüssel wächst die Tabelle bei jedem Fehlversuch, und die Auswertung zählt Tage doppelt. Die Vorlesung nennt das den Unterschied zwischen einem Ablauf, den man wiederholen kann, und einem, den man nur einmal starten darf.",
+            "en": "The key makes the workflow repeatable: if it runs twice on the same day, no second row appears. Without a key the table grows with every failed attempt, and the analysis counts days twice. The lecture calls this the difference between a workflow you can repeat and one you may start only once."
+          }
+        },
+        {
+          "was": "Skip on Conflict",
+          "bedeutet": {
+            "de": "Übergeht Zeilen, deren Schlüssel schon da ist, statt den Lauf mit einem Fehler abzubrechen. Die Alternative ist ein Upsert-Knoten, wenn eine korrigierte Vorhersage die alte überschreiben soll.",
+            "en": "Skips rows whose key already exists instead of aborting the run with an error. The alternative is an upsert node, if a corrected forecast should overwrite the old one."
+          }
+        },
+        {
+          "was": "abgerufen_am",
+          "bedeutet": {
+            "de": "Der Zeitpunkt des Abrufs, getrennt vom Tag, für den die Vorhersage gilt. Damit ist später nachvollziehbar, wie alt eine Vorhersage war – die Vorlesung unterscheidet ausdrücklich zwischen einem vorhergesagten und einem gemessenen Wert.",
+            "en": "The moment of retrieval, separate from the day the forecast is for. That makes it traceable later how old a forecast was – the lecture explicitly distinguishes a forecast value from a measured one."
+          }
+        },
+        {
+          "was": "Credential",
+          "bedeutet": {
+            "de": "Die Verbindungsdaten der Datenbank werden einmal als Postgres-Credential angelegt und in jedem weiteren Knoten ausgewählt. Bei Supabase (Lab 06) den Session-Pooler nehmen, nicht die direkte Verbindung – dieselbe IPv6-Falle wie dort.",
+            "en": "The database connection details are created once as a Postgres credential and selected in every further node. With Supabase (lab 06) take the session pooler, not the direct connection – the same IPv6 trap as there."
+          }
+        }
+      ]
+    },
+    "B05": {
+      "titel": {
+        "de": "Ein Item oder sieben – der Unterschied im Ablauf",
+        "en": "One item or seven – the difference in the workflow"
+      },
+      "prompt": "☰",
+      "befehl": "So kommt die Antwort an – EIN Item:\n  [ { \"daily\": { \"time\": [7 Tage], \"temperature_2m_max\": [7 Werte] } } ]\n  → Postgres Insert schreibt EINE Zeile\n\nSo wird es zu sieben Items:\n  HTTP Request  →  Code  →  Postgres (Insert)\n\n  Code-Knoten, Modus: Run Once for All Items\n  ────────────────────────────────────────────\n  const d = $input.first().json.daily;\n  return d.time.map((t, i) => ({\n    json: {\n      datum:        t,\n      temp_max:     d.temperature_2m_max[i],\n      niederschlag: d.precipitation_sum[i]\n    }\n  }));\n\n  → Postgres Insert läuft siebenmal, schreibt sieben Zeilen",
+      "teile": [
+        {
+          "was": "Run Once for All Items",
+          "bedeutet": {
+            "de": "Der Code läuft einmal und sieht den ganzen Eingangsstrom über $input. Der andere Modus, Run Once for Each Item, läuft je Item und sieht über $json nur dieses eine. Bei einer Antwort mit Listen darin braucht man den ersten Modus.",
+            "en": "The code runs once and sees the whole input stream through $input. The other mode, run once for each item, runs per item and through $json sees only that one. With a response containing lists you need the first mode."
+          }
+        },
+        {
+          "was": "return [{ json: … }]",
+          "bedeutet": {
+            "de": "Ein Code-Knoten muss eine Liste von Objekten zurückgeben, in denen die Daten unter json liegen. Wer nur die Daten zurückgibt, bekommt „A 'json' property isn't set“ – der häufigste Fehler in diesem Knoten.",
+            "en": "A code node has to return a list of objects with the data under json. Returning just the data gives “A 'json' property isn't set” – the most common error in this node."
+          }
+        },
+        {
+          "was": "Split Out",
+          "bedeutet": {
+            "de": "Der Knoten für denselben Zweck ohne Code: Feld angeben, das eine Liste enthält, und n8n macht aus jedem Element ein Item. Reicht, solange die Listen nicht parallel zusammengeführt werden müssen – hier gehören drei Listen positionsweise zusammen, dafür ist Code der klarere Weg.",
+            "en": "The node for the same purpose without code: name a field holding a list and n8n turns each element into an item. Enough as long as lists do not have to be merged in parallel – here three lists belong together by position, and code is the clearer route for that."
+          }
+        },
+        {
+          "was": "Woran man es sieht",
+          "bedeutet": {
+            "de": "Die Kopfzeile der Ausgabetabelle eines Knotens zeigt die Anzahl der Items. Steht dort 1, wo 7 stehen sollte, ist die Ursache immer diese – nicht die Datenbank.",
+            "en": "The header of a node's output table shows the number of items. If it says 1 where it should say 7, this is always the cause – not the database."
+          }
+        }
+      ]
+    },
+    "B06": {
+      "titel": {
+        "de": "Ausdrücke, die man wirklich braucht",
+        "en": "The expressions you actually need"
+      },
+      "prompt": "⌨",
+      "befehl": "{{ $json.temperatur }}                 Feld des aktuellen Items\n{{ $json[\"temp max\"] }}                Feldname mit Leerzeichen oder Umlaut\n{{ $json.daily.time[0] }}              erstes Element einer Liste\n\n{{ $now.toISO() }}                     Zeitpunkt jetzt (Luxon-Objekt)\n{{ $now.minus({ days: 1 }).toISODate() }}    gestern, als 2026-09-08\n{{ $today.toFormat('yyyy-MM-dd') }}    Tagesbeginn, formatiert\n\n{{ $('HTTP Request').item.json.id }}   Feld aus einem FRÜHEREN Knoten\n{{ $itemCount }}                       Anzahl der Items im Eingang\n{{ $execution.id }}                    Kennung dieses Laufs\n\n{{ $json.betrag ?? 0 }}                Ersatzwert, wenn das Feld fehlt\n{{ $json.stadt?.name }}                bricht nicht ab, wenn stadt fehlt\n{{ $json.zahl > 30 ? 'hoch' : 'normal' }}    Verzweigung im Feld\n\nNICHT so:\n{{ $json.api_key }}  in einem URL-Feld  →  der Schlüssel steht im Ablauf\n                                            und wandert in den Export",
+      "teile": [
+        {
+          "was": "Doppelte Klammern",
+          "bedeutet": {
+            "de": "Ein Feld ist entweder ein fester Wert oder ein Ausdruck – umgeschaltet wird am Feld selbst (fixed / expression). Wer geschweifte Klammern in ein fest gesetztes Feld tippt, bekommt den Text „{{ $json.x }}“ in die Datenbank geschrieben.",
+            "en": "A field is either a fixed value or an expression – you switch at the field itself (fixed / expression). Whoever types curly braces into a fixed field writes the literal text “{{ $json.x }}” into the database."
+          }
+        },
+        {
+          "was": "$('Knotenname')",
+          "bedeutet": {
+            "de": "Greift auf einen früheren Knoten zu, nicht nur auf den unmittelbar vorhergehenden. Der Name ist der im Editor angezeigte – wird er umbenannt, bricht der Ausdruck. Deshalb Knoten früh sinnvoll benennen, nicht „HTTP Request1“.",
+            "en": "Reaches a node further back, not only the immediately preceding one. The name is the one shown in the editor – rename it and the expression breaks. So name nodes sensibly early, not “HTTP Request1”."
+          }
+        },
+        {
+          "was": "?? und ?.",
+          "bedeutet": {
+            "de": "Ersatzwert und abgesicherter Zugriff. Eine Schnittstelle, die ein Feld gelegentlich weglässt, bringt einen Ablauf sonst nachts zum Absturz – der Knoten scheitert an undefined, nicht an der Datenbank.",
+            "en": "Fallback value and safe access. An interface that occasionally omits a field otherwise crashes a workflow at night – the node fails on undefined, not on the database."
+          }
+        },
+        {
+          "was": "$now ist Luxon",
+          "bedeutet": {
+            "de": "Kein JavaScript-Date, sondern ein Luxon-DateTime. Deshalb .toISO(), .toISODate(), .minus({ days: 1 }) statt der Date-Methoden. Und: Es rechnet in der eingestellten Zeitzone, was ohne GENERIC_TIMEZONE wieder UTC ist.",
+            "en": "Not a JavaScript Date but a Luxon DateTime. Hence .toISO(), .toISODate(), .minus({ days: 1 }) instead of the Date methods. And: it works in the configured time zone, which without GENERIC_TIMEZONE is UTC again."
+          }
+        }
+      ]
+    },
+    "B07": {
+      "titel": {
+        "de": "Die zwei URLs eines Webhooks",
+        "en": "A webhook's two URLs"
+      },
+      "befehl": "Webhook-Knoten, Reiter Parameters:\n  HTTP Method: POST      Path: stoerung      Respond: Immediately\n\nTest-URL      http://localhost:5678/webhook-test/stoerung\n  gilt nur, während im Editor „Listen for Test Event“ gedrückt ist\n  nimmt EINEN Aufruf an, zeigt die Daten sofort im Knoten\n\nProduktions-URL   http://localhost:5678/webhook/stoerung\n  wird erst registriert, wenn der Ablauf AKTIVIERT ist\n  zeigt im Editor nichts – Läufe stehen im Reiter Executions\n\n# Test von der Kommandozeile (Lab 01):\ncurl -X POST http://localhost:5678/webhook-test/stoerung \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\"station\":\"Hauptbahnhof\",\"rad\":\"VC-0142\",\"art\":\"Bremse\"}'\n\n# Windows PowerShell:\n# Invoke-RestMethod -Method Post -Uri http://localhost:5678/webhook-test/stoerung `\n#   -ContentType application/json `\n#   -Body '{\"station\":\"Hauptbahnhof\",\"rad\":\"VC-0142\",\"art\":\"Bremse\"}'",
+      "teile": [
+        {
+          "was": "404 not registered",
+          "bedeutet": {
+            "de": "Die häufigste Meldung, und fast immer dieselbe Ursache: Aufruf auf die Produktions-URL, aber der Ablauf ist nicht aktiviert – oder Aufruf auf die Test-URL, ohne dass im Editor gelauscht wird. Der Ablauf ist in beiden Fällen in Ordnung.",
+            "en": "The most common message, and almost always the same cause: a call to the production URL while the workflow is not activated – or a call to the test URL without the editor listening. The workflow is fine in both cases."
+          }
+        },
+        {
+          "was": "Respond",
+          "bedeutet": {
+            "de": "Immediately antwortet sofort mit 200, bevor der Ablauf fertig ist – richtig für Meldungen, die nur ankommen sollen. Using 'Respond to Webhook' Node antwortet erst am Ende und kann Daten zurückgeben – richtig für ein Formular, das eine Antwort erwartet. Ein Ablauf, der lange rechnet und sofort antworten müsste, läuft in die Zeitüberschreitung des Aufrufers.",
+            "en": "Immediately answers with 200 right away, before the workflow finishes – right for notifications that only need to arrive. Using the 'Respond to Webhook' node answers only at the end and can return data – right for a form expecting an answer. A workflow that computes for a long time but should answer at once runs into the caller's timeout."
+          }
+        },
+        {
+          "was": "Öffentlich erreichbar",
+          "bedeutet": {
+            "de": "localhost ist für ein Fremdsystem im Internet unerreichbar. Für einen echten Aufruf von außen braucht die Instanz eine öffentliche Adresse (WEBHOOK_URL setzen) und einen Reverse-Proxy mit TLS – oder man testet mit curl vom eigenen Rechner, wie hier.",
+            "en": "localhost is unreachable for a third-party system on the internet. For a real call from outside the instance needs a public address (set WEBHOOK_URL) and a reverse proxy with TLS – or you test with curl from your own machine, as here."
+          }
+        },
+        {
+          "was": "Ungeschützter Weg",
+          "bedeutet": {
+            "de": "Eine Webhook-URL ohne Authentifizierung nimmt von jedem Daten an, der den Pfad kennt. Der Knoten kann Header- oder Basic-Auth verlangen; das gehört in ein Credential, nicht in den Pfadnamen.",
+            "en": "A webhook URL without authentication accepts data from anyone who knows the path. The node can require header or basic auth; that belongs in a credential, not in the path name."
+          }
+        }
+      ]
+    },
+    "B08": {
+      "titel": {
+        "de": "Error Workflow einrichten",
+        "en": "Setting up an error workflow"
+      },
+      "prompt": "☰",
+      "befehl": "1  Neuen Ablauf anlegen, ersten Knoten: Error Trigger\n2  Dahinter, was benachrichtigen soll:  Send Email  ·  Slack  ·  Postgres (Insert)\n3  Speichern, Name z. B. „Fehlermelder“\n4  In JEDEM produktiven Ablauf:  Workflow Settings → Error Workflow → Fehlermelder\n\nWas der Error Trigger liefert:\n  {{ $json.workflow.name }}              welcher Ablauf\n  {{ $json.execution.id }}               welcher Lauf\n  {{ $json.execution.url }}              direkter Link in den Lauf\n  {{ $json.execution.lastNodeExecuted }} an welchem Knoten es endete\n  {{ $json.execution.error.message }}    die Meldung selbst\n\n5  Prüfen, ob er wirklich feuert: im produktiven Ablauf einen Knoten\n   absichtlich falsch stellen (URL verdrehen), aktivieren, warten.\n   Ein Fehlermelder, der nie geprüft wurde, ist keiner.",
+      "teile": [
+        {
+          "was": "Error Trigger",
+          "bedeutet": {
+            "de": "Ein eigener Trigger-Typ, der nur startet, wenn ein anderer Ablauf scheitert. Er läuft nicht bei Test-Läufen im Editor, sondern nur bei produktiven – deshalb muss der überwachte Ablauf aktiviert sein, damit die Prüfung etwas aussagt.",
+            "en": "A trigger type of its own that starts only when another workflow fails. It does not run on test runs in the editor, only on production ones – so the monitored workflow has to be activated for the check to mean anything."
+          }
+        },
+        {
+          "was": "Ein Melder für alle",
+          "bedeutet": {
+            "de": "Derselbe Fehlerablauf wird in beliebig vielen Abläufen eingetragen. Die Meldung enthält den Namen des gescheiterten Ablaufs, man braucht also nicht je Ablauf einen eigenen.",
+            "en": "The same error workflow is entered in any number of workflows. The message carries the failed workflow's name, so you do not need one per workflow."
+          }
+        },
+        {
+          "was": "In die Datenbank statt in die Mailbox",
+          "bedeutet": {
+            "de": "Fehler in eine Tabelle zu schreiben, hat einen Vorteil gegenüber einer Mail: Man kann sie auswerten. Zwei Ausfälle im Monat sind ein Zufall, zwei am Tag sind ein Muster – und das sieht man nur in einer Tabelle.",
+            "en": "Writing errors into a table has an advantage over sending mail: you can analyse them. Two outages a month are chance, two a day are a pattern – and you only see that in a table."
+          }
+        },
+        {
+          "was": "Stiller Fehlschlag",
+          "bedeutet": {
+            "de": "Ein Knoten mit Continue On Fail läuft weiter, ohne zu scheitern – dann feuert der Error Trigger nicht. Das ist manchmal gewollt, muss dann aber selbst geprüft werden, etwa mit einem If-Knoten auf $json.error.",
+            "en": "A node with continue-on-fail carries on without failing – then the error trigger does not fire. That is sometimes intended, but then has to be checked by hand, e.g. with an if node on $json.error."
+          }
+        }
+      ]
+    },
+    "B09": {
+      "titel": {
+        "de": "Laufdaten begrenzen und Telemetrie abschalten",
+        "en": "Limiting run data and switching telemetry off"
+      },
+      "befehl": "docker run -d --name n8n \\\n  -p 127.0.0.1:5678:5678 \\\n  -v n8n_data:/home/node/.n8n \\\n  -e N8N_ENCRYPTION_KEY=9f3c1b... \\\n  -e GENERIC_TIMEZONE=Europe/Berlin -e TZ=Europe/Berlin \\\n  -e EXECUTIONS_DATA_PRUNE=true \\\n  -e EXECUTIONS_DATA_MAX_AGE=168 \\\n  -e EXECUTIONS_DATA_PRUNE_MAX_COUNT=5000 \\\n  -e N8N_DIAGNOSTICS_ENABLED=false \\\n  -e N8N_VERSION_NOTIFICATIONS_ENABLED=false \\\n  --restart unless-stopped \\\n  n8nio/n8n\n\n# Je Ablauf zusätzlich, unter Workflow Settings:\n#   Save successful production executions:  None\n#   Save failed production executions:      All\n#   Save manual executions:                 All   (nur im Editor)",
+      "teile": [
+        {
+          "was": "EXECUTIONS_DATA_MAX_AGE",
+          "bedeutet": {
+            "de": "Aufbewahrungsdauer in Stunden; 168 sind sieben Tage. Zusammen mit PRUNE=true räumt n8n selbst auf. Ohne beides wächst die Datenbank unbegrenzt – mit vollständigen Ein- und Ausgabedaten jedes Knotens jedes Laufs.",
+            "en": "Retention period in hours; 168 is seven days. Together with PRUNE=true n8n tidies up by itself. Without both the database grows without limit – holding the complete input and output data of every node of every run."
+          }
+        },
+        {
+          "was": "Save successful: None",
+          "bedeutet": {
+            "de": "Der wirksamste Griff bei personenbezogenen Daten: Gelungene Läufe werden gar nicht gespeichert, Fehlläufe schon. Die Fehlersuche bleibt möglich, der Datenbestand entsteht nicht. Genau diese Kombination empfiehlt die Herstellerdokumentation für den DSGVO-Kontext.",
+            "en": "The most effective lever with personal data: successful runs are not stored at all, failed ones are. Debugging stays possible, the data collection does not arise. Exactly this combination is what the vendor's documentation recommends for the GDPR context."
+          }
+        },
+        {
+          "was": "N8N_DIAGNOSTICS_ENABLED",
+          "bedeutet": {
+            "de": "Voreingestellt an: n8n überträgt anonyme Nutzungsdaten. Auf false abgeschaltet – damit entfällt auch die eingebaute KI-Hilfe. Eine Abwägung, keine Selbstverständlichkeit, aber im Hochschulbetrieb die naheliegende Richtung.",
+            "en": "On by default: n8n transmits anonymous usage data. Set to false it is off – which also removes the built-in AI help. A trade-off, not a given, but in university operation the obvious direction."
+          }
+        },
+        {
+          "was": "Was das nicht löst",
+          "bedeutet": {
+            "de": "Ein Löschintervall ist keine Rechtsgrundlage. Wenn ein Ablauf personenbezogene Daten verarbeitet, braucht es die weiter – Zweck, Grundlage, Verzeichnis der Verarbeitungstätigkeiten. Die Einstellungen begrenzen nur, was zusätzlich und unbeabsichtigt entsteht.",
+            "en": "A deletion interval is not a legal basis. If a workflow processes personal data, that is still required – purpose, basis, record of processing activities. The settings only limit what arises additionally and unintentionally."
+          }
+        }
+      ]
+    }
+  },
+  "uebungen": [
+    {
+      "id": "P09-01",
+      "typ": "terminal",
+      "titel": {
+        "de": "n8n so in Betrieb nehmen, dass es einen Neustart übersteht",
+        "en": "Set n8n up so that it survives a restart"
+      },
+      "aufgabe": {
+        "de": "<p>Erst der Weg, den man in Anleitungen findet, dann der, den man behalten will. Starten Sie n8n zunächst mit <code>--rm</code> und ohne Band, lesen Sie die Protokollausgabe und achten Sie auf die Zeile zum Verschlüsselungsschlüssel. Räumen Sie dann auf und starten Sie neu: mit Band <code>n8n_data</code> auf <code>/home/node/.n8n</code>, mit gesetztem <code>N8N_ENCRYPTION_KEY</code> und mit Zeitzone.</p><p>Diese Konsole kennt das Abbild <code>n8nio/n8n</code>. Die Protokollausgabe unterscheidet sich danach, ob ein Schlüssel übergeben wurde – das ist der Punkt der Übung.</p>",
+        "en": "<p>First the route you find in tutorials, then the one worth keeping. Start n8n with <code>--rm</code> and without a volume, read the log output and watch the line about the encryption key. Then clean up and start again: with the volume <code>n8n_data</code> on <code>/home/node/.n8n</code>, with <code>N8N_ENCRYPTION_KEY</code> set and with a time zone.</p><p>This console knows the image <code>n8nio/n8n</code>. The log output differs depending on whether a key was passed – that is the point of the exercise.</p>"
+      },
+      "begruessung": [
+        {
+          "de": "Auftrag 1 von 1. Zusätzlich bekanntes Abbild: n8nio/n8n. Zum Nachlesen: docker logs <name>",
+          "en": "Assignment 1 of 1. Additionally known image: n8nio/n8n. To read back: docker logs <name>"
+        }
+      ],
+      "schritte": [
+        {
+          "text": {
+            "de": "n8n im Hintergrund starten, ohne Band, mit Port 5678 und Namen fluechtig",
+            "en": "Start n8n in the background, without a volume, on port 5678, named fluechtig"
+          },
+          "zustand": {
+            "containerLaeuft": "fluechtig",
+            "portGebunden": "5678:5678"
+          }
+        },
+        {
+          "text": {
+            "de": "Protokoll lesen – welche Zeile steht dort zum Schlüssel?",
+            "en": "Read the log – what line about the key does it show?"
+          },
+          "muster": "^docker\\s+logs\\b"
+        },
+        {
+          "text": {
+            "de": "Container anhalten und entfernen",
+            "en": "Stop the container and remove it"
+          },
+          "muster": "^docker\\s+rm\\b",
+          "zustand": {
+            "containerWeg": "fluechtig"
+          }
+        },
+        {
+          "text": {
+            "de": "Band n8n_data anlegen",
+            "en": "Create the volume n8n_data"
+          },
+          "muster": "^docker\\s+volume\\s+create\\b",
+          "zustand": {
+            "volumen": "n8n_data"
+          }
+        },
+        {
+          "text": {
+            "de": "n8n neu starten: Name n8n, Band auf /home/node/.n8n, N8N_ENCRYPTION_KEY gesetzt",
+            "en": "Start n8n again: named n8n, volume on /home/node/.n8n, N8N_ENCRYPTION_KEY set"
+          },
+          "zustand": {
+            "containerLaeuft": "n8n",
+            "bandAn": "n8n_data",
+            "umgebung": "N8N_ENCRYPTION_KEY="
+          }
+        },
+        {
+          "text": {
+            "de": "Zeitzone nachziehen: anhalten, entfernen, denselben Start zusätzlich mit GENERIC_TIMEZONE=Europe/Berlin",
+            "en": "Add the time zone: stop it, remove it, then the same start additionally with GENERIC_TIMEZONE=Europe/Berlin"
+          },
+          "zustand": {
+            "containerLaeuft": "n8n",
+            "umgebung": "GENERIC_TIMEZONE=Europe/Berlin"
+          }
+        },
+        {
+          "text": {
+            "de": "Protokoll des laufenden Containers lesen – die Schlüsselzeile ist verschwunden",
+            "en": "Read the running container's log – the key line has gone"
+          },
+          "muster": "^docker\\s+logs\\b"
+        }
+      ],
+      "rueckmeldung": {
+        "de": "Der Unterschied zwischen den beiden Protokollen ist der ganze Inhalt dieser Übung. „No encryption key found – generating one“ heißt: n8n hat sich selbst einen Schlüssel gebaut und ihn in das Datenverzeichnis gelegt. Solange das Verzeichnis auf einem Band liegt, geht das gut. Ohne Band ist der Schlüssel beim nächsten Start weg – und mit ihm die Verwendbarkeit aller Zugangsdaten. Deshalb ist die zweite Fassung die richtige: Schlüssel von außen gesetzt, im Passwortmanager gesichert, Band in der Sicherung. Fehlt in dieser Reihe noch etwas? Ja: --restart unless-stopped, damit der Container nach einem Neustart des Rechners von allein wiederkommt.",
+        "en": "The difference between the two logs is this exercise's entire content. “No encryption key found – generating one” means: n8n built itself a key and put it in the data directory. As long as that directory sits on a volume, that works out. Without a volume the key is gone on the next start – and with it the usability of all credentials. Hence the second version is the right one: key set from outside, kept in the password manager, volume in the backup. Is anything still missing from this sequence? Yes: --restart unless-stopped, so the container comes back by itself after the machine reboots."
+      }
+    },
+    {
+      "id": "P09-02",
+      "typ": "zuordnen",
+      "titel": {
+        "de": "Symptom und Ursache",
+        "en": "Symptom and cause"
+      },
+      "aufgabe": {
+        "de": "<p>Acht Beobachtungen aus der Praxis. Ordnen Sie jede dem Begriff zu, der sie erklärt. Alle acht sind Fälle, in denen der Ablauf selbst in Ordnung ist – falsch ist die Annahme darüber, wie n8n arbeitet.</p>",
+        "en": "<p>Eight observations from practice. Assign each to the concept that explains it. All eight are cases in which the workflow itself is fine – what is wrong is the assumption about how n8n works.</p>"
+      },
+      "ziele": [
+        {
+          "id": "z-akt",
+          "text": {
+            "de": "Ablauf nicht aktiviert",
+            "en": "Workflow not activated"
+          }
+        },
+        {
+          "id": "z-pin",
+          "text": {
+            "de": "Pinned Data",
+            "en": "Pinned data"
+          }
+        },
+        {
+          "id": "z-item",
+          "text": {
+            "de": "Item-Semantik",
+            "en": "Item semantics"
+          }
+        },
+        {
+          "id": "z-cred",
+          "text": {
+            "de": "Credential und Verschlüsselungsschlüssel",
+            "en": "Credential and encryption key"
+          }
+        },
+        {
+          "id": "z-hook",
+          "text": {
+            "de": "Test- statt Produktions-URL",
+            "en": "Test instead of production URL"
+          }
+        },
+        {
+          "id": "z-zeit",
+          "text": {
+            "de": "Zeitzone",
+            "en": "Time zone"
+          }
+        }
+      ],
+      "paare": [
+        {
+          "begriff": {
+            "de": "Im Editor läuft alles durch, ab Mitternacht passiert nichts.",
+            "en": "Everything runs through in the editor, from midnight on nothing happens."
+          },
+          "ziel": "z-akt"
+        },
+        {
+          "begriff": {
+            "de": "Ein Knoten bekommt immer dieselben drei Datensätze, obwohl die Schnittstelle inzwischen andere liefert.",
+            "en": "A node keeps getting the same three records although the interface now delivers different ones."
+          },
+          "ziel": "z-pin"
+        },
+        {
+          "begriff": {
+            "de": "Die Schnittstelle liefert sieben Tage, in der Tabelle steht eine Zeile.",
+            "en": "The interface delivers seven days, the table holds one row."
+          },
+          "ziel": "z-item"
+        },
+        {
+          "begriff": {
+            "de": "Nach dem Umzug auf einen anderen Server: „Credentials could not be decrypted“.",
+            "en": "After moving to another server: “Credentials could not be decrypted”."
+          },
+          "ziel": "z-cred"
+        },
+        {
+          "begriff": {
+            "de": "Das Fremdsystem bekommt 404, obwohl vorhin noch Daten angekommen sind.",
+            "en": "The third-party system gets 404 although data arrived a moment ago."
+          },
+          "ziel": "z-hook"
+        },
+        {
+          "begriff": {
+            "de": "Der Zeitplan steht auf 06:00, der Lauf beginnt im Sommer um 08:00.",
+            "en": "The schedule says 06:00, in summer the run begins at 08:00."
+          },
+          "ziel": "z-zeit"
+        },
+        {
+          "begriff": {
+            "de": "Ein Knoten läuft fünfzigmal, obwohl ein einziger Aufruf gewollt war.",
+            "en": "A node runs fifty times although a single call was intended."
+          },
+          "ziel": "z-item"
+        },
+        {
+          "begriff": {
+            "de": "Der exportierte Ablauf tut beim Kommilitonen nichts – kein Knoten hat Zugang zur Datenbank.",
+            "en": "The exported workflow does nothing for a fellow student – no node has access to the database."
+          },
+          "ziel": "z-cred"
+        }
+      ],
+      "rueckmeldung": {
+        "de": "Sechs Begriffe erklären die überwiegende Zahl der Zwischenfälle mit einem Automatisierungswerkzeug – und keiner davon ist ein Programmierfehler. Zwei verdienen die Wiederholung: Der exportierte Ablauf enthält absichtlich keine Zugangsdaten, das ist ein Sicherheitsmerkmal und kein Defekt; die Empfängerin legt ihre eigenen an. Und ein Knoten, der fünfzigmal läuft, folgt genau der Regel: einmal je Item. Wer einen einzigen Aufruf braucht, muss den Strom vorher zusammenfassen – etwa mit Aggregate oder einem Code-Knoten im Modus Run Once for All Items.",
+        "en": "Six concepts explain the vast majority of incidents with an automation tool – and none of them is a programming error. Two deserve repeating: the exported workflow deliberately contains no credentials, which is a security feature and not a defect; the recipient creates her own. And a node running fifty times follows exactly the rule: once per item. Whoever needs a single call has to condense the stream first – e.g. with aggregate or a code node in run-once-for-all-items mode."
+      }
+    },
+    {
+      "id": "P09-03",
+      "typ": "quiz",
+      "titel": {
+        "de": "Items und Ausdrücke",
+        "en": "Items and expressions"
+      },
+      "aufgabe": {
+        "de": "<p>Drei Fragen zum Datenmodell. Es ist die Stelle, an der ein Ablauf technisch fehlerfrei durchläuft und trotzdem das Falsche tut – deshalb steht sie hier vor allem anderen.</p>",
+        "en": "<p>Three questions on the data model. It is the place where a workflow runs through technically without errors and still does the wrong thing – which is why it comes before everything else here.</p>"
+      },
+      "fragen": [
+        {
+          "frage": {
+            "de": "Ein <code>HTTP Request</code>-Knoten gibt <em>ein</em> Item zurück, dessen Feld <code>daily.time</code> eine Liste mit sieben Datumsangaben enthält. Dahinter steht direkt <code>Postgres → Insert</code>. Was passiert?",
+            "en": "An <code>HTTP Request</code> node returns <em>one</em> item whose field <code>daily.time</code> holds a list of seven dates. Directly after it sits <code>Postgres → Insert</code>. What happens?"
+          },
+          "optionen": [
+            {
+              "de": "Der Insert läuft einmal und schreibt eine Zeile. n8n arbeitet je Item, und es gibt genau ein Item – die Liste <em>innerhalb</em> des Items zählt nicht mit.",
+              "en": "The insert runs once and writes one row. n8n works per item, and there is exactly one item – the list <em>inside</em> the item does not count."
+            },
+            {
+              "de": "Der Insert läuft siebenmal, weil n8n Listen in Feldern automatisch auflöst.",
+              "en": "The insert runs seven times, because n8n automatically unpacks lists in fields."
+            },
+            {
+              "de": "Der Knoten scheitert, weil ein Feld keine Liste enthalten darf.",
+              "en": "The node fails, because a field must not contain a list."
+            }
+          ],
+          "richtig": [
+            0
+          ],
+          "erklaerung": {
+            "de": "Die Zahl der Läufe eines Knotens ist die Zahl der Items im Eingang – nicht die Zahl der Werte in ihnen. Aus einem Item mit sieben Werten werden sieben Items durch Aufteilen: mit dem Knoten Split Out oder in einem Code-Knoten im Modus Run Once for All Items, der eine Liste von Objekten zurückgibt. Die Kopfzeile der Ausgabetabelle zeigt die Zahl der Items – der schnellste Weg, das zu prüfen, bevor die Datenbank verdächtigt wird.",
+            "en": "The number of times a node runs is the number of items in its input – not the number of values inside them. One item with seven values becomes seven items by splitting: with the split-out node or in a code node in run-once-for-all-items mode returning a list of objects. The output table's header shows the item count – the fastest way to check this before suspecting the database."
+          }
+        },
+        {
+          "frage": {
+            "de": "Welche dieser Ausdrücke sind sinnvoll, welche gehen schief? Wählen Sie alle aus, die ein <strong>Problem</strong> darstellen.",
+            "en": "Which of these expressions make sense, and which go wrong? Select all that constitute a <strong>problem</strong>."
+          },
+          "optionen": [
+            {
+              "de": "<code>{{ $json.api_key }}</code> im URL-Feld eines <code>HTTP Request</code>-Knotens, gefüllt aus einem vorgeschalteten <code>Set</code>-Knoten mit dem Schlüssel als festem Text.",
+              "en": "<code>{{ $json.api_key }}</code> in the URL field of an <code>HTTP Request</code> node, filled from an upstream <code>Set</code> node holding the key as fixed text."
+            },
+            {
+              "de": "<code>{{ $json.stadt.name }}</code>, wenn die Schnittstelle das Feld <code>stadt</code> gelegentlich weglässt.",
+              "en": "<code>{{ $json.stadt.name }}</code>, when the interface occasionally omits the <code>stadt</code> field."
+            },
+            {
+              "de": "<code>{{ $('HTTP Request').item.json.id }}</code>, um auf einen Knoten weiter vorn zuzugreifen.",
+              "en": "<code>{{ $('HTTP Request').item.json.id }}</code>, to reach a node further upstream."
+            },
+            {
+              "de": "<code>{{ $now.toISODate() }}</code> als Wert für ein <code>date</code>-Feld in der Datenbank.",
+              "en": "<code>{{ $now.toISODate() }}</code> as the value for a <code>date</code> field in the database."
+            }
+          ],
+          "richtig": [
+            0,
+            1
+          ],
+          "erklaerung": {
+            "de": "Der erste Fall ist der ernste: Ein Schlüssel als fester Text in einem Set-Knoten steht im Ablauf – und damit im Export, im Git-Repository und in den Laufprotokollen jeder Ausführung. Zugangsdaten gehören in ein Credential, das getrennt und verschlüsselt liegt und beim Export nicht mitgeht. Der zweite Fall bricht ab, sobald das Feld fehlt; abgesichert heißt es {{ $json.stadt?.name }} oder mit Ersatzwert {{ $json.stadt?.name ?? 'unbekannt' }} – nachts scheitert ein Ablauf fast immer an einem fehlenden Feld, nicht an der Datenbank. Die beiden anderen sind in Ordnung; beim dritten ist nur zu beachten, dass ein umbenannter Knoten den Ausdruck bricht.",
+            "en": "The first case is the serious one: a key as fixed text in a set node sits in the workflow – and therefore in the export, in the Git repository and in the run logs of every execution. Credentials belong in a credential, stored separately and encrypted and not travelling with an export. The second case breaks the moment the field is missing; made safe it reads {{ $json.stadt?.name }} or, with a fallback, {{ $json.stadt?.name ?? 'unbekannt' }} – at night a workflow almost always fails on a missing field, not on the database. The other two are fine; with the third, only note that a renamed node breaks the expression."
+          },
+          "mehrfach": true
+        },
+        {
+          "frage": {
+            "de": "Ein <code>Code</code>-Knoten soll aus einer Antwort mehrere Zeilen machen. Er endet mit <code>return zeilen;</code>, wobei <code>zeilen</code> eine Liste einfacher Objekte wie <code>{ datum: '2026-09-09', temp: 21 }</code> ist. n8n meldet einen Fehler. Warum?",
+            "en": "A <code>Code</code> node is meant to turn one response into several rows. It ends with <code>return zeilen;</code>, where <code>zeilen</code> is a list of plain objects like <code>{ datum: '2026-09-09', temp: 21 }</code>. n8n reports an error. Why?"
+          },
+          "optionen": [
+            {
+              "de": "Ein Code-Knoten muss Items zurückgeben, also Objekte mit einer Eigenschaft <code>json</code>: <code>zeilen.map(z => ({ json: z }))</code>.",
+              "en": "A code node has to return items, i.e. objects with a <code>json</code> property: <code>zeilen.map(z => ({ json: z }))</code>."
+            },
+            {
+              "de": "Ein Code-Knoten darf keine Liste zurückgeben, sondern nur ein einzelnes Objekt.",
+              "en": "A code node must not return a list, only a single object."
+            },
+            {
+              "de": "Datumsangaben müssen als Luxon-Objekt zurückgegeben werden, nicht als Text.",
+              "en": "Dates have to be returned as Luxon objects, not as text."
+            }
+          ],
+          "richtig": [
+            0
+          ],
+          "erklaerung": {
+            "de": "Die Meldung lautet meist „A 'json' property isn't set“. Der Grund liegt am Datenmodell: Ein Item ist eine Hülle mit den Nutzdaten unter json – daneben kann noch binary für Dateien stehen. Wer die Nutzdaten direkt zurückgibt, liefert also keine Items. Und der Modus zählt: Run Once for All Items sieht den ganzen Eingang über $input und läuft einmal; Run Once for Each Item läuft je Item und sieht über $json nur dieses eine. Für „eine Antwort, viele Zeilen“ braucht man den ersten Modus.",
+            "en": "The message is usually “A 'json' property isn't set”. The reason lies in the data model: an item is a wrapper with the payload under json – alongside it there can be binary for files. Returning the payload directly therefore returns no items. And the mode matters: run once for all items sees the whole input through $input and runs once; run once for each item runs per item and through $json sees only that one. For “one response, many rows” you need the first mode."
+          }
+        }
+      ]
+    },
+    {
+      "id": "P09-04",
+      "typ": "quiz",
+      "titel": {
+        "de": "Webhooks und der Ablauf, den niemand ansieht",
+        "en": "Webhooks and the workflow nobody watches"
+      },
+      "aufgabe": {
+        "de": "<p>Drei Fragen zum Betrieb: Was passiert, wenn der Editor geschlossen ist und der Ablauf um sechs Uhr morgens von allein läuft?</p>",
+        "en": "<p>Three questions on operation: what happens when the editor is closed and the workflow runs by itself at six in the morning?</p>"
+      },
+      "fragen": [
+        {
+          "frage": {
+            "de": "Ein Ablauf mit <code>Webhook</code>-Trigger funktioniert im Editor tadellos: Sie drücken <em>Listen for Test Event</em>, senden mit <code>curl</code> und sehen die Daten im Knoten. Sie geben dem Fremdsystem die URL. Es meldet <code>404</code>. Was fehlt am wahrscheinlichsten?",
+            "en": "A workflow with a <code>Webhook</code> trigger works flawlessly in the editor: you press <em>listen for test event</em>, send with <code>curl</code> and see the data in the node. You give the URL to the third-party system. It reports <code>404</code>. What is most likely missing?"
+          },
+          "optionen": [
+            {
+              "de": "Der Ablauf ist nicht aktiviert – und weitergegeben wurde außerdem vermutlich die Test-URL <code>/webhook-test/…</code> statt der Produktions-URL <code>/webhook/…</code>.",
+              "en": "The workflow is not activated – and the URL passed on was probably the test URL <code>/webhook-test/…</code> instead of the production URL <code>/webhook/…</code>."
+            },
+            {
+              "de": "Der Webhook-Knoten braucht ein Credential, sonst weist er alle Aufrufe ab.",
+              "en": "The webhook node needs a credential, otherwise it rejects all calls."
+            },
+            {
+              "de": "Das Fremdsystem muss <code>GET</code> statt <code>POST</code> verwenden.",
+              "en": "The third-party system has to use <code>GET</code> instead of <code>POST</code>."
+            }
+          ],
+          "richtig": [
+            0
+          ],
+          "erklaerung": {
+            "de": "Zwei Wege, dieselbe Meldung. Die Test-URL gilt nur, solange im Editor gelauscht wird, und nimmt einen einzigen Aufruf an. Die Produktions-URL wird überhaupt erst registriert, wenn der Ablauf aktiviert ist. Und nach dem Aktivieren zeigt der Editor nichts mehr – die Läufe stehen im Reiter Executions. Wer das nicht weiß, hält den funktionierenden Zustand für den kaputten. Nebenbei: localhost ist für ein System im Internet unerreichbar; für echte Aufrufe braucht die Instanz eine öffentliche Adresse.",
+            "en": "Two routes, the same message. The test URL applies only while the editor is listening and accepts a single call. The production URL is registered only once the workflow is activated. And after activation the editor shows nothing any more – the runs sit in the executions tab. Whoever does not know this takes the working state for the broken one. Incidentally: localhost is unreachable for a system on the internet; for real calls the instance needs a public address."
+          }
+        },
+        {
+          "frage": {
+            "de": "Ein zeitgesteuerter Ablauf schreibt seit drei Wochen täglich Wetterdaten. Am 22. Tag ändert die Schnittstelle einen Feldnamen. Was passiert – und was hätte helfen müssen?",
+            "en": "A scheduled workflow has been writing weather data daily for three weeks. On day 22 the interface changes a field name. What happens – and what should have helped?"
+          },
+          "optionen": [
+            {
+              "de": "Der Lauf scheitert still. Ohne eingetragenen <code>Error Workflow</code> merkt es niemand, bis jemand die Auswertung öffnet und fehlende Tage sieht.",
+              "en": "The run fails silently. Without an <code>Error Workflow</code> entered nobody notices until somebody opens the analysis and sees missing days."
+            },
+            {
+              "de": "n8n deaktiviert den Ablauf und schickt eine Meldung an die Adresse des Kontos.",
+              "en": "n8n deactivates the workflow and sends a notification to the account's address."
+            },
+            {
+              "de": "Der Lauf wird automatisch so lange wiederholt, bis er gelingt.",
+              "en": "The run is retried automatically until it succeeds."
+            }
+          ],
+          "richtig": [
+            0
+          ],
+          "erklaerung": {
+            "de": "Ein Ablauf ohne Fehlerbehandlung ist keine Automatisierung, sondern eine Wette. Das Gegenmittel ist klein: ein zweiter Ablauf, der mit einem Error Trigger beginnt und die Meldung samt $json.execution.url weiterschickt oder in eine Tabelle schreibt, und in jedem produktiven Ablauf unter Workflow Settings als Error Workflow eingetragen. Zwei Zusätze: Retry On Fail im HTTP-Knoten fängt die vorübergehenden Ausfälle ab, und der Fehlermelder selbst gehört einmal geprüft – ein nie ausgelöster Melder ist keiner. Vorsicht bei Continue On Fail: Damit scheitert der Knoten nicht, und der Error Trigger feuert nicht.",
+            "en": "A workflow without error handling is not automation but a bet. The remedy is small: a second workflow starting with an error trigger that forwards the message including $json.execution.url or writes it into a table, entered as the error workflow under workflow settings in every production workflow. Two additions: retry-on-fail in the HTTP node catches the transient outages, and the error notifier itself should be tested once – a notifier never triggered is none. Careful with continue-on-fail: with it the node does not fail, and the error trigger does not fire."
+          }
+        },
+        {
+          "frage": {
+            "de": "Welche dieser Vorkehrungen gehören zu einer n8n-Instanz, die auf einem Rechner im Hochschulnetz läuft? Wählen Sie alle zutreffenden.",
+            "en": "Which of these precautions belong to an n8n instance running on a machine in the university network? Select all that apply."
+          },
+          "optionen": [
+            {
+              "de": "Den Port an <code>127.0.0.1</code> binden oder einen Reverse-Proxy mit TLS davorsetzen – eine offene Instanz gibt jedem Zugriff auf alle gespeicherten Zugangsdaten.",
+              "en": "Bind the port to <code>127.0.0.1</code> or put a reverse proxy with TLS in front – an open instance gives anyone access to all stored credentials."
+            },
+            {
+              "de": "<code>N8N_ENCRYPTION_KEY</code> selbst setzen und außerhalb des Containers sichern.",
+              "en": "Set <code>N8N_ENCRYPTION_KEY</code> yourself and keep it outside the container."
+            },
+            {
+              "de": "Das Band <code>n8n_data</code> in die Sicherung aufnehmen.",
+              "en": "Include the volume <code>n8n_data</code> in the backup."
+            },
+            {
+              "de": "Auf ein Band verzichten, damit nach jedem Neustart ein sauberer Zustand entsteht.",
+              "en": "Do without a volume, so that a clean state arises after every restart."
+            }
+          ],
+          "richtig": [
+            0,
+            1,
+            2
+          ],
+          "erklaerung": {
+            "de": "Die ersten drei gehören zusammen und sind der Mindestbestand. Der vierte Punkt klingt nach Hygiene und ist das Gegenteil: Ohne Band verliert die Instanz bei jedem Neustart Abläufe, Zugangsdaten und Laufprotokolle. „Sauberer Zustand“ ist bei einem Werkzeug, dessen Inhalt man selbst gebaut hat, kein Vorteil. Dieselbe Unterscheidung wie beim Postgres-Container in Lab 05: Ein Container ist wegwerfbar, seine Daten sind es nicht.",
+            "en": "The first three belong together and are the minimum. The fourth sounds like hygiene and is the opposite: without a volume the instance loses workflows, credentials and run logs on every restart. A “clean state” is no advantage for a tool whose content you built yourself. The same distinction as with the Postgres container in lab 05: a container is disposable, its data is not."
+          },
+          "mehrfach": true
+        }
+      ]
+    },
+    {
+      "id": "P09-05",
+      "typ": "quiz",
+      "titel": {
+        "de": "Lizenz und Laufdaten",
+        "en": "Licence and run data"
+      },
+      "aufgabe": {
+        "de": "<p>Zwei Fragen, die für eine Seminararbeit und für den Betrieb einer Instanz zählen: Was darf man mit n8n tun, und was sammelt es dabei über die Verarbeiteten an?</p>",
+        "en": "<p>Two questions that matter for a term paper and for running an instance: what may you do with n8n, and what does it collect about the people whose data it processes?</p>"
+      },
+      "fragen": [
+        {
+          "frage": {
+            "de": "In einer Seminararbeit steht: „n8n ist eine Open-Source-Automatisierungsplattform.“ Was ist daran zu berichtigen?",
+            "en": "A term paper states: “n8n is an open source automation platform.” What has to be corrected?"
+          },
+          "optionen": [
+            {
+              "de": "Der Quellcode ist einsehbar, aber die <strong>Sustainable Use License</strong> ist keine von der Open Source Initiative anerkannte Lizenz. Korrekt wäre „quelloffen einsehbar unter einer Sustainable Use License“; n8n selbst nennt das <em>fair-code</em>.",
+              "en": "The source is visible, but the <strong>Sustainable Use License</strong> is not a licence recognised by the Open Source Initiative. Correct would be “source-available under a Sustainable Use License”; n8n itself calls this <em>fair-code</em>."
+            },
+            {
+              "de": "Nichts – jede Software mit öffentlich einsehbarem Quellcode ist Open Source.",
+              "en": "Nothing – any software with publicly visible source is open source."
+            },
+            {
+              "de": "Der Begriff ist falsch, weil n8n auch eine kostenpflichtige Cloud anbietet.",
+              "en": "The term is wrong because n8n also offers a paid cloud."
+            }
+          ],
+          "richtig": [
+            0
+          ],
+          "erklaerung": {
+            "de": "Genau die Unterscheidung aus Lab 00: Einsehbarer Quellcode ist nicht gleich Open Source. Die Sustainable Use License erlaubt Nutzung für eigene Zwecke – Lehre und Studium eingeschlossen –, Änderungen am Code und kostenfreie Weitergabe samt Lizenztext. Sie verbietet, den Zugang zu einer eigenen Instanz gegen Entgelt an Dritte zu verkaufen oder n8n unter eigener Marke anzubieten. Für diesen Kurs ist der Einsatz also gedeckt; eine hochschulbetriebene Instanz als Dienstleistung zu verkaufen wäre es nicht. Dass ein Hersteller zusätzlich eine kostenpflichtige Cloud anbietet, sagt über die Lizenz übrigens nichts – das tun auch Anbieter mit echter Apache-2.0-Lizenz, etwa bei Apache Airflow.",
+            "en": "Exactly the distinction from lab 00: visible source is not the same as open source. The Sustainable Use License permits use for your own purposes – teaching and study included – modifying the code and free distribution including the licence text. It forbids selling access to your own instance to third parties for money or offering n8n under your own brand. So use in this course is covered; selling a university-run instance as a service would not be. That a vendor additionally offers a paid cloud says nothing about the licence, by the way – vendors with a genuine Apache 2.0 licence do that too, for instance around Apache Airflow."
+          }
+        },
+        {
+          "frage": {
+            "de": "Ein Ablauf verarbeitet stündlich Kundendaten aus der Fallstudie. Er läuft seit einem Monat fehlerfrei. Was liegt jetzt in der n8n-Datenbank, und welche Einstellungen begrenzen es?",
+            "en": "A workflow processes customer data from the case study every hour. It has been running without errors for a month. What now sits in the n8n database, and which settings limit it?"
+          },
+          "optionen": [
+            {
+              "de": "Etwa siebenhundert vollständige Kopien der Ein- und Ausgabedaten jedes Knotens. Begrenzt wird das durch <code>EXECUTIONS_DATA_PRUNE=true</code> mit <code>EXECUTIONS_DATA_MAX_AGE</code> und, je Ablauf, <em>save successful production executions</em> auf <code>None</code>.",
+              "en": "Roughly seven hundred complete copies of every node's input and output data. That is limited by <code>EXECUTIONS_DATA_PRUNE=true</code> with <code>EXECUTIONS_DATA_MAX_AGE</code> and, per workflow, <em>save successful production executions</em> set to <code>None</code>."
+            },
+            {
+              "de": "Nur die Zeitstempel der Läufe – Nutzdaten speichert n8n aus Datenschutzgründen nicht.",
+              "en": "Only the runs' timestamps – n8n does not store payload data for data protection reasons."
+            },
+            {
+              "de": "Die Daten des jeweils letzten Laufs; ältere werden automatisch überschrieben.",
+              "en": "The data of the most recent run; older ones are overwritten automatically."
+            }
+          ],
+          "richtig": [
+            0
+          ],
+          "erklaerung": {
+            "de": "Das Laufprotokoll ist bei der Fehlersuche unbezahlbar und bei personenbezogenen Daten ein Bestand, den niemand bewusst angelegt hat und der wächst. Zwei Griffe verhindern das: automatisches Aufräumen über die beiden Umgebungsvariablen und, wirksamer, gelungene produktive Läufe gar nicht zu speichern – Fehlläufe bleiben dann erhalten, die Fehlersuche also möglich. Genau diese Kombination empfiehlt die Herstellerdokumentation für den DSGVO-Kontext. Was sie nicht ersetzt: Zweck, Rechtsgrundlage und Verzeichnis der Verarbeitungstätigkeiten. Eine Löschfrist ist keine Erlaubnis.",
+            "en": "The run log is invaluable when debugging and, with personal data, a collection nobody deliberately created and that keeps growing. Two levers prevent it: automatic pruning through the two environment variables and, more effectively, not storing successful production runs at all – failed runs are then kept, so debugging stays possible. Exactly this combination is what the vendor's documentation recommends for the GDPR context. What it does not replace: purpose, legal basis and record of processing activities. A deletion period is not a permission."
+          }
+        }
+      ]
+    }
+  ]
+}

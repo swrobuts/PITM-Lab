@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="de" data-lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lab 09 · n8n · PITM-Lab</title>
+  <meta name="pitm:titel-en" content="Lab 09 · n8n · PITM-Lab" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/pitm.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%232E2A72'/><text x='16' y='23' font-family='sans-serif' font-size='18' font-weight='bold' text-anchor='middle' fill='%23FFC300'>P</text></svg>" />
+</head>
+<body class="lab-page" data-lab="lab-09">
+
+<header class="header">
+  <div class="header-left">
+    <a class="header-logo" href="index.html" data-lab-link><span class="mark">PITM</span>-Lab</a>
+    <a class="header-back" href="index.html" data-lab-link>
+      <span lang="de">← Zur Übersicht</span><span lang="en">← Back to overview</span>
+    </a>
+  </div>
+  <div class="header-right">
+    <button class="lang-btn active" data-lang-btn="de" aria-pressed="true">DE</button>
+    <button class="lang-btn" data-lang-btn="en" aria-pressed="false">EN</button>
+  </div>
+</header>
+
+<nav class="sidebar" aria-label="Lab-Navigation">
+  <div class="sidebar-title"><span lang="de">Abschnitte</span><span lang="en">Sections</span></div>
+  <a class="sidebar-link" href="#was"><span lang="de">Beschaffung, nicht Analyse</span><span lang="en">Supply, not analysis</span></a>
+  <a class="sidebar-link" href="#begriffe"><span lang="de">Die Begriffe</span><span lang="en">The concepts</span></a>
+  <a class="sidebar-link" href="#inbetrieb"><span lang="de">Inbetriebnahme</span><span lang="en">Setting it up</span></a>
+  <a class="sidebar-link" href="#erster"><span lang="de">Der erste Ablauf</span><span lang="en">The first workflow</span></a>
+  <a class="sidebar-link" href="#items"><span lang="de">Items und Expressions</span><span lang="en">Items and expressions</span></a>
+  <a class="sidebar-link" href="#webhook"><span lang="de">Webhooks: Test und Betrieb</span><span lang="en">Webhooks: test and production</span></a>
+  <a class="sidebar-link" href="#fehler"><span lang="de">Wenn es nachts schiefgeht</span><span lang="en">When it fails at night</span></a>
+  <a class="sidebar-link" href="#lizenz"><span lang="de">Lizenz: fair-code</span><span lang="en">Licence: fair-code</span></a>
+  <a class="sidebar-link" href="#daten"><span lang="de">Laufdaten und Datenschutz</span><span lang="en">Run data and data protection</span></a>
+  <a class="sidebar-link" href="#spielplatz"><span lang="de">Spielplatz</span><span lang="en">Playground</span></a>
+  <a class="sidebar-link" href="#uebungen"><span lang="de">Übungen</span><span lang="en">Exercises</span></a>
+  <a class="sidebar-link" href="#zusammenfassung"><span lang="de">Zusammenfassung</span><span lang="en">Summary</span></a>
+</nav>
+
+<div class="lab-header">
+  <div class="lab-num-big">09</div>
+  <h1 class="lab-title">n8n</h1>
+  <p class="lab-intro">
+    <span lang="de">Die Auswertungen der vorigen Labs haben eine gemeinsame Voraussetzung: dass die Daten da sind. In
+      der Fallstudie sind es Wetterdaten, Eventdaten, Störungsmeldungen – jeden Tag neu, aus verschiedenen Quellen, in
+      eine Datenbank. Das ist keine Analyse, sondern Beschaffung und Orchestrierung, und dafür schreibt man kein
+      Notebook, das jemand jeden Morgen von Hand startet. Dieses Lab führt ein Werkzeug für solche Abläufe ein – und die
+      drei Dinge, an denen sie in der Praxis scheitern: Zugangsdaten, Fehlerbehandlung und die Frage, was in den
+      Laufprotokollen landet.</span>
+    <span lang="en">The analyses in the previous labs share one prerequisite: that the data is there. In the case study it
+      is weather data, event data, fault reports – new every day, from different sources, into a database. That is not
+      analysis but supply and orchestration, and for it you do not write a notebook somebody starts by hand every morning.
+      This lab introduces a tool for such workflows – and the three things they fail on in practice: credentials, error
+      handling and the question of what ends up in the run logs.</span>
+  </p>
+  <div class="lernziele">
+    <span class="lernziel-chip">Trigger · Node · Connection</span>
+    <span class="lernziel-chip">Item · Execution</span>
+    <span class="lernziel-chip">Credential</span>
+    <span class="lernziel-chip">Expression</span>
+    <span class="lernziel-chip">Error Workflow</span>
+  </div>
+  <div data-einordnung></div>
+</div>
+
+<main class="main-content">
+
+  <section class="section-block" id="was">
+    <h2><span lang="de">Beschaffung, nicht Analyse</span><span lang="en">Supply, not analysis</span></h2>
+    <p>
+      <span lang="de">In der Werkzeugübersicht der Vorlesung steht die Automatisierung querschnittlich: Sie sitzt auf
+        keiner Ebene, sondern löst Werkzeuge anderer Ebenen aus, verbindet sie und überwacht sie. Ein Ablauf in n8n ruft
+        eine Schnittstelle ab, formt das Ergebnis um und schreibt es in die Datenbank aus Lab 06. Was danach damit
+        passiert – die Auswertung in Lab 02, das Modell in Lab 08 – ist eine andere Frage.</span>
+      <span lang="en">In the lecture's tool overview automation sits across the layers: it belongs to none of them but
+        triggers tools of other layers, connects them and monitors them. A workflow in n8n calls an interface, reshapes
+        the result and writes it into the database from lab 06. What happens with it afterwards – the analysis in lab 02,
+        the model in lab 08 – is a different question.</span>
+    </p>
+    <div class="concept-box">
+      <h3><span lang="de">Wo die Grenze liegt</span><span lang="en">Where the boundary lies</span></h3>
+      <p><span lang="de">Es ist verlockend, in einem Automatisierungswerkzeug auch zu rechnen – es hat Knoten für
+        Aggregation, Filter und sogar Code. Die Trennung lohnt trotzdem: Ein Ablauf, der beschafft <em>und</em> auswertet,
+        ist schwer zu prüfen, weil das Ergebnis keine Datei ist, die man ansehen kann, sondern eine Nebenwirkung. Die
+        praktikable Arbeitsteilung: <strong>n8n beschafft und legt ab, KNIME oder ein Notebook wertet aus.</strong> Dann
+        gibt es an jeder Grenze etwas Nachprüfbares – eine Tabelle in der Datenbank.</span>
+      <span lang="en">It is tempting to compute in an automation tool too – it has nodes for aggregation, filtering and
+        even code. The separation still pays off: a workflow that supplies <em>and</em> analyses is hard to check, because
+        the result is not a file you can look at but a side effect. The practical division: <strong>n8n supplies and
+        stores, KNIME or a notebook analyses.</strong> Then at every boundary there is something checkable – a table in the
+        database.</span></p>
+    </div>
+    <div class="auswahl-hinweis">
+      <p><span lang="de"><strong>Hinweis.</strong> Bei den in dieser Lernumgebung gezeigten Tools handelt es sich um eine
+        Auswahl – diese ist weder als Empfehlung noch als Werbung zu verstehen. n8n steht hier, weil es ohne Kosten
+        selbst betrieben werden kann und seine Abläufe grafisch darstellt. Alternativen auf derselben Ebene:
+        <strong>Apache Airflow</strong> (Apache 2.0, Abläufe als Python-Code, in Datenteams verbreitet),
+        <strong>Prefect</strong>, <strong>Windmill</strong>, <strong>Node-RED</strong> – und im Kleinen ein Skript plus
+        <code>cron</code> oder eine GitHub Action mit Zeitplan.</span>
+      <span lang="en"><strong>Note.</strong> The tools shown in this learning environment are a selection – it is meant
+        neither as a recommendation nor as advertising. n8n appears here because it can be self-hosted at no cost and
+        represents its workflows graphically. Alternatives on the same layer: <strong>Apache Airflow</strong>
+        (Apache 2.0, workflows as Python code, common in data teams), <strong>Prefect</strong>,
+        <strong>Windmill</strong>, <strong>Node-RED</strong> – and, in the small, a script plus <code>cron</code> or a
+        GitHub Action on a schedule.</span></p>
+    </div>
+  </section>
+
+  <section class="section-block" id="begriffe">
+    <h2><span lang="de">Die Begriffe</span><span lang="en">The concepts</span></h2>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th><span lang="de">Begriff</span><span lang="en">Concept</span></th>
+            <th><span lang="de">Was es ist</span><span lang="en">What it is</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>Workflow</strong></td><td><span lang="de">Der Ablauf: eine Sammlung verbundener Knoten. Läuft nur, wenn er <strong>aktiviert</strong> ist.</span><span lang="en">The workflow: a collection of connected nodes. Runs only when it is <strong>activated</strong>.</span></td></tr>
+          <tr><td><strong>Trigger</strong></td><td><span lang="de">Der Knoten, der den Ablauf auslöst – nach Zeitplan, auf einen HTTP-Aufruf oder von Hand. Jeder produktive Ablauf braucht mindestens einen.</span><span lang="en">The node that starts the workflow – on a schedule, on an HTTP call or manually. Every production workflow needs at least one.</span></td></tr>
+          <tr><td><strong>Node</strong></td><td><span lang="de">Ein Arbeitsschritt: abrufen, umformen, verzweigen, schreiben, benachrichtigen.</span><span lang="en">One step of work: fetch, reshape, branch, write, notify.</span></td></tr>
+          <tr><td><strong>Item</strong></td><td><span lang="de">Ein Datensatz im Datenstrom, technisch ein JSON-Objekt. <strong>Der Begriff, an dem sich alles entscheidet</strong> – siehe unten.</span><span lang="en">One record in the data stream, technically a JSON object. <strong>The concept everything turns on</strong> – see below.</span></td></tr>
+          <tr><td><strong>Execution</strong></td><td><span lang="de">Ein konkreter Lauf. Im Reiter <code>Executions</code> mit Ein- und Ausgabedaten jedes Knotens einsehbar – nützlich und datenschutzrechtlich heikel.</span><span lang="en">One concrete run. Inspectable in the <code>Executions</code> tab with each node's input and output data – useful and delicate in data protection terms.</span></td></tr>
+          <tr><td><strong>Credential</strong></td><td><span lang="de">Zugangsdaten, getrennt vom Ablauf gespeichert und verschlüsselt. Einmal anlegen, in mehreren Knoten verwenden. <strong>Wird beim Export nicht mitgegeben.</strong></span><span lang="en">Credentials, stored separately from the workflow and encrypted. Create once, use in several nodes. <strong>Not included in an export.</strong></span></td></tr>
+          <tr><td><strong>Expression</strong></td><td><span lang="de">Ein Ausdruck in doppelten geschweiften Klammern, der ein Feld zur Laufzeit füllt: <code>{{ $json.betrag * 1.19 }}</code>.</span><span lang="en">An expression in double curly braces filling a field at runtime: <code>{{ $json.betrag * 1.19 }}</code>.</span></td></tr>
+          <tr><td><strong>Pinned Data</strong></td><td><span lang="de">Eingefrorene Ausgabe eines Knotens für die Entwicklung – <strong>wird im produktiven Lauf ignoriert</strong>. Eine beliebte Quelle für „im Test ging es doch“.</span><span lang="en">A node's frozen output for development – <strong>ignored in production runs</strong>. A popular source of “but it worked in the test”.</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="warn-box">
+      <p><span lang="de">Zwei dieser Begriffe erzeugen zusammen den häufigsten Fehler: <strong>Ein Ablauf läuft nur,
+        wenn er aktiviert ist</strong> – der Schalter oben rechts. Und <strong>Pinned Data gilt nur beim Testen</strong>.
+        Ein Ablauf, der im Editor tadellos durchläuft und nach dem Aktivieren nichts tut oder anderes tut, hat fast
+        immer eines von beidem als Ursache.</span>
+      <span lang="en">Two of these concepts together produce the most common error: <strong>a workflow runs only when it is
+        activated</strong> – the switch at the top right. And <strong>pinned data applies only while testing</strong>. A
+        workflow that runs flawlessly in the editor and then does nothing, or something else, after activation almost
+        always has one of those two as its cause.</span></p>
+    </div>
+  </section>
+
+  <section class="section-block" id="inbetrieb">
+    <h2><span lang="de">Inbetriebnahme</span><span lang="en">Setting it up</span></h2>
+    <p>
+      <span lang="de">Drei Wege, und die Wahl ist für den Hochschulkontext keine Geschmacksfrage: Nur der zweite hält
+        alle Daten im eigenen Haus.</span>
+      <span lang="en">Three routes, and for a university context the choice is not a matter of taste: only the second keeps
+        all data in house.</span>
+    </p>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th><span lang="de">Weg</span><span lang="en">Route</span></th>
+            <th><span lang="de">Aufwand</span><span lang="en">Effort</span></th>
+            <th><span lang="de">Wo die Daten liegen</span><span lang="en">Where the data sits</span></th>
+            <th><span lang="de">Für den Kurs</span><span lang="en">For the course</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>n8n Cloud</td>
+            <td><span lang="de">keiner – Anmelden genügt</span><span lang="en">none – signing up is enough</span></td>
+            <td><span lang="de">bei n8n auf Azure, EU-Region</span><span lang="en">with n8n on Azure, EU region</span></td>
+            <td><span lang="de">Testversion 14 Tage, 1.000 Läufe</span><span lang="en">14-day trial, 1,000 executions</span></td>
+          </tr>
+          <tr>
+            <td><span lang="de">Docker (Selbstbetrieb)</span><span lang="en">Docker (self-hosted)</span></td>
+            <td><span lang="de">ein Befehl – Lab 05</span><span lang="en">one command – lab 05</span></td>
+            <td><span lang="de">auf Ihrem Rechner oder Hochschulserver</span><span lang="en">on your machine or a university server</span></td>
+            <td><span lang="de"><strong>der Weg dieses Labs</strong></span><span lang="en"><strong>this lab's route</strong></span></td>
+          </tr>
+          <tr>
+            <td><code>npx n8n</code></td>
+            <td><span lang="de">ein Befehl, braucht Node.js 20.19–24</span><span lang="en">one command, needs Node.js 20.19–24</span></td>
+            <td><span lang="de">auf Ihrem Rechner</span><span lang="en">on your machine</span></td>
+            <td><span lang="de">zum Hineinschauen; laut Hersteller nicht für den Betrieb geeignet</span><span lang="en">for a look inside; per the vendor not suitable for production</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div data-befehl="B01"></div>
+    <div class="warn-box">
+      <h3><span lang="de">Der Verschlüsselungsschlüssel</span><span lang="en">The encryption key</span></h3>
+      <p><span lang="de">n8n verschlüsselt die gespeicherten Zugangsdaten mit einem Schlüssel. Setzen Sie keinen, erzeugt
+        n8n beim ersten Start einen zufälligen und legt ihn <em>im Datenverzeichnis</em> ab. Das funktioniert – bis das
+        Band verloren geht oder der Schlüssel sich ändert. Dann meldet n8n
+        <code>Credentials could not be decrypted</code>, und <strong>alle</strong> Zugangsdaten müssen neu angelegt
+        werden.</span>
+      <span lang="en">n8n encrypts the stored credentials with a key. If you set none, n8n generates a random one on first
+        start and puts it <em>in the data directory</em>. That works – until the volume is lost or the key changes. Then n8n
+        reports <code>Credentials could not be decrypted</code>, and <strong>all</strong> credentials have to be created
+        again.</span></p>
+      <p><span lang="de">Deshalb: Schlüssel einmal selbst erzeugen (<code>openssl rand -hex 32</code>), als
+        <code>N8N_ENCRYPTION_KEY</code> übergeben und <em>außerhalb</em> des Containers sichern – im Passwortmanager, den
+        Sie in Lab 00 eingerichtet haben. Und das Band <code>n8n_data</code> in die Sicherung aufnehmen: Es enthält
+        Abläufe, Zugangsdaten und Laufprotokolle.</span>
+      <span lang="en">Hence: generate the key yourself once (<code>openssl rand -hex 32</code>), pass it as
+        <code>N8N_ENCRYPTION_KEY</code> and store it <em>outside</em> the container – in the password manager you set up in
+        lab 00. And include the <code>n8n_data</code> volume in your backup: it holds workflows, credentials and run
+        logs.</span></p>
+    </div>
+    <div data-befehl="B02"></div>
+  </section>
+
+  <section class="section-block" id="erster">
+    <h2><span lang="de">Der erste Ablauf</span><span lang="en">The first workflow</span></h2>
+    <p>
+      <span lang="de">Die Aufgabe: Jeden Morgen die Wettervorhersage für Würzburg abrufen und in die Datenbank
+        schreiben. Damit ist die Grundlage für die Nachfrageprognose aus Notebook 04 der Fallstudie gelegt – dort war das
+        Wetter der wichtigste Einflussfaktor, und die Vorlesung betont, dass ein <em>vorhergesagtes</em> Wetter dabei
+        etwas anderes ist als ein gemessenes.</span>
+      <span lang="en">The task: fetch the weather forecast for Würzburg every morning and write it into the database. That
+        lays the basis for the demand forecast in notebook 04 of the case study – there the weather was the most important
+        influence, and the lecture stresses that a <em>forecast</em> weather is something different from a measured
+        one.</span>
+    </p>
+    <div class="code-block">Schedule Trigger  →  HTTP Request  →  Set (Edit Fields)  →  Postgres (Insert)
+      │                   │               │                    │
+   06:00 Uhr          offene API      Felder benennen     Tabelle wetter
+                      ohne Schlüssel   und typisieren</div>
+    <div data-befehl="B03"></div>
+    <div data-befehl="B04"></div>
+    <div class="tip-box">
+      <p><span lang="de">Die Tabelle legen Sie vorher an – am besten in DataGrip aus Lab 07, dann sehen Sie sie gleich
+        im Baum. Und der Anschluss ist der Punkt, an dem dieses Lab mit den anderen zusammenkommt: Aus KNIME (Lab 08)
+        greifen Sie mit <code>PostgreSQL Connector → DB Query Reader</code> auf dieselbe Tabelle zu, aus einem Notebook
+        (Lab 02) mit <code>pd.read_sql</code>. n8n beschafft, die anderen werten aus.</span>
+      <span lang="en">Create the table beforehand – best in DataGrip from lab 07, then you see it in the tree straight
+        away. And that connection is where this lab meets the others: from KNIME (lab 08) you reach the same table with
+        <code>PostgreSQL Connector → DB Query Reader</code>, from a notebook (lab 02) with <code>pd.read_sql</code>. n8n
+        supplies, the others analyse.</span></p>
+    </div>
+  </section>
+
+  <section class="section-block" id="items">
+    <h2><span lang="de">Items und Expressions</span><span lang="en">Items and expressions</span></h2>
+    <p>
+      <span lang="de">Das Datenmodell von n8n ist eine <strong>Liste von Items</strong>, und die meisten Knoten arbeiten
+        einmal je Item. Diese Kleinigkeit erklärt die häufigste Verwirrung: Ein Knoten läuft fünfzigmal statt einmal –
+        oder einmal statt fünfzigmal.</span>
+      <span lang="en">n8n's data model is a <strong>list of items</strong>, and most nodes work once per item. That detail
+        explains the most common confusion: a node runs fifty times instead of once – or once instead of fifty
+        times.</span>
+    </p>
+    <div class="concept-box">
+      <h3><span lang="de">Ein Beispiel, das den Unterschied zeigt</span><span lang="en">An example that shows the difference</span></h3>
+      <p><span lang="de">Eine Schnittstelle antwortet mit einem <em>einzigen</em> JSON-Objekt, das ein Feld
+        <code>daily</code> mit sieben Tagen enthält. Für n8n ist das <strong>ein</strong> Item – der folgende
+        <code>Postgres Insert</code> schreibt also eine Zeile, nicht sieben. Wer sieben Zeilen will, muss die Liste
+        vorher <em>aufteilen</em>: mit dem Knoten <code>Split Out</code> oder in einem <code>Code</code>-Knoten mit dem
+        Modus <em>Run once for all items</em>.</span>
+      <span lang="en">An interface answers with a <em>single</em> JSON object containing a <code>daily</code> field with
+        seven days. For n8n that is <strong>one</strong> item – so the following <code>Postgres Insert</code> writes one
+        row, not seven. Whoever wants seven rows has to <em>split</em> the list beforehand: with the
+        <code>Split Out</code> node or in a <code>Code</code> node using the mode <em>run once for all items</em>.</span></p>
+    </div>
+    <div data-befehl="B05"></div>
+    <div data-befehl="B06"></div>
+  </section>
+
+  <section class="section-block" id="webhook">
+    <h2><span lang="de">Webhooks: Test und Betrieb</span><span lang="en">Webhooks: test and production</span></h2>
+    <p>
+      <span lang="de">Ein <strong>Webhook</strong> dreht die Richtung um: Nicht n8n fragt, sondern ein anderes System
+        ruft n8n auf. Für eine Umfrage, ein Formular oder eine Meldung eines Fremdsystems ist das der richtige Trigger –
+        und er hat eine Eigenheit, die im Kurs zuverlässig für Verwirrung sorgt.</span>
+      <span lang="en">A <strong>webhook</strong> reverses the direction: n8n does not ask, another system calls n8n. For a
+        survey, a form or a notification from a third-party system that is the right trigger – and it has a peculiarity
+        that reliably causes confusion in the course.</span>
+    </p>
+    <div data-befehl="B07"></div>
+    <div class="warn-box">
+      <p><span lang="de">Es gibt <strong>zwei URLs</strong>. Die Test-URL (<code>/webhook-test/…</code>) nimmt einen
+        einzigen Aufruf an, während Sie im Editor auf <em>Listen for Test Event</em> gedrückt haben – dann sehen Sie die
+        Daten unmittelbar im Knoten. Die Produktions-URL (<code>/webhook/…</code>) wird erst registriert, wenn der Ablauf
+        <strong>aktiviert</strong> ist – und produktive Läufe zeigen im Editor nichts, sondern erscheinen im Reiter
+        <code>Executions</code>. Wer das nicht weiß, hält einen funktionierenden Ablauf für kaputt.</span>
+      <span lang="en">There are <strong>two URLs</strong>. The test URL (<code>/webhook-test/…</code>) accepts a single
+        call while you have pressed <em>listen for test event</em> in the editor – then you see the data straight away in
+        the node. The production URL (<code>/webhook/…</code>) is only registered once the workflow is
+        <strong>activated</strong> – and production runs show nothing in the editor but appear in the
+        <code>Executions</code> tab. Whoever does not know this takes a working workflow for a broken one.</span></p>
+    </div>
+  </section>
+
+  <section class="section-block" id="fehler">
+    <h2><span lang="de">Wenn es nachts schiefgeht</span><span lang="en">When it fails at night</span></h2>
+    <p>
+      <span lang="de">Ein zeitgesteuerter Ablauf läuft, wenn niemand hinsieht. Scheitert er – die Schnittstelle
+        antwortet nicht, das Format hat sich geändert, die Datenbank ist pausiert –, dann bleibt das unbemerkt, bis
+        jemand die Auswertung öffnet und sich über fehlende Tage wundert. Ein Ablauf ohne Fehlerbehandlung ist keine
+        Automatisierung, sondern eine Wette.</span>
+      <span lang="en">A scheduled workflow runs when nobody is watching. If it fails – the interface does not answer, the
+        format has changed, the database is paused – that goes unnoticed until somebody opens the analysis and wonders
+        about missing days. A workflow without error handling is not automation but a bet.</span>
+    </p>
+    <div data-befehl="B08"></div>
+    <div class="karten">
+      <div class="karte">
+        <div class="kopfzeile"><span lang="de">Wiederholen statt scheitern</span><span lang="en">Retry instead of fail</span></div>
+        <p><span lang="de">Im <code>HTTP Request</code>-Knoten unter <code>Settings</code>: <code>Retry On Fail</code>.
+          Eine Schnittstelle, die einmal nicht antwortet, ist meist beim zweiten Versuch da. Das ersetzt keine
+          Fehlerbehandlung, aber es verhindert die Hälfte der Meldungen.</span>
+        <span lang="en">In the <code>HTTP Request</code> node under <code>Settings</code>: <code>Retry On Fail</code>. An
+          interface that does not answer once is usually there on the second attempt. That replaces no error handling but
+          prevents half the alerts.</span></p>
+      </div>
+      <div class="karte">
+        <div class="kopfzeile"><span lang="de">Abrufgrenzen</span><span lang="en">Rate limits</span></div>
+        <p><span lang="de">Wer eine Schnittstelle in einer Schleife abfragt, bekommt <code>429</code> – dieselbe Meldung
+          wie bei Docker Hub in Lab 05, dieselbe Ursache: zu viele Anfragen. Gegenmittel: <code>Loop Over Items</code>
+          mit kleiner Bündelgröße und ein <code>Wait</code>-Knoten dazwischen.</span>
+        <span lang="en">Whoever queries an interface in a loop gets <code>429</code> – the same message as with Docker Hub
+          in lab 05, the same cause: too many requests. Remedy: <code>Loop Over Items</code> with a small batch size and a
+          <code>Wait</code> node in between.</span></p>
+      </div>
+      <div class="karte">
+        <div class="kopfzeile"><span lang="de">Zeitzonen</span><span lang="en">Time zones</span></div>
+        <p><span lang="de">Ein Zeitplan „06:00 Uhr“ ohne gesetzte Zeitzone feuert nach UTC – im Sommer also um acht.
+          Zwei Umgebungsvariablen setzen: <code>GENERIC_TIMEZONE=Europe/Berlin</code> <em>und</em>
+          <code>TZ=Europe/Berlin</code>. Zusätzlich je Ablauf unter <code>Workflow Settings</code>.</span>
+        <span lang="en">A schedule “06:00” without a set time zone fires in UTC – in summer therefore at eight. Set two
+          environment variables: <code>GENERIC_TIMEZONE=Europe/Berlin</code> <em>and</em> <code>TZ=Europe/Berlin</code>.
+          Additionally per workflow under <code>Workflow Settings</code>.</span></p>
+      </div>
+      <div class="karte">
+        <div class="kopfzeile"><span lang="de">Endlosschleife</span><span lang="en">Endless loop</span></div>
+        <p><span lang="de">Ein Webhook, der einen HTTP-Aufruf auf die eigene Instanz auslöst, ruft sich selbst auf. Vor
+          dem Aktivieren die Auslösequelle prüfen und <code>Loop Over Items</code> nur mit klarer Abbruchbedingung
+          verwenden.</span>
+        <span lang="en">A webhook triggering an HTTP call to its own instance calls itself. Before activating, check the
+          trigger source and use <code>Loop Over Items</code> only with a clear termination condition.</span></p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section-block" id="lizenz">
+    <h2><span lang="de">Lizenz: fair-code</span><span lang="en">Licence: fair-code</span></h2>
+    <p>
+      <span lang="de">n8n ist ein Lehrstück für die Lizenzarten aus Lab 00. Der Quellcode ist öffentlich einsehbar, und
+        genau deshalb wird das Werkzeug regelmäßig als „Open Source“ bezeichnet. Es ist keines: Die
+        <strong>Sustainable Use License</strong> ist keine von der Open Source Initiative anerkannte Lizenz, und n8n
+        nennt sich selbst <em>fair-code</em>.</span>
+      <span lang="en">n8n is a case study for the licence types from lab 00. The source code is publicly visible, and that
+        is exactly why the tool is regularly called “open source”. It is not: the <strong>Sustainable Use
+        License</strong> is not a licence recognised by the Open Source Initiative, and n8n calls itself
+        <em>fair-code</em>.</span>
+    </p>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th><span lang="de">Erlaubt</span><span lang="en">Permitted</span></th>
+            <th><span lang="de">Nicht erlaubt</span><span lang="en">Not permitted</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span lang="de">Nutzung für eigene Zwecke im eigenen Haus – Lehre und Studium eingeschlossen</span><span lang="en">Use for your own purposes in house – teaching and study included</span></td>
+            <td><span lang="de">Eine eigene Instanz betreiben und den Zugang gegen Entgelt an Dritte verkaufen</span><span lang="en">Running your own instance and selling access to third parties for money</span></td>
+          </tr>
+          <tr>
+            <td><span lang="de">Den Quellcode ändern und eigene Knoten bauen</span><span lang="en">Modifying the source and building your own nodes</span></td>
+            <td><span lang="de">n8n unter eigener Marke anbieten</span><span lang="en">Offering n8n under your own brand</span></td>
+          </tr>
+          <tr>
+            <td><span lang="de">Beratungsleistungen rund um n8n anbieten</span><span lang="en">Offering consultancy services around n8n</span></td>
+            <td><span lang="de">Zugangsdaten von Endnutzern einsammeln, um über die eigene Anwendung auf deren Daten zuzugreifen</span><span lang="en">Collecting end users' credentials to access their data through your own application</span></td>
+          </tr>
+          <tr>
+            <td><span lang="de">Kostenfreie Weitergabe für nicht-kommerzielle Zwecke, samt Lizenztext</span><span lang="en">Free distribution for non-commercial purposes, including the licence text</span></td>
+            <td><span lang="de">Lizenz- oder Urheberhinweise entfernen</span><span lang="en">Removing licence or copyright notices</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="info-box">
+      <p><span lang="de">Für die Lehre bedeutet das: <strong>Der Einsatz in diesem Kurs ist gedeckt.</strong> Nicht
+        gedeckt wäre, eine hochschulbetriebene Instanz als Dienstleistung gegen Entgelt an Dritte anzubieten. Und für
+        eine Seminararbeit: n8n nicht als „Open Source“ bezeichnen, sondern als <em>quelloffen einsehbar unter einer
+        Sustainable Use License</em>. Diese Unterscheidung ist genau der Prüfstoff aus Lab 00 – hier ist der
+        Anwendungsfall.</span>
+      <span lang="en">For teaching that means: <strong>use in this course is covered.</strong> What would not be covered is
+        offering a university-run instance as a paid service to third parties. And for a term paper: do not describe n8n as
+        “open source” but as <em>source-available under a Sustainable Use License</em>. This distinction is exactly the
+        material from lab 00 – here is the application.</span></p>
+    </div>
+    <p>
+      <span lang="de">Kostenseitig: Die selbst betriebene Community Edition hat unbegrenzt viele Abläufe und Läufe. Was
+        fehlt, sind Unternehmensfunktionen – Anmeldung über SSO, Rollen und Projekte, Git-gestützte Versionierung,
+        Protokollausleitung, externe Geheimnisverwaltung. Für diesen Kurs wird keine davon gebraucht. Die Cloud beginnt
+        bei etwa 20 Euro im Monat für 2.500 Läufe und rechnet je vollständigem Lauf ab, nicht je Knoten.</span>
+      <span lang="en">On cost: the self-hosted community edition has unlimited workflows and executions. What is missing
+        are enterprise functions – sign-in via SSO, roles and projects, Git-based versioning, log streaming, external
+        secret management. None of them is needed for this course. The cloud starts at around 20 euros a month for 2,500
+        executions and bills per complete run, not per node.</span>
+    </p>
+  </section>
+
+  <section class="section-block" id="daten">
+    <h2><span lang="de">Laufdaten und Datenschutz</span><span lang="en">Run data and data protection</span></h2>
+    <div class="warn-box">
+      <h3><span lang="de">Der Punkt, der übersehen wird</span><span lang="en">The point that gets overlooked</span></h3>
+      <p><span lang="de">n8n speichert je Lauf die <strong>vollständigen Ein- und Ausgabedaten jedes Knotens</strong>.
+        Das ist bei der Fehlersuche unbezahlbar und bei personenbezogenen Daten ein Bestand, den niemand angelegt hat und
+        der wächst. Ein Ablauf, der jede Stunde Kundendaten verarbeitet, führt nach einem Monat siebenhundert
+        Kopien davon in seiner Datenbank.</span>
+      <span lang="en">n8n stores the <strong>complete input and output data of every node</strong> per run. That is
+        invaluable when debugging and, with personal data, a collection nobody set up and that keeps growing. A workflow
+        processing customer data every hour holds seven hundred copies of it in its database after a month.</span></p>
+      <p><span lang="de">Die Gegenmittel sind Einstellungen, keine Disziplin:
+        <code>EXECUTIONS_DATA_PRUNE=true</code> und <code>EXECUTIONS_DATA_MAX_AGE=168</code> (Stunden, also sieben Tage)
+        räumen automatisch auf; je Ablauf lässt sich unter <code>Workflow Settings</code> zusätzlich
+        <em>save successful production executions</em> auf <code>None</code> stellen – Fehlläufe bleiben dann erhalten,
+        gelungene nicht. Genau das empfiehlt die Herstellerdokumentation für den DSGVO-Kontext.</span>
+      <span lang="en">The remedies are settings, not discipline: <code>EXECUTIONS_DATA_PRUNE=true</code> and
+        <code>EXECUTIONS_DATA_MAX_AGE=168</code> (hours, i.e. seven days) tidy up automatically; per workflow you can
+        additionally set <em>save successful production executions</em> to <code>None</code> under
+        <code>Workflow Settings</code> – failed runs are then kept, successful ones not. That is exactly what the vendor's
+        documentation recommends for the GDPR context.</span></p>
+    </div>
+    <div data-befehl="B09"></div>
+    <div class="karten">
+      <div class="karte">
+        <div class="kopfzeile"><span lang="de">Selbstbetrieb in der EU</span><span lang="en">Self-hosting in the EU</span></div>
+        <p><span lang="de">Auf einem Hochschulserver oder einer EU-Maschine bleibt die Verarbeitung vollständig unter
+          Kontrolle der Hochschule; eine Auftragsverarbeitung durch n8n entfällt. Dafür liegt die Verantwortung dann
+          auch vollständig dort: Aktualisierungen, Zugriffsschutz, Sicherungen.</span>
+        <span lang="en">On a university server or an EU machine the processing stays entirely under the university's
+          control; processing on its behalf by n8n does not arise. In exchange the responsibility then lies entirely
+          there: updates, access protection, backups.</span></p>
+      </div>
+      <div class="karte">
+        <div class="kopfzeile">Telemetrie</div>
+        <p><span lang="de"><code>N8N_DIAGNOSTICS_ENABLED=false</code> schaltet die anonyme Nutzungsdatenübermittlung ab
+          – voreingestellt ist sie an. Damit entfällt auch die eingebaute KI-Hilfe. Cloud-Instanzen verwenden zusätzlich
+          ein Werkzeug zur Sitzungsaufzeichnung.</span>
+        <span lang="en"><code>N8N_DIAGNOSTICS_ENABLED=false</code> switches off the anonymous usage telemetry – it is on
+          by default. That also removes the built-in AI help. Cloud instances additionally use a session recording
+          tool.</span></p>
+      </div>
+      <div class="karte">
+        <div class="kopfzeile"><span lang="de">Nie offen ins Netz</span><span lang="en">Never open to the network</span></div>
+        <p><span lang="de">Eine n8n-Instanz ohne Zugriffsschutz gibt jedem, der sie findet, Zugriff auf alle
+          gespeicherten Zugangsdaten. Hinter einen Reverse-Proxy mit TLS, nur im Hochschulnetz oder über VPN.
+          Dasselbe Prinzip wie die Bindung an <code>127.0.0.1</code> in Lab 05.</span>
+        <span lang="en">An n8n instance without access protection gives anyone who finds it access to all stored
+          credentials. Behind a reverse proxy with TLS, only in the university network or over VPN. The same principle as
+          binding to <code>127.0.0.1</code> in lab 05.</span></p>
+      </div>
+      <div class="karte">
+        <div class="kopfzeile"><span lang="de">Abläufe teilen ist unkritisch</span><span lang="en">Sharing workflows is harmless</span></div>
+        <p><span lang="de">Beim Export eines Ablaufs gehen die Zugangsdaten <strong>nicht</strong> mit – sie liegen
+          getrennt und verschlüsselt. Ein Ablauf lässt sich also gefahrlos abgeben. Es sei denn, jemand hat einen
+          Schlüssel direkt in einen Knoten getippt: Dann steht er im Export.</span>
+        <span lang="en">When exporting a workflow the credentials do <strong>not</strong> travel along – they sit
+          separately and encrypted. A workflow can therefore be submitted safely. Unless somebody typed a key directly
+          into a node: then it is in the export.</span></p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section-block" id="spielplatz">
+    <h2><span lang="de">Spielplatz</span><span lang="en">Playground</span></h2>
+    <p>
+      <span lang="de">Die Bedienoberfläche von n8n lässt sich hier nicht nachbilden – wohl aber die Inbetriebnahme, und
+        die ist der Teil, an dem es scheitert. Diese Konsole kennt das Abbild <code>n8nio/n8n</code>: Probieren Sie den
+        Start mit und ohne Band, mit und ohne Verschlüsselungsschlüssel, und lesen Sie jeweils die
+        Protokollausgabe.</span>
+      <span lang="en">n8n's interface cannot be modelled here – but the setting-up can, and that is the part it fails on.
+        This console knows the image <code>n8nio/n8n</code>: try starting it with and without a volume, with and without an
+        encryption key, and read the log output each time.</span>
+    </p>
+    <div data-terminal="frei"></div>
+  </section>
+
+  <section class="section-block" id="uebungen">
+    <h2><span lang="de">Übungen</span><span lang="en">Exercises</span></h2>
+    <p>
+      <span lang="de">Fünf Übungen: eine an der Konsole – n8n so in Betrieb nehmen, dass es einen Neustart übersteht –,
+        eine Zuordnung der Begriffe und drei Verständnisfragen zu Items, Webhooks und Lizenz.</span>
+      <span lang="en">Five exercises: one at the console – set n8n up so that it survives a restart – a matching exercise
+        on the concepts, and three comprehension questions on items, webhooks and the licence.</span>
+    </p>
+    <div data-uebung="P09-01"></div>
+    <div data-uebung="P09-02"></div>
+    <div data-uebung="P09-03"></div>
+    <div data-uebung="P09-04"></div>
+    <div data-uebung="P09-05"></div>
+    <div data-fortschritt></div>
+  </section>
+
+  <section class="section-block" id="zusammenfassung">
+    <h2><span lang="de">Zusammenfassung</span><span lang="en">Summary</span></h2>
+    <ul>
+      <li><span lang="de">Automatisierung ist Beschaffung und Orchestrierung, nicht Analyse. Die tragfähige Arbeitsteilung: n8n holt und legt ab, KNIME oder ein Notebook wertet aus – dann gibt es an jeder Grenze eine nachprüfbare Tabelle.</span><span lang="en">Automation is supply and orchestration, not analysis. The sound division: n8n fetches and stores, KNIME or a notebook analyses – then at every boundary there is a checkable table.</span></li>
+      <li><span lang="de">Ein Ablauf läuft nur, wenn er aktiviert ist. Pinned Data gilt nur beim Testen. Diese zwei Sätze erklären die meisten Fälle von „im Editor ging es doch“.</span><span lang="en">A workflow runs only when it is activated. Pinned data applies only while testing. Those two sentences explain most cases of “but it worked in the editor”.</span></li>
+      <li><span lang="de">Das Datenmodell ist eine Liste von Items. Ein JSON-Objekt mit einer Liste darin ist <em>ein</em> Item – wer sieben Zeilen schreiben will, teilt es vorher auf.</span><span lang="en">The data model is a list of items. A JSON object with a list inside is <em>one</em> item – whoever wants to write seven rows splits it first.</span></li>
+      <li><span lang="de">Der Verschlüsselungsschlüssel wird selbst gesetzt und außerhalb gesichert. Ohne ihn sind alle Zugangsdaten verloren, sobald das Band weg ist.</span><span lang="en">The encryption key is set by you and stored outside. Without it all credentials are lost the moment the volume is gone.</span></li>
+      <li><span lang="de">Ein zeitgesteuerter Ablauf ohne Error-Workflow ist eine Wette. Und Laufdaten wachsen: automatisches Aufräumen einschalten, gelungene Läufe nicht dauerhaft speichern.</span><span lang="en">A scheduled workflow without an error workflow is a bet. And run data grows: switch on automatic pruning, do not store successful runs permanently.</span></li>
+      <li><span lang="de">n8n ist quelloffen einsehbar, aber nicht Open Source. Lehre und Studium sind gedeckt; der Verkauf des Zugangs an Dritte nicht.</span><span lang="en">n8n is source-available but not open source. Teaching and study are covered; selling access to third parties is not.</span></li>
+    </ul>
+    <div data-lab-nav></div>
+  </section>
+
+</main>
+
+<footer class="footer">
+  <p>
+    <span lang="de">PITM-Lab · Lab 09 · THWS Business School · Stand 09/2026</span>
+    <span lang="en">PITM-Lab · Lab 09 · THWS Business School · as of 09/2026</span>
+  </p>
+</footer>
+
+<script type="module" src="assets/pitm.js"></script>
+</body>
+</html>

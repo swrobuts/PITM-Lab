@@ -1,0 +1,176 @@
+{
+  "uebungen": [
+    {
+      "id": "P00-01",
+      "typ": "zuordnen",
+      "titel": { "de": "Werkzeuge ihren Ebenen zuordnen", "en": "Assign tools to their layers" },
+      "aufgabe": {
+        "de": "<p>Ordnen Sie jedes Werkzeug der Ebene zu, auf der es seine Hauptaufgabe hat. Zwei Werkzeuge könnten auf zwei Ebenen sitzen – entscheiden Sie nach der Aufgabe, für die man sie <em>zuerst</em> auswählt.</p>",
+        "en": "<p>Assign every tool to the layer where its main task lies. Two tools could sit on two layers – decide by the task they are chosen for <em>first</em>.</p>"
+      },
+      "ziele": [
+        { "id": "A", "text": { "de": "A · Datenhaltung und Abfrage", "en": "A · Storage and querying" } },
+        { "id": "B", "text": { "de": "B · Auswertung und BI", "en": "B · Reporting and BI" } },
+        { "id": "C", "text": { "de": "C · Analytics-Plattform", "en": "C · Analytics platform" } },
+        { "id": "D", "text": { "de": "D · Cloud-Infrastruktur", "en": "D · Cloud infrastructure" } },
+        { "id": "E", "text": { "de": "E · Versionierung und Betrieb", "en": "E · Versioning and operations" } },
+        { "id": "F", "text": { "de": "F · Programmierumgebung", "en": "F · Programming environment" } },
+        { "id": "G", "text": { "de": "G · Automatisierung (Querschnitt)", "en": "G · Automation (cross-section)" } }
+      ],
+      "paare": [
+        { "begriff": { "de": "PostgreSQL", "en": "PostgreSQL" }, "ziel": "A" },
+        { "begriff": { "de": "Power BI", "en": "Power BI" }, "ziel": "B" },
+        { "begriff": { "de": "KNIME Analytics Platform", "en": "KNIME Analytics Platform" }, "ziel": "C" },
+        { "begriff": { "de": "Amazon Web Services", "en": "Amazon Web Services" }, "ziel": "D" },
+        { "begriff": { "de": "Docker", "en": "Docker" }, "ziel": "E" },
+        { "begriff": { "de": "Git", "en": "Git" }, "ziel": "E" },
+        { "begriff": { "de": "DataGrip", "en": "DataGrip" }, "ziel": "F" },
+        { "begriff": { "de": "Visual Studio Code", "en": "Visual Studio Code" }, "ziel": "F" },
+        { "begriff": { "de": "n8n", "en": "n8n" }, "ziel": "G" },
+        { "begriff": { "de": "Apache Airflow", "en": "Apache Airflow" }, "ziel": "G" }
+      ],
+      "rueckmeldung": {
+        "de": "Beachten Sie DataGrip: Es ist eine Entwicklungsumgebung (F), keine Datenbank (A). Es speichert selbst keine Daten, sondern verbindet sich mit einem System, das es tut. Genauso Docker: Es hält keine Daten, sondern betreibt Anwendungen reproduzierbar (E) – auch dann, wenn die betriebene Anwendung eine Datenbank ist.",
+        "en": "Note DataGrip: it is a development environment (F), not a database (A). It stores no data itself but connects to a system that does. The same for Docker: it holds no data but runs applications reproducibly (E) – even when the application it runs is a database."
+      }
+    },
+    {
+      "id": "P00-02",
+      "typ": "quiz",
+      "titel": { "de": "Ebene oder Produkt?", "en": "Layer or product?" },
+      "aufgabe": {
+        "de": "<p>Die Vorlesung ordnet Werkzeuge nach Ebenen und nicht nach Herstellern. Prüfen Sie, ob Sie die Begründung tragen können.</p>",
+        "en": "<p>The lecture orders tools by layer and not by vendor. Check whether you can carry the reasoning.</p>"
+      },
+      "fragen": [
+        {
+          "frage": { "de": "Warum ordnet die Vorlesung nach Ebenen?", "en": "Why does the lecture order things by layer?" },
+          "optionen": [
+            { "de": "Weil die Ebenen über Jahrzehnte stabil bleiben, während Produkte abgelöst werden – wer die Ebene kennt, kann ein Nachfolgeprodukt selbst einordnen.", "en": "Because the layers stay stable over decades while products get replaced – whoever knows the layer can place a successor product themselves." },
+            { "de": "Weil quelloffene Werkzeuge grundsätzlich auf niedrigeren Ebenen sitzen als kommerzielle.", "en": "Because open-source tools sit on lower layers than commercial ones by principle." },
+            { "de": "Weil sich nur so die Preise der Anbieter vergleichen lassen.", "en": "Because it is the only way to compare vendors' prices." }
+          ],
+          "richtig": [0],
+          "erklaerung": {
+            "de": "Azure Data Studio wurde 2026 eingestellt; die Aufgabe, die es erfüllte, gibt es weiter und wird heute von einem anderen Werkzeug derselben Ebene erledigt. Lizenzart und Ebene sind voneinander unabhängig: PostgreSQL ist quelloffen und sitzt auf Ebene A, Airflow ist quelloffen und sitzt querschnittlich.",
+            "en": "Azure Data Studio was retired in 2026; the task it performed still exists and is handled today by a different tool on the same layer. Licence type and layer are independent of each other: PostgreSQL is open source and sits on layer A, Airflow is open source and sits across the layers."
+          }
+        },
+        {
+          "frage": { "de": "Google Colab wird im Lab zwei Ebenen zugeordnet. Welchen beiden – und woran merkt man das im Alltag?", "en": "Google Colab is assigned to two layers in the lab. Which two – and how do you notice it in daily use?" },
+          "optionen": [
+            { "de": "F und D: Es ist eine Notebook-Umgebung, die auf gemieteter Rechenleistung läuft. Man merkt es daran, dass die Laufzeit nach einiger Zeit endet und dabei alles verschwindet, was nicht ausdrücklich dauerhaft gespeichert wurde.", "en": "F and D: it is a notebook environment running on rented compute. You notice it because the runtime ends after a while and everything not explicitly stored permanently disappears with it." },
+            { "de": "A und F: Es speichert die Daten selbst und wertet sie selbst aus.", "en": "A and F: it stores the data itself and analyses it itself." },
+            { "de": "B und G: Es erzeugt Berichte und automatisiert sie.", "en": "B and G: it produces reports and automates them." }
+          ],
+          "richtig": [0],
+          "erklaerung": {
+            "de": "Die Doppelzugehörigkeit erklärt genau die Eigenschaft, an der Anfänger scheitern: Der Rechner, auf dem das Notebook läuft, gehört nicht ihnen und wird ihnen wieder weggenommen. Alles, was überleben soll, muss an einen Ort, der nicht die Laufzeit ist.",
+            "en": "The dual membership explains exactly the property beginners stumble over: the machine the notebook runs on is not theirs and gets taken away again. Anything meant to survive has to go somewhere that is not the runtime."
+          }
+        },
+        {
+          "frage": { "de": "Ein Werkzeug speichert Daten nicht selbst, sondern verbindet sich über einen Treiber mit mehreren Datenbanksystemen, liest deren Schema ein und schlägt beim Tippen Tabellennamen vor. Auf welcher Ebene sitzt es?", "en": "A tool does not store data itself but connects through a driver to several database systems, reads their schema and suggests table names as you type. Which layer does it sit on?" },
+          "optionen": [
+            { "de": "F – es ist eine Entwicklungsumgebung für Abfragen.", "en": "F – it is a development environment for queries." },
+            { "de": "A – es arbeitet mit Datenbanken, also gehört es zur Datenhaltung.", "en": "A – it works with databases, so it belongs to storage." },
+            { "de": "G – es verbindet mehrere Systeme, also automatisiert es.", "en": "G – it connects several systems, so it automates." }
+          ],
+          "richtig": [0],
+          "erklaerung": {
+            "de": "Die Prüffrage ist nicht „womit arbeitet es?“, sondern „was liegt darunter?“. Unter einem Datenbank-Client liegt immer ein Datenbanksystem; er ersetzt es nicht. Beschrieben ist DataGrip, ebenso passend wären DBeaver oder pgAdmin.",
+            "en": "The test question is not “what does it work with?” but “what lies beneath it?”. Beneath a database client there is always a database system; it does not replace it. What is described is DataGrip; DBeaver or pgAdmin would fit equally well."
+          }
+        }
+      ]
+    },
+    {
+      "id": "P00-03",
+      "typ": "quiz",
+      "titel": { "de": "Lizenzen und Kosten", "en": "Licences and costs" },
+      "aufgabe": {
+        "de": "<p>Vier Aussagen aus dem Abschnitt zu Lizenzen und Kontingenten. Lesen Sie genau – bei drei Fragen kommt es auf ein einzelnes Wort an.</p>",
+        "en": "<p>Four statements from the sections on licences and allowances. Read carefully – in three questions a single word makes the difference.</p>"
+      },
+      "fragen": [
+        {
+          "frage": { "de": "Welche Aussagen über n8n sind zutreffend? Mehrere Antworten sind richtig.", "en": "Which statements about n8n are correct? Several answers are correct." },
+          "mehrfach": true,
+          "optionen": [
+            { "de": "Der Quellcode ist einsehbar, die Lizenz ist aber keine von der OSI anerkannte Open-Source-Lizenz.", "en": "The source is visible, but the licence is not an OSI-approved open-source licence." },
+            { "de": "Die Nutzung in Lehre und Studium ist von der Lizenz gedeckt.", "en": "Use in teaching and study is covered by the licence." },
+            { "de": "Es ist erlaubt, eine eigene n8n-Instanz zu betreiben und den Zugang gegen Entgelt an Dritte zu verkaufen.", "en": "It is permitted to run your own n8n instance and sell access to third parties for money." },
+            { "de": "In einer Seminararbeit darf n8n als „Open Source“ bezeichnet werden, weil der Quellcode öffentlich ist.", "en": "In a term paper n8n may be called “open source” because the source code is public." }
+          ],
+          "richtig": [0, 1],
+          "erklaerung": {
+            "de": "Die Sustainable Use License erlaubt Nutzung „for your own internal business purposes or for non-commercial or personal use“ und untersagt ausdrücklich das Hosten für Dritte gegen Entgelt sowie das Anbieten unter eigener Marke. Einsehbarer Quellcode ist nicht dasselbe wie eine Open-Source-Lizenz – der Begriff ist an die Definition der Open Source Initiative gebunden, und n8n nennt sich selbst „fair-code“.",
+            "en": "The Sustainable Use License permits use “for your own internal business purposes or for non-commercial or personal use” and expressly prohibits hosting for third parties for money as well as white-labelling. Visible source is not the same as an open-source licence – the term is bound to the Open Source Initiative's definition, and n8n calls itself “fair-code”."
+          }
+        },
+        {
+          "frage": { "de": "Ein Unternehmen mit 180 Beschäftigten und 14 Mio. US-Dollar Jahresumsatz möchte Docker Desktop einsetzen. Was gilt?", "en": "A company with 180 employees and 14 million US dollars in annual revenue wants to use Docker Desktop." },
+          "optionen": [
+            { "de": "Es braucht ein kostenpflichtiges Abonnement, weil beide Bedingungen zusammen erfüllt sein müssen und die Umsatzgrenze überschritten ist.", "en": "It needs a paid subscription, because both conditions must hold together and the revenue threshold is exceeded." },
+            { "de": "Die Nutzung ist kostenlos, weil die Mitarbeitendenzahl unter 250 liegt.", "en": "Use is free, because the headcount is below 250." },
+            { "de": "Die Nutzung ist kostenlos, weil Docker Desktop unter einer freien Lizenz steht.", "en": "Use is free, because Docker Desktop is under a free licence." }
+          ],
+          "richtig": [0],
+          "erklaerung": {
+            "de": "Die Klausel nennt „fewer than 250 employees and less than US $10,000,000 […] in annual revenue“ – ein „und“, kein „oder“. Docker Desktop ist zudem proprietär; frei lizenziert ist die Docker Engine, nicht die Desktop-Anwendung. Wer die Lizenzfrage vermeiden will, nutzt Docker Engine, Podman oder Rancher Desktop.",
+            "en": "The clause reads “fewer than 250 employees and less than US $10,000,000 […] in annual revenue” – an “and”, not an “or”. Docker Desktop is also proprietary; what is freely licensed is Docker Engine, not the desktop application. Whoever wants to avoid the licence question uses Docker Engine, Podman or Rancher Desktop."
+          }
+        },
+        {
+          "frage": { "de": "Ein Kurs nutzt ein Supabase-Projekt im kostenlosen Plan. Zwischen zwei Übungsterminen liegen zehn Tage Semesterferien. Womit ist zu rechnen?", "en": "A course uses a Supabase project on the free plan. Ten days of break lie between two exercise sessions. What should be expected?" },
+          "optionen": [
+            { "de": "Das Projekt ist pausiert und muss im Dashboard wiederhergestellt werden, bevor es antwortet.", "en": "The project is paused and has to be restored in the dashboard before it responds." },
+            { "de": "Das Projekt ist gelöscht; die Tabellen müssen neu angelegt werden.", "en": "The project is deleted; the tables have to be created again." },
+            { "de": "Nichts – der kostenlose Plan hat keine Zeitgrenzen.", "en": "Nothing – the free plan has no time limits." }
+          ],
+          "richtig": [0],
+          "erklaerung": {
+            "de": "Projekte im kostenlosen Plan werden nach etwa einer Woche ohne Aktivität pausiert, um Serverressourcen zu sparen; sie lassen sich im Dashboard wieder aufwecken. Nicht gelöscht – aber am Termin eben nicht sofort ansprechbar. Wer das weiß, weckt das Projekt am Vorabend.",
+            "en": "Free-plan projects are paused after roughly a week without activity to save server resources; they can be woken again in the dashboard. Not deleted – but not immediately reachable on the day either. Whoever knows this wakes the project the evening before."
+          }
+        },
+        {
+          "frage": { "de": "Dreißig Studierende starten im Seminarraum gleichzeitig ihren ersten Container aus einem öffentlichen Abbild und erhalten nach kurzer Zeit den Fehlercode 429. Was ist die Ursache?", "en": "Thirty students in a seminar room simultaneously start their first container from a public image and shortly receive error code 429. What is the cause?" },
+          "optionen": [
+            { "de": "Das Abrufkontingent von Docker Hub wird für unangemeldete Zugriffe je IP-Adresse gezählt; der ganze Raum teilt sich eine Adresse.", "en": "Docker Hub's pull allowance is counted per IP address for anonymous access; the whole room shares one address." },
+            { "de": "Der Rechner hat zu wenig Arbeitsspeicher für so viele Container.", "en": "The machine has too little memory for that many containers." },
+            { "de": "Die Abbilder sind für die falsche Prozessorarchitektur gebaut.", "en": "The images are built for the wrong processor architecture." }
+          ],
+          "richtig": [0],
+          "erklaerung": {
+            "de": "Unangemeldet gelten 100 Abrufe je sechs Stunden und IP-Adresse beziehungsweise IPv6-Subnetz. Ein Anmelden mit persönlichem Konto gibt jeder Person ein eigenes Kontingent; alternativ zieht man die Abbilder vor der Veranstaltung oder betreibt einen lokalen Spiegel. Ein Speicherfehler oder eine Architekturabweichung melden sich mit anderen Meldungen – 429 heißt „zu viele Anfragen“.",
+            "en": "Anonymously, 100 pulls per six hours per IP address or IPv6 subnet apply. Signing in with a personal account gives every person their own allowance; alternatively you pull the images before class or run a local mirror. A memory error or an architecture mismatch announces itself with different messages – 429 means “too many requests”."
+          }
+        }
+      ]
+    },
+    {
+      "id": "P00-04",
+      "typ": "checkliste",
+      "titel": { "de": "Zugänge für die folgenden Labs anlegen", "en": "Set up the accounts for the following labs" },
+      "aufgabe": {
+        "de": "<p>Diese Schritte kosten nichts und dauern zusammen etwa eine halbe Stunde – dafür läuft der Rest des Semesters ohne Wartezeiten. Haken Sie ab, was erledigt ist; der Stand bleibt in Ihrem Browser.</p><p><strong>Was Sie nicht brauchen:</strong> keine Kreditkarte, kein kostenpflichtiges Abonnement, keine Cloud-Guthaben.</p>",
+        "en": "<p>These steps cost nothing and take about half an hour together – in return the rest of the semester runs without waiting. Tick off what is done; the state stays in your browser.</p><p><strong>What you do not need:</strong> no credit card, no paid subscription, no cloud credit.</p>"
+      },
+      "schritte": [
+        { "text": { "de": "<strong>GitHub-Konto anlegen.</strong> Persönliches Konto auf <code>github.com/signup</code>. Benutzername mit Bedacht wählen – er erscheint in jedem Commit und ist öffentlich.", "en": "<strong>Create a GitHub account.</strong> A personal account at <code>github.com/signup</code>. Choose the username deliberately – it appears in every commit and is public." } },
+        { "text": { "de": "<strong>Hochschul-E-Mail im GitHub-Konto hinterlegen und bestätigen.</strong> <code>Settings → Emails → Add email address</code>. Ohne verifizierte Hochschuladresse gibt es kein GitHub Education.", "en": "<strong>Add and verify your university email in your GitHub account.</strong> <code>Settings → Emails → Add email address</code>. Without a verified academic address there is no GitHub Education." } },
+        { "text": { "de": "<strong>Zwei-Faktor-Anmeldung einschalten.</strong> <code>Settings → Password and authentication → Two-factor authentication</code>. Für beitragende Konten ist sie Pflicht; ein Passkey erfüllt Passwort- und zweiten Faktor zugleich.", "en": "<strong>Enable two-factor authentication.</strong> <code>Settings → Password and authentication → Two-factor authentication</code>. It is mandatory for contributing accounts; a passkey covers password and second factor at once." } },
+        { "text": { "de": "<strong>E-Mail-Adresse in Commits verbergen.</strong> <code>Settings → Emails → Keep my email addresses private</code>. Sonst steht Ihre Adresse dauerhaft und öffentlich in jedem Commit.", "en": "<strong>Hide your email address in commits.</strong> <code>Settings → Emails → Keep my email addresses private</code>. Otherwise your address stands permanently and publicly in every commit." } },
+        { "text": { "de": "<strong>GitHub Education beantragen.</strong> <code>github.com/settings/education/benefits</code>, Nachweis hochladen (Studierendenausweis mit aktuellem Datum, Immatrikulationsbescheinigung oder Stundenplan). Die Prüfung dauert mitunter Tage – deshalb jetzt.", "en": "<strong>Apply for GitHub Education.</strong> <code>github.com/settings/education/benefits</code>, upload proof (student ID with a current date, enrolment certificate or timetable). Verification can take days – hence now." } },
+        { "text": { "de": "<strong>JetBrains-Bildungslizenz beantragen.</strong> <code>jetbrains.com/shop/eform/students</code> – mit Hochschul-E-Mail, ISIC-Karte oder über das GitHub Student Developer Pack. Sie gilt ein Jahr und deckt DataGrip ab (Lab 07).", "en": "<strong>Apply for the JetBrains educational licence.</strong> <code>jetbrains.com/shop/eform/students</code> – with a university email, an ISIC card or via the GitHub Student Developer Pack. It runs for a year and covers DataGrip (lab 07)." } },
+        { "text": { "de": "<strong>Google-Konto prüfen.</strong> Für Colab (Lab 02) genügt ein bestehendes Konto. Prüfen Sie, ob Ihr Hochschulkonto Colab freigibt; falls nicht, entscheiden Sie bewusst, ob Sie ein privates Konto verwenden – und lesen Sie vorher den Datenschutzabschnitt in Lab 02.", "en": "<strong>Check your Google account.</strong> For Colab (lab 02) an existing account is enough. Check whether your university account has Colab enabled; if not, decide deliberately whether to use a private account – and read the data protection section in lab 02 first." } },
+        { "text": { "de": "<strong>Passwortverwaltung einrichten.</strong> In den folgenden Labs entstehen Datenbankpasswörter, Zugriffsschlüssel und Verschlüsselungsschlüssel, die nur einmal angezeigt werden. Ein Passwortmanager ist hier keine Empfehlung zur Bequemlichkeit, sondern die Voraussetzung dafür, dass die Übungen nicht an einem verlorenen Schlüssel enden.", "en": "<strong>Set up a password manager.</strong> The following labs produce database passwords, access keys and encryption keys that are shown only once. A password manager here is not a convenience recommendation but the precondition for the exercises not ending at a lost key." } }
+      ],
+      "rueckmeldung": {
+        "de": "Damit sind die Zugänge beisammen. Zwei Dinge notieren Sie sich am besten im Kalender: das Ablaufdatum der JetBrains-Lizenz und die Erneuerung von GitHub Education. Beide melden sich zwar von selbst – aber gern in der Woche, in der eine Abgabe fällig ist.",
+        "en": "That completes the accounts. Two things are worth putting in your calendar: the expiry date of the JetBrains licence and the renewal of GitHub Education. Both do announce themselves – but usually in the week a deadline falls."
+      }
+    }
+  ]
+}

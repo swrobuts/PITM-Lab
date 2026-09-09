@@ -1,0 +1,281 @@
+{
+  "befehle": {
+    "B01": {
+      "titel": { "de": "Python, Git und VS Code installieren", "en": "Install Python, Git and VS Code" },
+      "varianten": {
+        "mac": { "befehl": "brew install python@3.12 git\n# VS Code: .zip von code.visualstudio.com laden,\n# entpacken, Visual Studio Code.app nach /Applications ziehen\npython3 --version\ngit --version", "teile": [
+          { "was": "python@3.12", "bedeutet": { "de": "Eine eigene Python-Installation. Das System-Python unter /usr/bin/python3 gehört macOS und sollte für Projekte nicht verwendet werden – Apple ändert es mit Systemaktualisierungen.", "en": "Your own Python installation. The system Python at /usr/bin/python3 belongs to macOS and should not be used for projects – Apple changes it with system updates." } },
+          { "was": "code-Befehl", "bedeutet": { "de": "Nach der Installation einmal in VS Code: Befehlspalette → „Shell Command: Install 'code' command in PATH“. Danach öffnet code . den aktuellen Ordner aus dem Terminal.", "en": "After installing, once inside VS Code: command palette → “Shell Command: Install 'code' command in PATH”. Afterwards code . opens the current folder from the terminal." } }
+        ] },
+        "win": { "befehl": "winget install Python.Python.3.12\nwinget install Git.Git\nwinget install Microsoft.VisualStudioCode\npython --version\ngit --version", "teile": [
+          { "was": "Add python.exe to PATH", "bedeutet": { "de": "Beim grafischen Installer von python.org unbedingt anhaken. Fehlt es, meldet die Konsole „python: command not found“, obwohl Python installiert ist. Über winget geschieht es automatisch.", "en": "With python.org's graphical installer, tick this without fail. If it is missing, the console reports “python: command not found” although Python is installed. Via winget it happens automatically." } },
+          { "was": "User Installer", "bedeutet": { "de": "VS Code gibt es als User- und als System-Installer. Der User-Installer braucht keine Administratorrechte und ist auf Hochschulgeräten oft der einzige Weg.", "en": "VS Code comes as a user and as a system installer. The user installer needs no administrator rights and on university machines is often the only route." } },
+          { "was": "Terminal neu öffnen", "bedeutet": { "de": "Nach jeder Installation, die den Suchpfad ändert. Sonst kennt das offene Fenster den neuen Befehl nicht.", "en": "After every installation that changes the search path. Otherwise the open window does not know the new command." } }
+        ] },
+        "cmd": { "befehl": "winget install Python.Python.3.12\nwinget install Git.Git\nwinget install Microsoft.VisualStudioCode\npython --version\ngit --version", "teile": [
+          { "was": "where python", "bedeutet": { "de": "Zeigt, welche python.exe gefunden wird. Bei mehreren Installationen der schnellste Weg zur Klarheit.", "en": "Shows which python.exe is found. With several installations the fastest route to clarity." } }
+        ] }
+      }
+    },
+    "B02": {
+      "titel": { "de": "Die zwei Erweiterungen, die genügen", "en": "The two extensions that suffice" },
+      "prompt": "☰",
+      "befehl": "Strg+Shift+X            Erweiterungen öffnen  (macOS: ⇧⌘X)\n\n  ms-python.python      Python  → bringt Pylance und den Debugger mit\n  ms-toolsai.jupyter    Jupyter → Notebooks im Editor\n\nAlles Weitere erst, wenn es gebraucht wird.",
+      "teile": [
+        { "was": "ms-python.python", "bedeutet": { "de": "Die Kennung des Herausgebers vor dem Punkt. ms-python ist Microsoft; eine gleichnamige Erweiterung von einem anderen Herausgeber ist etwas anderes. Bei der Suche auf die Kennung achten, nicht nur auf den Namen.", "en": "The publisher identifier before the dot. ms-python is Microsoft; an extension of the same name from a different publisher is something else. When searching, mind the identifier, not just the name." } },
+        { "was": "Pylance", "bedeutet": { "de": "Kommt mit der Python-Erweiterung. Sie liefert Vervollständigung, Typprüfung und die Hinweise, die einen Fehler vor der Ausführung sichtbar machen.", "en": "Comes with the Python extension. It provides completion, type checking and the hints that make an error visible before execution." } },
+        { "was": "Profile", "bedeutet": { "de": "VS Code kann Erweiterungssätze als Profile verwalten. Ein Profil für diesen Kurs hält die Installation klein und macht sie reproduzierbar.", "en": "VS Code can manage sets of extensions as profiles. One profile for this course keeps the installation small and makes it reproducible." } }
+      ]
+    },
+    "B03": {
+      "titel": { "de": "Projektordner öffnen und Umgebung anlegen", "en": "Open the project folder and create an environment" },
+      "varianten": {
+        "mac": { "befehl": "cd ~/projekt\ncode .\n\n# In VS Code: ⇧⌘P → Python: Create Environment → Venv → Interpreter wählen", "teile": [
+          { "was": "code .", "bedeutet": { "de": "Öffnet den aktuellen Ordner. Der Punkt ist das Verzeichnis, nicht ein Satzzeichen – wie beim docker build in Lab 05.", "en": "Opens the current folder. The dot is the directory, not punctuation – as with docker build in lab 05." } },
+          { "was": "Create Environment", "bedeutet": { "de": "Legt einen Ordner .venv im Projekt an und stellt den Interpreter darauf ein. Der von Hand gegangene Weg wäre python3 -m venv .venv – der Befehl der Palette macht dasselbe und wählt gleich aus.", "en": "Creates a .venv folder in the project and sets the interpreter to it. Done by hand it would be python3 -m venv .venv – the palette command does the same and selects it right away." } },
+          { "was": "Venv oder Conda", "bedeutet": { "de": "Venv ist Teil von Python und braucht keine weitere Installation. Conda kann zusätzlich Nicht-Python-Abhängigkeiten verwalten und ist im Analytics-Umfeld verbreitet; für diesen Kurs genügt Venv.", "en": "Venv is part of Python and needs no further installation. Conda can additionally manage non-Python dependencies and is common in analytics; for this course Venv is enough." } }
+        ] },
+        "win": { "befehl": "cd $HOME\\projekt\ncode .\n\n# In VS Code: Strg+Shift+P → Python: Create Environment → Venv → Interpreter wählen", "teile": [
+          { "was": "code .", "bedeutet": { "de": "Öffnet den aktuellen Ordner. Funktioniert, sobald VS Code im Suchpfad steht – beim Installer ist das voreingestellt.", "en": "Opens the current folder. Works as soon as VS Code is on the search path – the installer sets that by default." } },
+          { "was": ".venv\\Scripts\\", "bedeutet": { "de": "Unter Windows liegen die Programme der Umgebung in .venv\\Scripts\\ statt in .venv/bin/. Anleitungen aus der Unix-Welt nennen den anderen Pfad – das ist kein Fehler, nur eine andere Plattform.", "en": "On Windows the environment's programs sit in .venv\\Scripts\\ instead of .venv/bin/. Guides from the Unix world name the other path – that is not an error, just a different platform." } },
+          { "was": "Ausführungsrichtlinie", "bedeutet": { "de": "Verweigert PowerShell das Aktivierungsskript, hilft einmalig: Set-ExecutionPolicy -Scope CurrentUser RemoteSigned. VS Code umgeht das meist selbst.", "en": "If PowerShell refuses the activation script, this helps once: Set-ExecutionPolicy -Scope CurrentUser RemoteSigned. VS Code usually works around it itself." } }
+        ] },
+        "cmd": { "befehl": "cd %USERPROFILE%\\projekt\ncode .\n\n# In VS Code: Strg+Shift+P → Python: Create Environment → Venv", "teile": [
+          { "was": ".venv\\Scripts\\activate.bat", "bedeutet": { "de": "Das Aktivierungsskript für die Eingabeaufforderung. In PowerShell heißt es Activate.ps1, unter macOS und Linux source .venv/bin/activate.", "en": "The activation script for Command Prompt. In PowerShell it is Activate.ps1, on macOS and Linux source .venv/bin/activate." } }
+        ] }
+      }
+    },
+    "B04": {
+      "titel": { "de": "Prüfen, welches Python rechnet", "en": "Check which Python is computing" },
+      "befehl": "python -c \"import sys; print(sys.executable)\"\npip -V\npip install pandas==2.2.2\npip freeze > requirements.txt",
+      "ausgabe": "/Users/studi/projekt/.venv/bin/python\npip 24.2 from /Users/studi/projekt/.venv/lib/python3.12/site-packages/pip (python 3.12)",
+      "teile": [
+        { "was": "sys.executable", "bedeutet": { "de": "Der Pfad des Interpreters, der diese Zeile ausführt. Er muss .venv enthalten. Steht dort etwas anderes, ist die Umgebung nicht aktiv – und alle folgenden Fehler folgen daraus.", "en": "The path of the interpreter executing this line. It has to contain .venv. If something else stands there, the environment is not active – and every following error follows from that." } },
+        { "was": "pip -V", "bedeutet": { "de": "Zeigt, wohin pip installiert. Der Pfad muss mit dem darüber übereinstimmen. Weichen sie ab, installiert pip in eine andere Umgebung als die, in der der Code läuft.", "en": "Shows where pip installs to. The path has to match the one above. If they differ, pip installs into a different environment from the one the code runs in." } },
+        { "was": "python -m pip install", "bedeutet": { "de": "Die verlässlichere Schreibweise: Sie beauftragt ausdrücklich das gerade laufende Python mit der Installation. Bei Zweifeln immer diese verwenden.", "en": "The more reliable spelling: it explicitly instructs the currently running Python to do the installing. When in doubt, always use this one." } },
+        { "was": "pip freeze > requirements.txt", "bedeutet": { "de": "Schreibt die Paketliste mit Versionen in eine Datei. Diese Datei gehört ins Repository, der Ordner .venv nicht. Jemand anderes stellt die Umgebung damit her: pip install -r requirements.txt.", "en": "Writes the package list with versions into a file. That file belongs in the repository, the .venv folder does not. Somebody else recreates the environment with it: pip install -r requirements.txt." } }
+      ]
+    },
+    "B05": {
+      "titel": { "de": "Die Befehlspalette – der einzige Handgriff, den man braucht", "en": "The command palette – the only action you really need" },
+      "prompt": "⌨",
+      "befehl": "Strg+Shift+P   /  ⇧⌘P        Befehlspalette: jeden Befehl über seinen Namen finden\nStrg+P         /  ⌘P         Datei über ihren Namen öffnen\nStrg+K Strg+O  /  ⌘O        Ordner öffnen\nStrg+Shift+E   /  ⇧⌘E       Explorer (Dateibaum)\nStrg+ö oder Strg+`  /  Ctrl+`   Terminal ein- und ausblenden",
+      "teile": [
+        { "was": "Befehlspalette", "bedeutet": { "de": "Tippen genügt: „interpreter“ findet Python: Select Interpreter, „format“ findet Format Document, „trust“ findet die Vertrauenseinstellung. Wer sie benutzt, muss keine Tastenkürzel lernen.", "en": "Typing is enough: “interpreter” finds Python: Select Interpreter, “format” finds Format Document, “trust” finds the trust setting. Whoever uses it needs to learn no shortcuts." } },
+        { "was": "Strg+P", "bedeutet": { "de": "Findet eine Datei im Projekt über Teile ihres Namens. In einem Repository mit hundert Dateien schneller als jeder Klick im Baum.", "en": "Finds a file in the project by parts of its name. In a repository with a hundred files, faster than any click in the tree." } },
+        { "was": "Terminal", "bedeutet": { "de": "Das eingebaute Terminal öffnet im Projektordner und übernimmt die virtuelle Umgebung – zu erkennen am (.venv) im Prompt. Genau darum ist es dem separaten Terminalfenster vorzuziehen.", "en": "The built-in terminal opens in the project folder and picks up the virtual environment – recognisable by the (.venv) in the prompt. That is exactly why it is preferable to a separate terminal window." } }
+      ]
+    },
+    "B06": {
+      "titel": { "de": "Suchen, ersetzen, Fehler suchen", "en": "Search, replace, debug" },
+      "prompt": "⌨",
+      "befehl": "Strg+Shift+F  /  ⇧⌘F     projektweit suchen\nStrg+Shift+H  /  ⇧⌘H     projektweit ersetzen (mit Vorschau)\n\nStrg+Shift+D  /  ⇧⌘D     Fehlersuche öffnen\nF9                        Haltepunkt setzen oder entfernen\nF5                        starten und bis zum Haltepunkt laufen\nF10                       einen Schritt weiter (über den Aufruf hinweg)\nF11                       in den Aufruf hinein\nShift+F5                  beenden",
+      "teile": [
+        { "was": "Projektweit suchen", "bedeutet": { "de": "Sucht in allen Dateien des Ordners. Der schnellste Weg zur Antwort auf „wo wird diese Spalte eigentlich noch verwendet?“.", "en": "Searches all files in the folder. The fastest route to the answer to “where else is this column actually used?”." } },
+        { "was": "Haltepunkt", "bedeutet": { "de": "Ein Klick links neben die Zeilennummer. Der Programmlauf hält dort an, und alle Variablen sind im Debug-Panel sichtbar. Das ersetzt zehn print()-Zeilen.", "en": "A click to the left of the line number. Execution stops there and all variables are visible in the debug panel. That replaces ten print() lines." } },
+        { "was": "Debugger in Notebooks", "bedeutet": { "de": "Funktioniert auch in Zellen. Für eine Kette aus pandas-Umformungen, deren Ergebnis nicht stimmt, ist das der kürzeste Weg zur Ursache.", "en": "Works in cells too. For a chain of pandas transformations whose result is wrong, it is the shortest route to the cause." } }
+      ]
+    },
+    "B07": {
+      "titel": { "de": "Einstellungen, die sich lohnen", "en": "Settings worth having" },
+      "prompt": "📄",
+      "befehl": "// Befehlspalette → Preferences: Open User Settings (JSON)\n{\n  \"editor.formatOnSave\": true,\n  \"[python]\": { \"editor.defaultFormatter\": \"charliermarsh.ruff\" },\n  \"files.eol\": \"\\n\",\n  \"files.trimTrailingWhitespace\": true,\n  \"telemetry.telemetryLevel\": \"off\",\n  \"python.terminal.activateEnvironment\": true\n}",
+      "teile": [
+        { "was": "formatOnSave", "bedeutet": { "de": "Formatiert bei jedem Speichern. In einer Gruppenarbeit entscheidend: Ohne einheitliche Formatierung besteht jeder Unterschied zur Hälfte aus Leerzeichen.", "en": "Formats on every save. Decisive in group work: without uniform formatting, half of every diff consists of whitespace." } },
+        { "was": "defaultFormatter", "bedeutet": { "de": "Ruff, Black oder autopep8 – die Wahl ist gleichgültig, solange sie im Team dieselbe ist. Wichtig ist die Vereinbarung, nicht das Werkzeug.", "en": "Ruff, Black or autopep8 – the choice does not matter as long as it is the same across the team. What matters is the agreement, not the tool." } },
+        { "was": "files.eol", "bedeutet": { "de": "Erzwingt Unix-Zeilenenden. In gemischten Gruppen die Einstellung, die die meisten unnötigen Unterschiede verhindert.", "en": "Forces Unix line endings. In mixed groups the setting that prevents the most unnecessary diffs." } },
+        { "was": "User oder Workspace", "bedeutet": { "de": "Benutzereinstellungen gelten überall, Arbeitsbereichseinstellungen nur in diesem Projekt und liegen in .vscode/settings.json – die gehört ins Repository. Keine Zugangsdaten in beide, sie werden synchronisiert beziehungsweise mitcommittet.", "en": "User settings apply everywhere, workspace settings only in this project and live in .vscode/settings.json – which belongs in the repository. No credentials in either: one is synchronised, the other committed." } }
+      ]
+    },
+    "B08": {
+      "titel": { "de": "Notebook im Editor", "en": "Notebook in the editor" },
+      "prompt": "⌨",
+      "befehl": "Befehlspalette → Create: New Jupyter Notebook\nKernel oben rechts auf .venv stellen\n\nStrg+Enter    /  ⌃⏎     Zelle ausführen, Fokus bleibt\nShift+Enter   /  ⇧⏎     ausführen und zur nächsten\nAlt+Enter     /  ⌥⏎     ausführen und neue Zelle darunter\n\npip install ipykernel      # falls der Kernel in .venv fehlt",
+      "teile": [
+        { "was": "Kernel", "bedeutet": { "de": "Die dritte Stelle, an der die Umgebung stimmen muss – neben Interpreter und Terminal. Zeigt der Kernel auf ein anderes Python, findet das Notebook Pakete nicht, die im Skript funktionieren.", "en": "The third place where the environment has to be right – alongside interpreter and terminal. If the kernel points to a different Python, the notebook does not find packages that work in a script." } },
+        { "was": "ipykernel", "bedeutet": { "de": "Das Paket, das eine Umgebung als Kernel verfügbar macht. Erscheint .venv nicht in der Kernel-Auswahl, fehlt es meist.", "en": "The package that makes an environment available as a kernel. If .venv does not appear in the kernel picker, it is usually missing." } },
+        { "was": "Variablen-Panel", "bedeutet": { "de": "In der Notebook-Werkzeugleiste. Zeigt alle Objekte im Kernel; ein Doppelklick auf einen DataFrame öffnet den Data Viewer mit Sortierung und Filter.", "en": "In the notebook toolbar. Shows all objects in the kernel; a double-click on a DataFrame opens the data viewer with sorting and filtering." } },
+        { "was": "Reproduzierbarkeitstest", "bedeutet": { "de": "Auch hier gilt Lab 02: Kernel neu starten, alle Zellen ausführen, prüfen. In VS Code heißt der Knopf „Restart“ und „Run All“.", "en": "Lab 02 applies here too: restart the kernel, run all cells, check. In VS Code the buttons are “Restart” and “Run All”." } }
+      ]
+    }
+  },
+  "uebungen": [
+    {
+      "id": "P04-01",
+      "typ": "checkliste",
+      "titel": { "de": "Installation und erste Erweiterungen", "en": "Installation and first extensions" },
+      "aufgabe": {
+        "de": "<p>Arbeiten Sie diese Liste auf Ihrem eigenen Rechner ab. Am Ende können Sie eine Python-Datei schreiben, ausführen und mit dem Debugger anhalten.</p>",
+        "en": "<p>Work through this list on your own machine. At the end you can write a Python file, run it and stop it with the debugger.</p>"
+      },
+      "schritte": [
+        { "text": { "de": "Python installiert und <code>python3 --version</code> (Windows: <code>python --version</code>) liefert eine Versionsnummer.", "en": "Python installed, and <code>python3 --version</code> (Windows: <code>python --version</code>) returns a version number." } },
+        { "text": { "de": "Git installiert und <code>git --version</code> liefert eine Versionsnummer.", "en": "Git installed, and <code>git --version</code> returns a version number." } },
+        { "text": { "de": "VS Code installiert und gestartet. Auf Hochschulgeräten den User-Installer nehmen, wenn keine Administratorrechte vorliegen.", "en": "VS Code installed and started. On university machines take the user installer if you have no administrator rights." } },
+        { "text": { "de": "Erweiterung <code>ms-python.python</code> installiert. Auf die Herausgeberkennung achten, nicht nur auf den Namen.", "en": "Extension <code>ms-python.python</code> installed. Mind the publisher identifier, not just the name." } },
+        { "text": { "de": "Erweiterung <code>ms-toolsai.jupyter</code> installiert.", "en": "Extension <code>ms-toolsai.jupyter</code> installed." } },
+        { "text": { "de": "In den Einstellungen <code>telemetry.telemetryLevel</code> auf <code>off</code> gesetzt und mit <code>Developer: Show Telemetry</code> geprüft, dass nichts mehr gesendet wird.", "en": "Set <code>telemetry.telemetryLevel</code> to <code>off</code> in the settings and checked with <code>Developer: Show Telemetry</code> that nothing is being sent." } },
+        { "text": { "de": "Die Befehlspalette einmal benutzt, um eine Einstellung zu finden, ohne durch Menüs zu klicken.", "en": "Used the command palette once to find a setting without clicking through menus." } }
+      ],
+      "rueckmeldung": {
+        "de": "Zwei Erweiterungen sind genug. Jede weitere ist Programmcode mit Ihren Benutzerrechten und ohne Sandbox — der Abschnitt über Erweiterungen sagt, warum das keine übertriebene Vorsicht ist. Wenn Sie später eine dritte brauchen, prüfen Sie Herausgeber, Installationszahl und den Verweis auf das Quell-Repository.",
+        "en": "Two extensions are enough. Every further one is program code with your user rights and no sandbox — the section on extensions says why that is not exaggerated caution. When you later need a third, check the publisher, the install count and the link to the source repository."
+      }
+    },
+    {
+      "id": "P04-02",
+      "typ": "checkliste",
+      "titel": { "de": "Ein Projekt mit eigener Umgebung", "en": "A project with its own environment" },
+      "aufgabe": {
+        "de": "<p>Bauen Sie ein Projekt auf, wie es für die folgenden Labs gebraucht wird: eigener Ordner, eigene Umgebung, Repository, Paketliste. Wenn Sie Lab 03 gemacht haben, können Sie das dort geklonte Repository verwenden.</p>",
+        "en": "<p>Set up a project the way the following labs need it: own folder, own environment, repository, package list. If you have done lab 03, you can use the repository you cloned there.</p>"
+      },
+      "schritte": [
+        { "text": { "de": "Projektordner angelegt und in VS Code <strong>als Ordner</strong> geöffnet (<code>code .</code> oder <code>Datei → Ordner öffnen</code>). Der Explorer zeigt einen Dateibaum.", "en": "Project folder created and opened in VS Code <strong>as a folder</strong> (<code>code .</code> or <code>File → Open Folder</code>). The explorer shows a file tree." } },
+        { "text": { "de": "Virtuelle Umgebung angelegt: Befehlspalette → <code>Python: Create Environment</code> → <code>Venv</code>. Im Explorer erscheint ein Ordner <code>.venv</code>.", "en": "Virtual environment created: command palette → <code>Python: Create Environment</code> → <code>Venv</code>. A <code>.venv</code> folder appears in the explorer." } },
+        { "text": { "de": "Terminal geöffnet. Der Prompt beginnt mit <code>(.venv)</code>. Falls nicht: Terminal schließen und neu öffnen.", "en": "Terminal opened. The prompt starts with <code>(.venv)</code>. If not: close the terminal and reopen it." } },
+        { "text": { "de": "<code>python -c \"import sys; print(sys.executable)\"</code> ausgeführt. Der Pfad enthält <code>.venv</code>.", "en": "Ran <code>python -c \"import sys; print(sys.executable)\"</code>. The path contains <code>.venv</code>." } },
+        { "text": { "de": "<code>pip install pandas</code> ausgeführt, dann <code>pip list</code> — pandas steht in der Liste.", "en": "Ran <code>pip install pandas</code>, then <code>pip list</code> — pandas is in the list." } },
+        { "text": { "de": "<code>pip freeze &gt; requirements.txt</code> ausgeführt. Die Datei enthält pandas mit Versionsnummer.", "en": "Ran <code>pip freeze &gt; requirements.txt</code>. The file contains pandas with a version number." } },
+        { "text": { "de": "<code>.gitignore</code> angelegt oder ergänzt: <code>.venv/</code> und <code>__pycache__/</code> stehen darin. In der Git-Ansicht erscheint der Ordner <code>.venv</code> danach nicht mehr.", "en": "Created or extended the <code>.gitignore</code>: <code>.venv/</code> and <code>__pycache__/</code> are in it. The <code>.venv</code> folder then no longer appears in the Git view." } },
+        { "text": { "de": "Absichtlich einen Fehler erzeugt: Interpreter in der Statusleiste auf die globale Installation umgestellt, <code>import pandas</code> ausgeführt, <code>ModuleNotFoundError</code> gelesen — und den Interpreter zurückgestellt.", "en": "Produced an error on purpose: switched the interpreter in the status bar to the global installation, ran <code>import pandas</code>, read the <code>ModuleNotFoundError</code> — and switched the interpreter back." } }
+      ],
+      "rueckmeldung": {
+        "de": "Der letzte Schritt ist der wichtigste. Wer diesen Fehler einmal absichtlich erzeugt hat, erkennt ihn beim nächsten Mal in zehn Sekunden statt in einer halben Stunde — und weiß, dass er nichts mit pandas zu tun hat.",
+        "en": "The last step is the most important. Whoever has produced this error deliberately once recognises it next time in ten seconds instead of half an hour — and knows it has nothing to do with pandas."
+      }
+    },
+    {
+      "id": "P04-03",
+      "typ": "quiz",
+      "titel": { "de": "Die Diagnose von ModuleNotFoundError", "en": "Diagnosing ModuleNotFoundError" },
+      "aufgabe": {
+        "de": "<p>Drei Fälle aus der Übungsbetreuung. Alle drei sehen aus wie ein Problem mit der Bibliothek und sind es nicht.</p>",
+        "en": "<p>Three cases from tutoring. All three look like a problem with the library and are not.</p>"
+      },
+      "fragen": [
+        {
+          "frage": { "de": "<code>pip install pandas</code> meldet „Successfully installed pandas-2.2.2“. Die nächste Zeile <code>import pandas</code> scheitert mit ModuleNotFoundError. Was prüfen Sie zuerst?", "en": "<code>pip install pandas</code> reports “Successfully installed pandas-2.2.2”. The next line <code>import pandas</code> fails with ModuleNotFoundError. What do you check first?" },
+          "optionen": [
+            { "de": "Ob <code>sys.executable</code> und <code>pip -V</code> auf dasselbe Python zeigen. Weichen sie ab, hat pip in eine andere Umgebung installiert als die, in der der Code läuft.", "en": "Whether <code>sys.executable</code> and <code>pip -V</code> point to the same Python. If they differ, pip installed into a different environment from the one the code runs in." },
+            { "de": "Ob die Internetverbindung stabil war.", "en": "Whether the internet connection was stable." },
+            { "de": "Ob pandas mit der Python-Version verträglich ist.", "en": "Whether pandas is compatible with the Python version." }
+          ],
+          "richtig": [0],
+          "erklaerung": {
+            "de": "Eine gescheiterte Installation meldet sich als Fehler, nicht als Erfolg — „Successfully installed“ heißt, dass die Datei irgendwo liegt. Die Frage ist nur, wo. Eine Unverträglichkeit meldet sich beim Installieren, nicht beim Importieren. Deshalb ist die Antwort immer dieselben zwei Zeilen.",
+            "en": "A failed installation announces itself as an error, not as a success — “Successfully installed” means the file is somewhere. The only question is where. An incompatibility announces itself while installing, not while importing. Hence the answer is always the same two lines."
+          }
+        },
+        {
+          "frage": { "de": "Ein Skript läuft, dasselbe <code>import</code> in einem Notebook derselben Projektmappe scheitert. Woran liegt es?", "en": "A script runs, the same <code>import</code> in a notebook in the same workspace fails. Why?" },
+          "optionen": [
+            { "de": "Der Kernel des Notebooks zeigt auf eine andere Umgebung als der gewählte Interpreter. Der Kernel wird oben rechts im Notebook gesetzt, nicht in der Statusleiste.", "en": "The notebook's kernel points to a different environment from the selected interpreter. The kernel is set at the top right of the notebook, not in the status bar." },
+            { "de": "Notebooks können grundsätzlich nur mit Conda-Umgebungen arbeiten.", "en": "Notebooks can fundamentally only work with conda environments." },
+            { "de": "Der Import muss in Notebooks in der ersten Zelle stehen.", "en": "In notebooks the import has to be in the first cell." }
+          ],
+          "richtig": [0],
+          "erklaerung": {
+            "de": "Es gibt drei Stellen, an denen eine Umgebung eingestellt wird: der Interpreter (Statusleiste), das Terminal (Prompt mit (.venv)) und der Notebook-Kernel (oben rechts). Alle drei können auseinanderlaufen. Erscheint .venv nicht in der Kernel-Auswahl, fehlt dort meist das Paket ipykernel.",
+            "en": "There are three places where an environment is set: the interpreter (status bar), the terminal (prompt with (.venv)) and the notebook kernel (top right). All three can diverge. If .venv does not appear in the kernel picker, the ipykernel package is usually missing there."
+          }
+        },
+        {
+          "frage": { "de": "Eine Kommilitonin schickt ihren Projektordner als ZIP-Datei, damit Sie die Auswertung nachvollziehen können. Was sollte darin sein — und was nicht?", "en": "A fellow student sends her project folder as a ZIP file so you can follow the analysis. What should be in it — and what should not?" },
+          "optionen": [
+            { "de": "Enthalten: Code, <code>requirements.txt</code>, <code>.gitignore</code>, eine kleine Beispieldatei. Nicht enthalten: <code>.venv/</code>, <code>__pycache__/</code>, die vollständigen Rohdaten.", "en": "Included: code, <code>requirements.txt</code>, <code>.gitignore</code>, a small sample file. Not included: <code>.venv/</code>, <code>__pycache__/</code>, the full raw data." },
+            { "de": "Alles, was im Ordner liegt — nur so ist die Auswertung vollständig reproduzierbar.", "en": "Everything in the folder — only that way is the analysis fully reproducible." },
+            { "de": "Nur die Notebooks, weil sie die Ausgaben schon enthalten.", "en": "Only the notebooks, because they already contain the outputs." }
+          ],
+          "richtig": [0],
+          "erklaerung": {
+            "de": "Die virtuelle Umgebung ist plattformabhängig und mehrere Hundert Megabyte groß — auf einem anderen System ist sie unbrauchbar. Die requirements.txt leistet dasselbe in zwanzig Zeilen und ist plattformunabhängig. Notebooks allein genügen nicht: Ohne Paketliste weiß niemand, mit welchen Versionen die Zahlen entstanden sind.",
+            "en": "The virtual environment is platform-dependent and several hundred megabytes in size — on another system it is useless. The requirements.txt does the same job in twenty lines and is platform-independent. Notebooks alone are not enough: without a package list nobody knows which versions produced the figures."
+          }
+        }
+      ]
+    },
+    {
+      "id": "P04-04",
+      "typ": "zuordnen",
+      "titel": { "de": "Wo wird was eingestellt?", "en": "Where is what configured?" },
+      "aufgabe": {
+        "de": "<p>Ordnen Sie jede Aufgabe der Stelle zu, an der sie erledigt wird. Wer diese Landkarte im Kopf hat, sucht nicht in Menüs.</p>",
+        "en": "<p>Assign every task to the place where it is done. Whoever has this map in their head does not search through menus.</p>"
+      },
+      "ziele": [
+        { "id": "status", "text": { "de": "Statusleiste unten", "en": "Status bar at the bottom" } },
+        { "id": "palette", "text": { "de": "Befehlspalette", "en": "Command palette" } },
+        { "id": "notebook", "text": { "de": "Notebook-Werkzeugleiste (oben rechts)", "en": "Notebook toolbar (top right)" } },
+        { "id": "settings", "text": { "de": "settings.json", "en": "settings.json" } },
+        { "id": "gitignore", "text": { "de": ".gitignore im Projekt", "en": ".gitignore in the project" } }
+      ],
+      "paare": [
+        { "begriff": { "de": "Python-Interpreter wechseln", "en": "Change the Python interpreter" }, "ziel": "status" },
+        { "begriff": { "de": "Zeilenende von CRLF auf LF stellen", "en": "Switch the line ending from CRLF to LF" }, "ziel": "status" },
+        { "begriff": { "de": "Virtuelle Umgebung anlegen", "en": "Create a virtual environment" }, "ziel": "palette" },
+        { "begriff": { "de": "Workspace Trust nachträglich ändern", "en": "Change Workspace Trust afterwards" }, "ziel": "palette" },
+        { "begriff": { "de": "Kernel eines Notebooks setzen", "en": "Set a notebook's kernel" }, "ziel": "notebook" },
+        { "begriff": { "de": "Formatierung beim Speichern einschalten", "en": "Enable formatting on save" }, "ziel": "settings" },
+        { "begriff": { "de": "Telemetrie abschalten", "en": "Switch off telemetry" }, "ziel": "settings" },
+        { "begriff": { "de": "Den Ordner .venv aus der Versionsverwaltung ausschließen", "en": "Exclude the .venv folder from version control" }, "ziel": "gitignore" }
+      ],
+      "rueckmeldung": {
+        "de": "Die Statusleiste ist die Anzeige, die Befehlspalette der Zugang zu allem, was einen Namen hat. Beachten Sie die Doppelung beim Interpreter: Er lässt sich auch über die Palette wechseln — aber nur die Statusleiste sagt jederzeit, welcher gerade gilt. Anzeigen und Einstellen sind zwei verschiedene Bedürfnisse.",
+        "en": "The status bar is the display, the command palette the way into everything that has a name. Note the overlap at the interpreter: it can be changed through the palette too — but only the status bar tells you at any moment which one applies. Displaying and setting are two different needs."
+      }
+    },
+    {
+      "id": "P04-05",
+      "typ": "quiz",
+      "titel": { "de": "Erweiterungen, Vertrauen, Daten", "en": "Extensions, trust, data" },
+      "aufgabe": {
+        "de": "<p>Drei Fragen zu dem, was ein Editor über Ihr Projekt und Ihren Rechner erfährt.</p>",
+        "en": "<p>Three questions about what an editor learns about your project and your machine.</p>"
+      },
+      "fragen": [
+        {
+          "frage": { "de": "Was leistet der eingeschränkte Modus (Restricted Mode), wenn Sie einen fremden Projektordner öffnen?", "en": "What does restricted mode achieve when you open an unfamiliar project folder?" },
+          "optionen": [
+            { "de": "Er schaltet Terminal, Aufgaben, Debugger, projektbezogene Einstellungen mit Programmpfaden und KI-Agenten ab — also genau die Wege, über die fremder Code beim Öffnen ausgeführt würde.", "en": "It switches off terminal, tasks, debugger, workspace settings with executable paths and AI agents — precisely the routes through which foreign code would be executed on opening." },
+            { "de": "Er verschlüsselt die Dateien im Ordner.", "en": "It encrypts the files in the folder." },
+            { "de": "Er verhindert, dass Sie Dateien versehentlich überschreiben.", "en": "It prevents you from accidentally overwriting files." }
+          ],
+          "richtig": [0],
+          "erklaerung": {
+            "de": "Ein Projektordner kann Einstellungen mitbringen, die beim Öffnen Programme starten. Der eingeschränkte Modus unterbindet das, bis Sie zustimmen. Bei einem geklonten Übungsrepository lohnt es sich, ihn zunächst zu behalten, in die Dateien zu sehen und dann bewusst freizugeben — dieselbe Haltung wie beim Kopieren von Löschbefehlen in Lab 01.",
+            "en": "A project folder can bring settings that start programs on opening. Restricted mode prevents that until you agree. With a cloned exercise repository it is worth keeping it at first, looking into the files and then releasing it deliberately — the same attitude as with copying deletion commands in lab 01."
+          }
+        },
+        {
+          "frage": { "de": "Sie setzen <code>telemetry.telemetryLevel</code> auf <code>off</code>. Welche Datenerhebung ist damit beendet und welche nicht?", "en": "You set <code>telemetry.telemetryLevel</code> to <code>off</code>. Which data collection ends with that and which does not?" },
+          "optionen": [
+            { "de": "Beendet ist die Erhebung durch VS Code selbst. Nicht beendet ist die durch Erweiterungen — die regeln ihre Datenerhebung eigenständig und müssen einzeln geprüft werden.", "en": "What ends is the collection by VS Code itself. What does not end is that by extensions — they govern their own collection and have to be checked individually." },
+            { "de": "Alles, was den Rechner verlässt, ist damit abgeschaltet.", "en": "Everything that leaves the machine is switched off with it." },
+            { "de": "Nichts, die Einstellung ist nur eine Anzeige.", "en": "Nothing, the setting is merely a display." }
+          ],
+          "richtig": [0],
+          "erklaerung": {
+            "de": "Das ist der Grund, warum die Zahl der Erweiterungen eine Datenschutzfrage ist und nicht nur eine Geschmacksfrage. Prüfen lässt sich der Zustand mit dem Befehl Developer: Show Telemetry, der den Ausgabekanal mitschreibt.",
+            "en": "That is why the number of extensions is a data protection question and not merely a matter of taste. The state can be checked with the command Developer: Show Telemetry, which logs the output channel."
+          }
+        },
+        {
+          "frage": { "de": "Welche der folgenden Angaben gehören <em>nicht</em> in <code>settings.json</code>? Mehrere Antworten sind richtig.", "en": "Which of the following do <em>not</em> belong in <code>settings.json</code>? Several answers are correct." },
+          "mehrfach": true,
+          "optionen": [
+            { "de": "Das Passwort der Supabase-Datenbank", "en": "The Supabase database password" },
+            { "de": "Ein GitHub-Zugriffs-Token", "en": "A GitHub access token" },
+            { "de": "Die Formatierungseinstellung <code>editor.formatOnSave</code>", "en": "The formatting setting <code>editor.formatOnSave</code>" },
+            { "de": "Das gewünschte Zeilenende <code>files.eol</code>", "en": "The desired line ending <code>files.eol</code>" }
+          ],
+          "richtig": [0, 1],
+          "erklaerung": {
+            "de": "settings.json wird über Settings Sync in ein Microsoft- oder GitHub-Konto synchronisiert; die Arbeitsbereichsfassung unter .vscode/ wird zusätzlich mitcommittet. Beides sind Wege nach draußen. Zugangsdaten gehören in eine .env-Datei, die in der .gitignore steht, oder in eine Umgebungsvariable — dieselbe Regel wie beim Secrets-Panel in Lab 02 und beim Verschlüsselungsschlüssel in Lab 09.",
+            "en": "settings.json is synchronised through Settings Sync into a Microsoft or GitHub account; the workspace version under .vscode/ is additionally committed. Both are routes outward. Credentials belong in a .env file listed in the .gitignore, or in an environment variable — the same rule as with the secrets panel in lab 02 and the encryption key in lab 09."
+          }
+        }
+      ]
+    }
+  ]
+}

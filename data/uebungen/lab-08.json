@@ -1,0 +1,333 @@
+{
+  "befehle": {
+    "B01": {
+      "titel": { "de": "Installieren, Workspace wählen, Speicher einstellen", "en": "Install, choose a workspace, set the memory" },
+      "prompt": "☰",
+      "befehl": "1  knime.com/downloads/download-knime  → LTS-Fassung wählen\n2  Windows: Installer oder ZIP  ·  macOS: .dmg (arm64 oder x86_64)  ·  Linux: .tar.gz entpacken\n3  Beim Start nach dem Workspace gefragt:  ~/knime-workspace\n     NICHT in OneDrive, Dropbox o. ä. — Sync-Konflikte zerstören Workflows\n4  Speicher erhöhen: knime.ini im Installationsordner öffnen\n     -Xmx1024m      ← Voreinstellung\n     -Xmx8g         ← etwa die Hälfte des vorhandenen RAM\n   macOS: Rechtsklick auf KNIME → Show Package Contents → Contents → Eclipse → knime.ini",
+      "teile": [
+        { "was": "LTS", "bedeutet": { "de": "Long Term Support: alle sechs Monate eine neue Fassung, zwei Jahre Aktualisierungen. Für einen Kurs die richtige Wahl, weil die verfügbaren Knoten über das Semester gleich bleiben. Die STS-Linie erscheint alle sechs Wochen.", "en": "Long term support: a new release every six months, two years of updates. The right choice for a course, because the available nodes stay the same across the semester. The STS line appears every six weeks." } },
+        { "was": "Workspace", "bedeutet": { "de": "Ein Ordner für alle Workflows samt Einstellungen und Zwischenergebnissen. Er wird beim Start gewählt und lässt sich später wechseln. Ein Workspace enthält viele Workflows — nicht umgekehrt.", "en": "A folder for all workflows including settings and intermediate results. It is chosen at start-up and can be changed later. One workspace contains many workflows — not the other way round." } },
+        { "was": "-Xmx", "bedeutet": { "de": "Die Obergrenze für den Arbeitsspeicher der Java-Umgebung. Bei der Voreinstellung von einem Gigabyte bricht ein Ablauf über 100.000 Zeilen ab. Die Herstellerempfehlung lautet etwa die Hälfte des vorhandenen Speichers.", "en": "The upper limit for the Java environment's memory. With the one-gigabyte default, a flow over 100,000 rows aborts. The vendor's recommendation is roughly half the available memory." } },
+        { "was": "Kein Konto", "bedeutet": { "de": "Für Installation und lokalen Betrieb ist kein Hub-Konto nötig. Es wird erst gebraucht, um Workflows zu teilen oder den KI-Assistenten zu nutzen.", "en": "No hub account is needed for installation and local operation. It is only required to share workflows or use the AI assistant." } }
+      ]
+    },
+    "B02": {
+      "titel": { "de": "Die Handgriffe, die man am ersten Tag braucht", "en": "The actions you need on day one" },
+      "prompt": "⌨",
+      "befehl": "F6                 Knoten konfigurieren   (oder Doppelklick)\nF7                 ausführen\nShift+F7           alles Ausführbare ausführen\nF9                 Ausführung abbrechen\nF8                 Reset — löscht Ergebnisse, auch aller nachfolgenden Knoten\nStrg+S             speichern (speichert auch die Ergebnisse mit)\n\nRechtsklick auf einen Knoten → unterster Menüpunkt = Ausgabetabelle ansehen\nKnoten markieren → Description-Fenster rechts = Dokumentation des Knotens\nNodes markieren → Rechtsklick → Create Component / Create Metanode",
+      "teile": [
+        { "was": "F8 (Reset)", "bedeutet": { "de": "Löscht das Ergebnis des Knotens und aller nachfolgenden. Es ist ausdrücklich kein Rückgängig: Der Vorgang, der vorher lief, wird nicht zurückgenommen — nur sein Ergebnis verworfen. Vor einem Umbau lohnt es, Zwischenergebnisse mit einem Table Writer zu sichern.", "en": "Clears the node's result and that of all downstream nodes. It is expressly not an undo: the operation that ran before is not reversed — only its result is discarded. Before a rebuild it pays to save intermediate results with a Table Writer." } },
+        { "was": "Ausgabetabelle ansehen", "bedeutet": { "de": "Der wichtigste Handgriff überhaupt. Nach jedem Knoten die Zeilenzahl ablesen: Ein Filter, der aus 1.500 Zeilen 3 macht, ist ein Fehler — aber nur, wenn man hinsieht.", "en": "The single most important action. Read the row count after every node: a filter that turns 1,500 rows into 3 is a bug — but only if you look." } },
+        { "was": "Description-Fenster", "bedeutet": { "de": "Zeigt die Dokumentation des markierten Knotens — alle Einstellungen erklärt, mit Beispielen. Die verlässlichste Quelle, weil sie zur installierten Fassung gehört. Dasselbe Prinzip wie --help auf der Kommandozeile.", "en": "Shows the selected node's documentation — every setting explained, with examples. The most reliable source, because it belongs to the installed version. The same principle as --help on the command line." } },
+        { "was": "Component", "bedeutet": { "de": "Fasst markierte Knoten zu einem wiederverwendbaren Knoten mit eigenem Dialog zusammen. Eine Metanode ist nur optische Bündelung: Flow-Variablen laufen durch, es gibt keinen Dialog.", "en": "Bundles selected nodes into a reusable node with its own dialogue. A metanode is purely visual grouping: flow variables pass through, there is no dialogue." } }
+      ]
+    },
+    "B03": {
+      "titel": { "de": "Die erste Kette: einlesen, filtern, gruppieren, schreiben", "en": "The first chain: read, filter, group, write" },
+      "prompt": "⇢",
+      "befehl": "CSV Reader → Row Filter → Column Filter → GroupBy → Sorter → CSV Writer\n\nCSV Reader     Datei wählen; Reiter „Transformation“: JEDEN Spaltentyp prüfen\n               Trennzeichen ;   Encoding UTF-8   ☑ has column header\nRow Filter     Bedingung, z. B.  dauer_min >= 5\nColumn Filter  nur die Spalten behalten, die gebraucht werden\nGroupBy        Reiter Groups: Gruppenspalte  ·  Manual Aggregation: Sum, Mean, Count\nSorter         absteigend nach der Summe\nCSV Writer     Zielpfad relativ setzen:  knime://knime.workflow/data/ergebnis.csv",
+      "teile": [
+        { "was": "Reiter Transformation", "bedeutet": { "de": "Hier werden die Spaltentypen gesetzt. Bei deutschen Ausleitungen wird „12,50“ sonst als Text erkannt, und jede Summe scheitert später mit einer Meldung, die nicht auf den Import verweist. Dieselbe Falle wie decimal=\",\" in pandas und der CSV-Import in Supabase.", "en": "This is where column types are set. With German exports “12,50” is otherwise detected as text, and every sum later fails with a message that does not point at the import. The same trap as decimal=\",\" in pandas and the CSV import in Supabase." } },
+        { "was": "GroupBy", "bedeutet": { "de": "Zwei Reiter, die zusammengehören: „Groups“ legt fest, wonach gruppiert wird, „Manual Aggregation“, was gerechnet wird. Wer nur den ersten füllt, erhält eine Liste eindeutiger Werte ohne Kennzahlen.", "en": "Two tabs that belong together: “Groups” sets what is grouped by, “Manual Aggregation” what is computed. Whoever fills only the first gets a list of distinct values without measures." } },
+        { "was": "knime://knime.workflow/", "bedeutet": { "de": "Ein relativer Pfad innerhalb des Workflows. Absolute Pfade wie /Users/studi/… lassen einen Workflow nur auf dem eigenen Rechner laufen — beim Weitergeben scheitert er sofort.", "en": "A relative path inside the workflow. Absolute paths such as /Users/studi/… make a workflow run only on your own machine — when shared it fails immediately." } },
+        { "was": "Reihenfolge", "bedeutet": { "de": "Row Filter und Column Filter früh, weil sie die Datenmenge verkleinern. Bei großen Tabellen ist das der Unterschied zwischen zwei Sekunden und zwei Minuten je Ausführung.", "en": "Row Filter and Column Filter early, because they reduce the data volume. With large tables that is the difference between two seconds and two minutes per execution." } }
+      ]
+    },
+    "B04": {
+      "titel": { "de": "Klassifikation: Learner und Predictor", "en": "Classification: learner and predictor" },
+      "prompt": "⇢",
+      "befehl": "                                          ┌→ Decision Tree Learner ─┐ (Modell)\nCSV Reader → Missing Value → Column Filter → Partitioning              ↓\n                                          └────────────→ Decision Tree Predictor → Scorer\n                                            (unterer Ausgang = Test)\n\nPartitioning   Relative[%] = 70\n               Modus: Stratified sampling  auf die Zielspalte\n               ☑ Use random seed  = 1234\nLearner        oberer Partitioning-Ausgang (Training), Zielspalte wählen\nPredictor      Modellport oben, unterer Partitioning-Ausgang (Test) unten\nScorer         Zielspalte gegen Prediction (Zielspalte)",
+      "teile": [
+        { "was": "Zwei Ausgänge", "bedeutet": { "de": "Partitioning liefert oben die Trainings- und unten die Testmenge. Wer beide Kabel an denselben Ausgang legt, trainiert und prüft auf denselben Daten — Accuracy nahe 100 %, Aussagekraft null.", "en": "Partitioning delivers the training set at the top and the test set at the bottom. Whoever attaches both cables to the same output trains and tests on the same data — accuracy near 100 %, informative value zero." } },
+        { "was": "Stratified sampling", "bedeutet": { "de": "Hält das Verhältnis der Klassen in beiden Teilen gleich. Ohne Stratifizierung kann bei einer seltenen Klasse — Betrug, Ausfall, Schaden — die Testmenge kein einziges positives Beispiel enthalten, und der Scorer misst nichts.", "en": "Keeps the class ratio the same in both parts. Without stratification, with a rare class — fraud, failure, damage — the test set may contain not a single positive example, and the scorer measures nothing." } },
+        { "was": "Use random seed", "bedeutet": { "de": "Macht den Split wiederholbar. Ohne festen Startwert liefert derselbe Workflow bei jedem Lauf andere Zahlen — und die Frage „warum ist die Accuracy heute anders?“ hat keine fachliche Antwort. Reproduzierbarkeit beginnt hier.", "en": "Makes the split repeatable. Without a fixed seed the same workflow gives different numbers on every run — and the question “why is the accuracy different today?” has no substantive answer. Reproducibility begins here." } },
+        { "was": "Column Filter vor dem Learner", "bedeutet": { "de": "Hier fliegen IDs und alles hinaus, was die Antwort verrät. Eine Accuracy von 99,8 % ist fast immer ein Befund über diesen Knoten und keine Leistung des Modells.", "en": "This is where IDs and everything that gives away the answer are dropped. An accuracy of 99.8 % is almost always a finding about this node and not an achievement of the model." } }
+      ]
+    },
+    "B05": {
+      "titel": { "de": "Bewerten – und mit einer Faustregel vergleichen", "en": "Evaluate – and compare against a rule of thumb" },
+      "prompt": "⇢",
+      "befehl": "Scorer          Klassifikation: Confusion Matrix, Accuracy, Cohen's Kappa\nNumeric Scorer  Regression: R², RMSE, MAE\nROC Curve       Trennschärfe über alle Schwellen\n\n# Immer gegen eine Faustregel vergleichen:\nRule Engine → Predictor-Ausgang → Scorer\n   $kilometer_seit_reparatur$ > 800 => \"wartung\"\n   TRUE => \"keine\"",
+      "teile": [
+        { "was": "Confusion Matrix", "bedeutet": { "de": "Die vier Felder aus der Vorlesung: TP korrekt positiv, FN der übersehene Fall, FP der Fehlalarm, TN korrekt negativ. Die Accuracy ist eine Zahl daraus — und bei unausgeglichenen Klassen die uninformativste.", "en": "The four cells from the lecture: TP correctly positive, FN the missed case, FP the false alarm, TN correctly negative. Accuracy is one number derived from it — and with imbalanced classes the least informative one." } },
+        { "was": "Die Accuracy-Falle", "bedeutet": { "de": "Bei 30 Betrugsfällen in 1.000 Testfällen erreicht ein Modell, das ausnahmslos „kein Betrug“ sagt, 97 % Accuracy — und erkennt keinen einzigen Fall, auf den es ankommt. Deshalb immer die Matrix ansehen, nicht die eine Zahl.", "en": "With 30 fraud cases in 1,000 test cases, a model that says “no fraud” without exception reaches 97 % accuracy — and detects not a single case that matters. Hence always look at the matrix, not the one number." } },
+        { "was": "Faustregel als Vergleich", "bedeutet": { "de": "Ein Modell ist nur so gut wie sein Abstand zu der einfachen Regel, die es ersetzen soll. In Notebook 02 der Fallstudie schlug die Regel „Kilometer seit letzter Reparatur zuerst“ mit 53 von 60 Treffern sowohl den Entscheidungsbaum (45) als auch den Random Forest (44) — und wurde deshalb freigegeben.", "en": "A model is only as good as its margin over the simple rule it is meant to replace. In notebook 02 of the case study the rule “most kilometres since last repair first” beat both the decision tree (45) and the random forest (44) with 53 of 60 hits — and was therefore the one released." } },
+        { "was": "Numeric Scorer", "bedeutet": { "de": "Für eine Zielgröße mit Zahlen. MAE ist der mittlere absolute Fehler in der Einheit der Zielgröße — bei einer Preisspanne in Cent also unmittelbar verständlich, anders als R².", "en": "For a numeric target. MAE is the mean absolute error in the target's unit — with a price range in cents therefore immediately understandable, unlike R²." } }
+      ]
+    },
+    "B06": {
+      "titel": { "de": "Die zwei Reihenfolgen – falsch und richtig", "en": "The two orderings – wrong and right" },
+      "prompt": "⇢",
+      "befehl": "# FALSCH — Normalizer sieht die Testdaten mit:\nCSV Reader → Normalizer → Partitioning → Learner → Predictor → Scorer\n\n# RICHTIG — der Normalizer sieht nur das Training,\n#           die Testmenge bekommt dessen Modell über Normalizer (Apply):\n                              ┌→ Normalizer ──┬→ Learner ─────────┐\nCSV Reader → Partitioning ────┤               │ (Modell)          ↓\n                              └→ Normalizer (Apply) ──→ Predictor → Scorer\n                                    ↑ (Normalisierungsmodell aus dem Training)",
+      "teile": [
+        { "was": "Warum das ein Fehler ist", "bedeutet": { "de": "Der Normalizer berechnet Minimum und Maximum jeder Spalte. Läuft er vor dem Split, gehen die Werte der Testmenge in diese Rechnung ein — und damit Information, die zum Vorhersagezeitpunkt nicht verfügbar wäre. Das Modell hat einen Blick in die Zukunft gehabt.", "en": "The Normalizer computes each column's minimum and maximum. Run before the split, the test set's values enter that computation — and with them information that would not be available at prediction time. The model has had a glimpse of the future." } },
+        { "was": "Normalizer (Apply)", "bedeutet": { "de": "Nimmt das Normalisierungsmodell aus dem Training und wendet es auf die Testmenge an. Derselbe Bauplan wie Learner und Predictor — und der Grund, warum es diesen Knoten überhaupt gibt.", "en": "Takes the normalisation model from the training and applies it to the test set. The same design as learner and predictor — and the reason this node exists at all." } },
+        { "was": "Gilt auch für", "bedeutet": { "de": "Missing Value, Auto-Binner, One-to-Many-Codierung, Ausreißerbehandlung. Jeder Knoten, der eine Kennzahl über alle Zeilen berechnet und dann anwendet, muss nach dem Split stehen.", "en": "Missing Value, Auto-Binner, one-to-many encoding, outlier handling. Every node that computes a statistic over all rows and then applies it has to sit after the split." } },
+        { "was": "Woran man es merkt", "bedeutet": { "de": "Man merkt es nicht — die falsche Fassung liefert die besseren Zahlen. Genau deshalb prüft man die Reihenfolge im Graphen und nicht das Ergebnis. Ein Modell, das im Test glänzt und im Betrieb versagt, ist meistens hier verunglückt.", "en": "You do not notice — the wrong version delivers the better numbers. That is exactly why you check the order in the graph and not the result. A model that shines in the test and fails in operation usually went wrong here." } }
+      ]
+    },
+    "B07": {
+      "titel": { "de": "Python im Ablauf", "en": "Python inside the flow" },
+      "prompt": "🐍",
+      "befehl": "# Erweiterung: File → Install KNIME Extensions… → KNIME Python Integration\n# Knoten: Python Script\n\nimport knime.scripting.io as knio\nimport pandas as pd\n\ndf = knio.input_tables[0].to_pandas()\ndf[\"preis_je_minute\"] = df[\"preis_eur\"] / df[\"dauer_min\"]\nknio.output_tables[0] = knio.Table.from_pandas(df)",
+      "teile": [
+        { "was": "knime.scripting.io", "bedeutet": { "de": "Die Brücke zwischen Knotenports und Python. input_tables[0] ist der erste Eingang, output_tables[0] der erste Ausgang. Die Anzahl der Ports lässt sich im Knoten einstellen.", "en": "The bridge between node ports and Python. input_tables[0] is the first input, output_tables[0] the first output. The number of ports is configurable in the node." } },
+        { "was": "to_pandas / from_pandas", "bedeutet": { "de": "Wandelt zwischen KNIME-Tabelle und Datenrahmen. Alles, was in Lab 02 mit pandas geübt wurde, funktioniert hier unverändert — der Knoten ist eine Zelle in einem Graphen.", "en": "Converts between a KNIME table and a data frame. Everything practised with pandas in lab 02 works here unchanged — the node is a cell inside a graph." } },
+        { "was": "Umgebung", "bedeutet": { "de": "KNIME bringt eine gebündelte Python-Umgebung mit; der Pixi-Anbieter ist die heute empfohlene Verwaltung. Für einen Kurs bedeutet das: Studierende brauchen kein Conda zu installieren. Die Fragen aus Lab 04 — welches Python rechnet gerade? — stellen sich hier in derselben Form.", "en": "KNIME ships a bundled Python environment; the pixi provider is today's recommended management. For a course that means: students need not install conda. The questions from lab 04 — which Python is computing? — arise here in the same form." } },
+        { "was": "Wann Python, wann Knoten", "bedeutet": { "de": "Knoten für alles, was jemand ohne Programmierkenntnisse lesen soll. Python für Spezialverfahren, eigene Darstellungen und Bibliotheken ohne eigenen Knoten. Ein Python Script mit 200 Zeilen im Graphen hebt den Vorteil des Graphen wieder auf.", "en": "Nodes for everything somebody without programming skills should read. Python for specialised methods, custom visualisations and libraries without their own node. A 200-line Python Script inside the graph undoes the graph's advantage again." } }
+      ]
+    }
+  },
+  "uebungen": [
+    {
+      "id": "P08-01",
+      "typ": "zuordnen",
+      "titel": { "de": "Node und CRISP-DM-Phase", "en": "Node and CRISP-DM phase" },
+      "aufgabe": {
+        "de": "<p>Ordnen Sie jeden Knoten der CRISP-DM-Phase zu, in der er seine Arbeit tut. Zwei der Knoten gehören zu einer Phase, die die Vorlesung als die zeitaufwändigste bezeichnet.</p>",
+        "en": "<p>Assign each node to the CRISP-DM phase in which it does its work. Two of the nodes belong to a phase the lecture calls the most time-consuming.</p>"
+      },
+      "ziele": [
+        { "id": "p2", "text": { "de": "2 Data Understanding", "en": "2 Data understanding" } },
+        { "id": "p3", "text": { "de": "3 Data Preparation", "en": "3 Data preparation" } },
+        { "id": "p4", "text": { "de": "4 Modeling", "en": "4 Modeling" } },
+        { "id": "p5", "text": { "de": "5 Evaluation", "en": "5 Evaluation" } },
+        { "id": "p6", "text": { "de": "6 Deployment", "en": "6 Deployment" } }
+      ],
+      "paare": [
+        { "begriff": { "de": "Data Explorer (Verteilungen, Anteil fehlender Werte)", "en": "Data Explorer (distributions, share of missing values)" }, "ziel": "p2" },
+        { "begriff": { "de": "Missing Value", "en": "Missing Value" }, "ziel": "p3" },
+        { "begriff": { "de": "Joiner", "en": "Joiner" }, "ziel": "p3" },
+        { "begriff": { "de": "Partitioning", "en": "Partitioning" }, "ziel": "p3" },
+        { "begriff": { "de": "Random Forest Learner", "en": "Random Forest Learner" }, "ziel": "p4" },
+        { "begriff": { "de": "k-Means", "en": "k-Means" }, "ziel": "p4" },
+        { "begriff": { "de": "Scorer (Confusion Matrix)", "en": "Scorer (confusion matrix)" }, "ziel": "p5" },
+        { "begriff": { "de": "Numeric Scorer (R², MAE)", "en": "Numeric Scorer (R², MAE)" }, "ziel": "p5" },
+        { "begriff": { "de": "CSV Writer", "en": "CSV Writer" }, "ziel": "p6" },
+        { "begriff": { "de": "Bar Chart in einer Component", "en": "Bar Chart inside a component" }, "ziel": "p6" }
+      ],
+      "rueckmeldung": {
+        "de": "Beachten Sie, dass Partitioning zur Datenvorbereitung gehört und nicht zur Modellierung. Das ist keine Haarspalterei: Genau weil der Split ein Vorbereitungsschritt ist, muss er vor allem stehen, was eine Kennzahl über die Daten berechnet — vor Normalizer, vor Missing Value, vor jeder Codierung. Der Abschnitt über Data Leakage handelt von nichts anderem.",
+        "en": "Note that partitioning belongs to data preparation and not to modeling. That is not pedantry: precisely because the split is a preparation step, it has to come before everything that computes a statistic over the data — before Normalizer, before Missing Value, before any encoding. The section on data leakage is about nothing else."
+      }
+    },
+    {
+      "id": "P08-02",
+      "typ": "checkliste",
+      "titel": { "de": "Die erste Kette bauen", "en": "Build the first chain" },
+      "aufgabe": {
+        "de": "<p>Arbeiten Sie diese Liste in KNIME ab. Als Daten nehmen Sie eine CSV-Datei Ihrer Wahl — die Fallstudiendaten, ein offener Datensatz von <code>govdata.de</code>, oder ein Export aus der Datenbank aus Lab 06 (in DataGrip: <code>Export Data → CSV</code>).</p><p>Am Ende haben Sie einen Ablauf, der eine Datei einliest, reduziert, gruppiert und ein Ergebnis schreibt — und Sie haben nach jedem Schritt hingesehen.</p>",
+        "en": "<p>Work through this list in KNIME. For data take a CSV file of your choice — the case study data, an open dataset from <code>govdata.de</code>, or an export from the lab 06 database (in DataGrip: <code>Export Data → CSV</code>).</p><p>At the end you have a flow that reads a file, reduces it, groups it and writes a result — and you have looked after every step.</p>"
+      },
+      "schritte": [
+        { "text": { "de": "KNIME installiert, Workspace gewählt (<strong>nicht</strong> in einem Cloud-Ordner) und in <code>knime.ini</code> den Speicher auf etwa die Hälfte des vorhandenen RAM gesetzt.", "en": "KNIME installed, workspace chosen (<strong>not</strong> in a cloud folder) and the memory in <code>knime.ini</code> set to roughly half the available RAM." } },
+        { "text": { "de": "Neuen Workflow angelegt und im <code>Description</code>-Fenster in einem Satz notiert, welche Frage er beantworten soll. Das ist Phase 1 — sie hat keinen Knoten.", "en": "Created a new workflow and noted in one sentence in the <code>Description</code> panel which question it should answer. That is phase 1 — it has no node." } },
+        { "text": { "de": "<code>CSV Reader</code> eingefügt und konfiguriert. Im Reiter <code>Transformation</code> <strong>jeden</strong> Spaltentyp geprüft — steht dort <code>String</code>, wo eine Zahl stehen sollte?", "en": "Inserted and configured a <code>CSV Reader</code>. Checked <strong>every</strong> column type in the <code>Transformation</code> tab — is there a <code>String</code> where a number should be?" } },
+        { "text": { "de": "Mit <code>F7</code> ausgeführt, bis die Ampel grün ist, und die Ausgabetabelle angesehen (Rechtsklick, unterster Menüpunkt). Zeilenzahl notiert.", "en": "Executed with <code>F7</code> until the light is green, and viewed the output table (right-click, bottom entry). Noted the row count." } },
+        { "text": { "de": "<code>Row Filter</code> und <code>Column Filter</code> ergänzt und nach <em>jedem</em> Knoten die Zeilen- und Spaltenzahl abgelesen.", "en": "Added <code>Row Filter</code> and <code>Column Filter</code> and read off the row and column counts after <em>every</em> node." } },
+        { "text": { "de": "<code>GroupBy</code> eingefügt: im Reiter <code>Groups</code> die Gruppenspalte, im Reiter <code>Manual Aggregation</code> eine Kennzahl (Sum, Mean oder Count).", "en": "Inserted <code>GroupBy</code>: the grouping column in the <code>Groups</code> tab, a measure in the <code>Manual Aggregation</code> tab (Sum, Mean or Count)." } },
+        { "text": { "de": "<code>CSV Writer</code> mit einem <strong>relativen</strong> Pfad (<code>knime://knime.workflow/data/…</code>) angehängt und den ganzen Ablauf mit <code>Shift+F7</code> ausgeführt.", "en": "Attached a <code>CSV Writer</code> with a <strong>relative</strong> path (<code>knime://knime.workflow/data/…</code>) and executed the whole flow with <code>Shift+F7</code>." } },
+        { "text": { "de": "Reset ausprobiert: <code>F8</code> auf dem <code>Row Filter</code>. Beobachtet, dass die Ampeln aller nachfolgenden Knoten mit auf gelb springen — Reset ist kein Rückgängig.", "en": "Tried the reset: <code>F8</code> on the <code>Row Filter</code>. Observed that the lights of all downstream nodes jump to yellow too — reset is not an undo." } },
+        { "text": { "de": "Die Bereinigungskette markiert und mit <code>Rechtsklick → Create Component</code> zu einem Knoten zusammengefasst. Der Graph ist danach lesbar.", "en": "Selected the cleaning chain and bundled it into one node with <code>right-click → Create Component</code>. The graph is readable afterwards." } }
+      ],
+      "rueckmeldung": {
+        "de": "Zwei Schritte tragen den Rest des Labs: die Typprüfung im dritten und das Ablesen der Zeilenzahl im vierten und fünften. Ein falsch erkannter Spaltentyp bringt eine Auswertung nicht zum Absturz, sondern zu einem falschen Ergebnis — und eine Kette, deren Zeilenzahlen niemand angesehen hat, liefert Zahlen ohne Deckung. Das ist derselbe Gedanke, den die Vorlesung unter GiGo führt: garbage in, garbage out.",
+        "en": "Two steps carry the rest of the lab: the type check in the third and reading the row count in the fourth and fifth. A wrongly detected column type does not crash an analysis but produces a wrong result — and a chain whose row counts nobody looked at delivers figures without backing. That is the same thought the lecture files under GiGo: garbage in, garbage out."
+      }
+    },
+    {
+      "id": "P08-03",
+      "typ": "checkliste",
+      "titel": { "de": "Ein Modell mit Abnahmekriterium", "en": "A model with an acceptance criterion" },
+      "aufgabe": {
+        "de": "<p>Jetzt der vollständige Ablauf von der Aufbereitung bis zur Bewertung — und, was in Lehrbeispielen meist fehlt, der Vergleich mit einer Faustregel. Ein Modell ist nur so gut wie sein Abstand zu der einfachen Regel, die es ersetzen soll.</p>",
+        "en": "<p>Now the complete flow from preparation to evaluation — and, what most textbook examples lack, the comparison against a rule of thumb. A model is only as good as its margin over the simple rule it is meant to replace.</p>"
+      },
+      "schritte": [
+        { "text": { "de": "Vor dem ersten Knoten im <code>Description</code>-Fenster festgehalten: Zielgröße, Fehlerkosten (was kostet ein übersehener Fall, was ein Fehlalarm?) und das Abnahmekriterium. Ohne diese drei Angaben ist jede Trefferquote unbewertbar.", "en": "Before the first node, recorded in the <code>Description</code> panel: the target variable, the error costs (what does a missed case cost, what a false alarm?) and the acceptance criterion. Without those three, any hit rate is unassessable." } },
+        { "text": { "de": "<code>Missing Value</code> eingefügt und je Spaltentyp eine Strategie gewählt (numerisch Median, Text häufigster Wert).", "en": "Inserted <code>Missing Value</code> and chose a strategy per column type (numeric median, text most frequent)." } },
+        { "text": { "de": "<code>Column Filter</code> vor dem Learner: IDs entfernt und alles, was die Antwort verrät. Die Zielspalte bleibt.", "en": "<code>Column Filter</code> before the learner: removed IDs and everything that gives away the answer. The target column stays." } },
+        { "text": { "de": "<code>Partitioning</code> eingefügt: <code>Relative[%] = 70</code>, Modus <strong>Stratified sampling</strong> auf die Zielspalte, <strong>Use random seed</strong> gesetzt.", "en": "Inserted <code>Partitioning</code>: <code>Relative[%] = 70</code>, mode <strong>stratified sampling</strong> on the target column, <strong>use random seed</strong> set." } },
+        { "text": { "de": "<code>Decision Tree Learner</code> an den <strong>oberen</strong> Ausgang (Training), <code>Decision Tree Predictor</code> mit Modellport oben und dem <strong>unteren</strong> Ausgang (Test) unten.", "en": "<code>Decision Tree Learner</code> on the <strong>upper</strong> output (training), <code>Decision Tree Predictor</code> with the model port on top and the <strong>lower</strong> output (test) below." } },
+        { "text": { "de": "<code>Scorer</code> angehängt und die <strong>Confusion Matrix</strong> gelesen — nicht nur die Accuracy. Wie viele Fälle wurden übersehen?", "en": "Attached a <code>Scorer</code> and read the <strong>confusion matrix</strong> — not just the accuracy. How many cases were missed?" } },
+        { "text": { "de": "Die Learner-Ansicht geöffnet (<code>Rechtsklick → View: Decision Tree View</code>) und den Baum gelesen: Welches Merkmal steht oben, und ist das fachlich plausibel?", "en": "Opened the learner's view (<code>right-click → View: Decision Tree View</code>) and read the tree: which feature is at the top, and is that plausible in substance?" } },
+        { "text": { "de": "Eine <strong>Faustregel</strong> mit <code>Rule Engine</code> gebaut (eine einzige Bedingung) und mit einem zweiten <code>Scorer</code> bewertet. Schlägt das Modell die Regel?", "en": "Built a <strong>rule of thumb</strong> with <code>Rule Engine</code> (a single condition) and evaluated it with a second <code>Scorer</code>. Does the model beat the rule?" } },
+        { "text": { "de": "<code>max depth</code> im Learner verändert und beobachtet, wie sich Trainings- und Testgüte auseinanderentwickeln — Überanpassung, sichtbar gemacht.", "en": "Changed <code>max depth</code> in the learner and observed how training and test performance diverge — overfitting, made visible." } }
+      ],
+      "rueckmeldung": {
+        "de": "Der achte Schritt ist der, der in Lehrbeispielen fehlt und in der Praxis entscheidet. In Notebook 02 der Fallstudie schlug die Regel „Rad mit den meisten Kilometern seit der letzten Reparatur zuerst“ mit 53 von 60 Treffern sowohl den Entscheidungsbaum (45) als auch den Random Forest (44) — freigegeben wurde deshalb die Regel, nicht das Modell. Ein Modell muss seinen Aufwand rechtfertigen, und der Maßstab ist nicht null, sondern die einfachste Alternative.",
+        "en": "The eighth step is the one missing from textbook examples and decisive in practice. In notebook 02 of the case study the rule “bike with the most kilometres since last repair first” beat both the decision tree (45) and the random forest (44) with 53 of 60 hits — so what was released was the rule, not the model. A model has to justify its cost, and the yardstick is not zero but the simplest alternative."
+      }
+    },
+    {
+      "id": "P08-04",
+      "typ": "quiz",
+      "titel": { "de": "Data Leakage – der Fehler mit den besseren Zahlen", "en": "Data leakage – the mistake with the better numbers" },
+      "aufgabe": {
+        "de": "<p>Die wichtigste Übung dieses Labs. Vier Situationen, in denen ein Modell etwas gewusst hat, was es nicht wissen durfte.</p>",
+        "en": "<p>This lab's most important exercise. Four situations in which a model knew something it was not allowed to know.</p>"
+      },
+      "fragen": [
+        {
+          "frage": { "de": "Ein Ablauf lautet: <code>CSV Reader → Normalizer → Partitioning → Learner → Predictor → Scorer</code>. Was ist daran falsch?", "en": "A flow reads: <code>CSV Reader → Normalizer → Partitioning → Learner → Predictor → Scorer</code>. What is wrong with it?" },
+          "optionen": [
+            { "de": "Der <code>Normalizer</code> berechnet Minimum und Maximum über alle Zeilen — also auch über die Testmenge. Richtig ist: erst <code>Partitioning</code>, dann <code>Normalizer</code> auf dem Training und <code>Normalizer (Apply)</code> auf dem Test.", "en": "The <code>Normalizer</code> computes minimum and maximum over all rows — including the test set. Correct is: <code>Partitioning</code> first, then <code>Normalizer</code> on the training data and <code>Normalizer (Apply)</code> on the test data." },
+            { "de": "Nichts — Normalisieren vor dem Split ist die übliche Reihenfolge.", "en": "Nothing — normalising before the split is the usual order." },
+            { "de": "Der <code>Normalizer</code> gehört hinter den <code>Predictor</code>.", "en": "The <code>Normalizer</code> belongs after the <code>Predictor</code>." }
+          ],
+          "richtig": [0],
+          "erklaerung": {
+            "de": "Jeder Knoten, der eine Kennzahl über alle Zeilen berechnet und dann anwendet, muss nach dem Split stehen — sonst fließt Information aus der Testmenge in die Aufbereitung. Dasselbe gilt für Missing Value mit Median, für den Auto-Binner und für jede Codierung. Der Knoten Normalizer (Apply) existiert genau für diesen Zweck: Er nimmt das Modell aus dem Training.",
+            "en": "Every node that computes a statistic over all rows and then applies it has to sit after the split — otherwise information from the test set flows into the preparation. The same holds for Missing Value with a median, for the Auto-Binner and for every encoding. The Normalizer (Apply) node exists for exactly this purpose: it takes the model from the training."
+          }
+        },
+        {
+          "frage": { "de": "Ihr Entscheidungsbaum erreicht eine Accuracy von 99,7 %. Was ist die erste Vermutung?", "en": "Your decision tree reaches an accuracy of 99.7 %. What is the first suspicion?" },
+          "optionen": [
+            { "de": "Eine Spalte verrät die Antwort — die Zielgröße selbst, eine daraus abgeleitete Spalte oder eine ID, die mit ihr zusammenhängt. Der <code>Column Filter</code> vor dem Learner ist zu prüfen.", "en": "A column gives away the answer — the target itself, a column derived from it, or an ID correlated with it. The <code>Column Filter</code> before the learner is to be checked." },
+            { "de": "Das Modell ist ausgezeichnet und kann ausgeliefert werden.", "en": "The model is excellent and can be deployed." },
+            { "de": "Der Entscheidungsbaum ist für diese Aufgabe besonders geeignet.", "en": "The decision tree is particularly suited to this task." }
+          ],
+          "richtig": [0],
+          "erklaerung": {
+            "de": "Eine Trefferquote nahe 100 % ist in der Praxis fast immer ein Befund über die Datenaufbereitung und keine Leistung des Modells. Die Learner-Ansicht hilft: Steht ganz oben im Baum ein Merkmal, das die Antwort logisch enthält — Endzeit bei einer Dauervorhersage, tatsächlicher Preis bei einer Preisvorhersage —, ist die Ursache gefunden.",
+            "en": "In practice a hit rate near 100 % is almost always a finding about the data preparation and not an achievement of the model. The learner's view helps: if a feature that logically contains the answer sits at the top of the tree — end time in a duration prediction, actual price in a price prediction — the cause is found."
+          }
+        },
+        {
+          "frage": { "de": "Sie sollen die Fahrtdauer vorhersagen, bevor ein Rad entsperrt wird. Welche Merkmale dürfen ins Modell? Mehrere Antworten sind richtig.", "en": "You are to predict a ride's duration before a bike is unlocked. Which features may enter the model? Several answers are correct." },
+          "mehrfach": true,
+          "optionen": [
+            { "de": "Startstation und Zielstation (in der Anwendung angegeben)", "en": "Start and destination station (given in the app)" },
+            { "de": "Radtyp", "en": "Bike type" },
+            { "de": "Wochentag und Tageszeit", "en": "Day of week and time of day" },
+            { "de": "Endzeit der Fahrt", "en": "The ride's end time" },
+            { "de": "Tatsächlich gefahrene Distanz", "en": "Actual distance travelled" }
+          ],
+          "richtig": [0, 1, 2],
+          "erklaerung": {
+            "de": "Der Prüfsatz lautet: Steht dieses Merkmal zum Zeitpunkt der Vorhersage tatsächlich zur Verfügung? Endzeit und gefahrene Distanz entstehen erst während der Fahrt — beides sind Informationen aus der Zukunft. Genau diese Grenze nennt die Vorlesung an Notebook 01 die Informationsgrenze: „Gelangen Endzeit, gefahrene Distanz oder der tatsächliche Preis ins Training oder in die Prüfung, entsteht Data Leakage.“ Kein Werkzeug stellt diese Frage; sie gehört ins Geschäftsverständnis.",
+            "en": "The test reads: is this feature actually available at the moment of prediction? End time and distance travelled only come into being during the ride — both are information from the future. That is exactly the boundary the lecture calls the information boundary at notebook 01: “If end time, distance travelled or the actual price get into the training or the test, data leakage arises.” No tool asks this question; it belongs to business understanding."
+          }
+        },
+        {
+          "frage": { "de": "Warum ist Data Leakage gefährlicher als ein schlecht gewählter Algorithmus?", "en": "Why is data leakage more dangerous than a badly chosen algorithm?" },
+          "optionen": [
+            { "de": "Weil er die <em>besseren</em> Zahlen liefert. Ein schwaches Modell fällt in der Evaluation auf; ein Modell mit Leakage besteht sie glänzend und versagt erst im Betrieb — wenn niemand mehr an die Aufbereitung denkt.", "en": "Because it delivers the <em>better</em> numbers. A weak model is caught in the evaluation; a model with leakage passes it brilliantly and fails only in operation — when nobody thinks about the preparation any more." },
+            { "de": "Weil er die Rechenzeit erhöht.", "en": "Because it increases computing time." },
+            { "de": "Weil er nur bei neuronalen Netzen auftritt.", "en": "Because it only occurs with neural networks." }
+          ],
+          "richtig": [0],
+          "erklaerung": {
+            "de": "Deshalb prüft man die Reihenfolge im Graphen und nicht nur das Ergebnis — und deshalb ist ein grafisches Werkzeug hier im Vorteil: In einem Notebook ist die Reihenfolge eine Zeilennummer, in KNIME eine Verbindung, die man sieht. Die Vorlesung verlangt von der Evaluation, dass die Anwendbarkeit auf neue, unbekannte Daten sichergestellt ist. Ein Modell mit Leakage erfüllt genau dieses Kriterium nicht, während es alle Zahlen erfüllt.",
+            "en": "That is why you check the order in the graph and not only the result — and why a graphical tool has the advantage here: in a notebook the order is a line number, in KNIME a connection you can see. The lecture demands of the evaluation that applicability to new, unknown data be ensured. A model with leakage fails exactly that criterion while satisfying every number."
+          }
+        }
+      ]
+    },
+    {
+      "id": "P08-05",
+      "typ": "quiz",
+      "titel": { "de": "Ampeln, Reset und Weitergabe", "en": "Lights, reset and sharing" },
+      "aufgabe": {
+        "de": "<p>Drei Bedienfragen, die im Kurs regelmäßig zu Verwirrung führen.</p>",
+        "en": "<p>Three operating questions that regularly cause confusion in the course.</p>"
+      },
+      "fragen": [
+        {
+          "frage": { "de": "Ein Knoten hat eine gelbe Ampel und liefert am Ausgang keine Daten. Was fehlt?", "en": "A node has a yellow light and delivers no data at its output. What is missing?" },
+          "optionen": [
+            { "de": "Die Ausführung. Gelb heißt: konfiguriert, aber nicht ausgeführt — <code>F7</code> für den Knoten, <code>Shift+F7</code> für die ganze Kette.", "en": "The execution. Yellow means: configured but not executed — <code>F7</code> for the node, <code>Shift+F7</code> for the whole chain." },
+            { "de": "Die Konfiguration. Gelb heißt: noch nicht eingerichtet.", "en": "The configuration. Yellow means: not yet set up." },
+            { "de": "Die Verbindung zum vorhergehenden Knoten.", "en": "The connection to the preceding node." }
+          ],
+          "richtig": [0],
+          "erklaerung": {
+            "de": "Rot heißt nicht konfiguriert, gelb konfiguriert und nicht ausgeführt, grün ausgeführt. Diese drei Zustände machen den Unterschied zu einem Notebook: Dort kann eine Zelle eine Ausgabe zeigen, deren Variablen längst nicht mehr existieren (Lab 02). Hier ist der Zustand jedes Schritts unmissverständlich sichtbar.",
+            "en": "Red means not configured, yellow configured and not executed, green executed. Those three states are the difference from a notebook: there a cell can show output whose variables no longer exist (lab 02). Here the state of every step is unambiguously visible."
+          }
+        },
+        {
+          "frage": { "de": "Sie ändern die Einstellung eines Knotens in der Mitte eines Ablaufs mit zwanzig Knoten. Was passiert mit den Ergebnissen der zwölf Knoten danach?", "en": "You change the settings of a node in the middle of a twenty-node flow. What happens to the results of the twelve nodes after it?" },
+          "optionen": [
+            { "de": "Sie werden verworfen — der Reset läuft kaskadierend nach unten. Bei aufwändigen Ketten lohnt es, Zwischenergebnisse vorher mit einem <code>Table Writer</code> zu sichern.", "en": "They are discarded — the reset cascades downstream. With expensive chains it pays to save intermediate results beforehand with a <code>Table Writer</code>." },
+            { "de": "Sie bleiben erhalten, bis man sie einzeln zurücksetzt.", "en": "They are kept until you reset them individually." },
+            { "de": "Sie werden automatisch neu berechnet.", "en": "They are recomputed automatically." }
+          ],
+          "richtig": [0],
+          "erklaerung": {
+            "de": "Das ist konsequent: Ein Ergebnis, das auf einer geänderten Vorstufe beruht, wäre nicht mehr gültig. KNIME verwirft es deshalb, statt es stehen zu lassen — und macht damit unmöglich, was in einem Notebook alltäglich ist: ein Ergebnis, das zu einem Zustand gehört, den es nicht mehr gibt. Wichtig ist die andere Richtung: Reset nimmt keinen Vorgang zurück, es verwirft nur ein Ergebnis.",
+            "en": "That is consistent: a result resting on a changed upstream step would no longer be valid. KNIME therefore discards it rather than leaving it — and thereby makes impossible what is everyday in a notebook: a result belonging to a state that no longer exists. What matters is the other direction: reset reverses no operation, it merely discards a result."
+          }
+        },
+        {
+          "frage": { "de": "Sie sollen Ihren Workflow zur Bewertung abgeben. Was ist zu tun? Mehrere Antworten sind richtig.", "en": "You are to submit your workflow for assessment. What has to be done? Several answers are correct." },
+          "mehrfach": true,
+          "optionen": [
+            { "de": "Über <code>File → Export KNIME Workflow…</code> als <code>.knwf</code> exportieren, nicht den Workspace-Ordner kopieren.", "en": "Export as a <code>.knwf</code> through <code>File → Export KNIME Workflow…</code>, not copy the workspace folder." },
+            { "de": "Das Häkchen <strong>„Reset Workflow(s) before export“</strong> setzen, damit keine Zwischenergebnisse mitgehen.", "en": "Tick <strong>“Reset Workflow(s) before export”</strong>, so that no intermediate results travel along." },
+            { "de": "Absolute Pfade in den Reader-Knoten durch relative ersetzen (<code>knime://knime.workflow/…</code>), sonst läuft der Ablauf nur auf Ihrem Rechner.", "en": "Replace absolute paths in the reader nodes with relative ones (<code>knime://knime.workflow/…</code>), otherwise the flow runs only on your machine." },
+            { "de": "Den Workflow in den öffentlichen Bereich des Community Hub laden und den Link abgeben.", "en": "Upload the workflow to the public space of the Community Hub and submit the link." }
+          ],
+          "richtig": [0, 1, 2],
+          "erklaerung": {
+            "de": "Der öffentliche Hub-Bereich ist eine Veröffentlichung — mit eingebetteten Daten, Pfaden und möglicherweise Zugangsdaten. Dieselbe Frage wie beim öffentlichen Repository in Lab 03: Was dort einmal liegt, ist draußen. Kursabgaben gehören nach Moodle. Und das Reset-Häkchen ist die Entsprechung zu nbstripout: Es hält die Ausgaben aus der Abgabe heraus.",
+            "en": "The public hub space is a publication — with embedded data, paths and possibly credentials. The same question as with the public repository in lab 03: what once sits there is out. Course submissions belong in Moodle. And the reset checkbox is the counterpart to nbstripout: it keeps the outputs out of the submission."
+          }
+        }
+      ]
+    },
+    {
+      "id": "P08-06",
+      "typ": "quiz",
+      "titel": { "de": "KNIME, Dataiku und die Wahl dazwischen", "en": "KNIME, Dataiku and the choice between them" },
+      "aufgabe": {
+        "de": "<p>Drei Fragen zur Einordnung — die letzte betrifft die Kursplanung und ist ein Beispiel dafür, warum Lab 00 auf Verfügbarkeit besteht und nicht nur auf Funktionen.</p>",
+        "en": "<p>Three questions on placing the tools — the last concerns course planning and is an example of why lab 00 insists on availability and not only on features.</p>"
+      },
+      "fragen": [
+        {
+          "frage": { "de": "Was ist der wesentliche Entwurfsunterschied zwischen KNIME und Dataiku?", "en": "What is the essential design difference between KNIME and Dataiku?" },
+          "optionen": [
+            { "de": "KNIME ist eine Desktop-Anwendung mit Zwischenergebnissen am Knotenport; Dataiku ist eine Serverinstanz, in der jedes Zwischenergebnis ein benanntes, dauerhaftes <em>Dataset</em> ist. Daraus folgt die Zusammenarbeit: bei Dataiku eingebaut, bei KNIME über den Hub.", "en": "KNIME is a desktop application with intermediate results at the node port; Dataiku is a server instance in which every intermediate result is a named, persistent <em>dataset</em>. Collaboration follows from that: built in with Dataiku, through the Hub with KNIME." },
+            { "de": "KNIME kann kein maschinelles Lernen, Dataiku schon.", "en": "KNIME cannot do machine learning, Dataiku can." },
+            { "de": "Dataiku arbeitet mit Code, KNIME nur grafisch.", "en": "Dataiku works with code, KNIME only graphically." }
+          ],
+          "richtig": [0],
+          "erklaerung": {
+            "de": "Beide beherrschen grafische Abläufe und Code (KNIME über den Python Script Node, Dataiku über Code Recipes), und beide bringen Verfahren des maschinellen Lernens mit. Der Unterschied ist die Bauform — Desktop gegen Server — und daraus folgt alles Weitere: Wer eine Instanz betreibt, hat Zusammenarbeit und Rechteverwaltung eingebaut und dafür einen Betriebsaufwand.",
+            "en": "Both master graphical flows and code (KNIME through the Python Script node, Dataiku through code recipes), and both ship machine learning methods. The difference is the form — desktop versus server — and everything else follows: whoever runs an instance has collaboration and permissions built in, and an operational cost in exchange."
+          }
+        },
+        {
+          "frage": { "de": "Welche Aussagen zu Lizenz und Kosten treffen zu? Mehrere Antworten sind richtig.", "en": "Which statements about licence and cost are correct? Several answers are correct." },
+          "mehrfach": true,
+          "optionen": [
+            { "de": "Die KNIME Analytics Platform steht unter der GPLv3 und ist auf dem Desktop ohne Grenze bei Datenmenge, Laufzeit oder Nutzerzahl kostenfrei.", "en": "The KNIME Analytics Platform is under GPLv3 and free on the desktop with no cap on data volume, runtime or number of users." },
+            { "de": "Der KNIME Hub ist ab dem Team-Plan kostenpflichtig; für den lokalen Betrieb braucht man ihn nicht.", "en": "The KNIME Hub is chargeable from the team plan on; you do not need it for local operation." },
+            { "de": "Die KNIME-Zertifizierung L1 ist kostenlos.", "en": "The KNIME L1 certification is free." },
+            { "de": "Dataikus Free Edition ist quelloffen.", "en": "Dataiku's Free Edition is open source." }
+          ],
+          "richtig": [0, 1, 2],
+          "erklaerung": {
+            "de": "Dataikus Free Edition ist kostenfrei, aber proprietär — kostenfrei und quelloffen sind zwei verschiedene Aussagen, wie in Lab 00 an vier Lizenzarten unterschieden. Bei KNIME liegt die Grenze zwischen frei und kostenpflichtig nicht im Funktionsumfang des Desktops, sondern beim Hub: Teilen, Zusammenarbeit und Betrieb kosten, das Arbeiten selbst nicht.",
+            "en": "Dataiku's Free Edition is free of charge but proprietary — free of charge and open source are two different statements, as distinguished across four licence types in lab 00. With KNIME the line between free and chargeable is not in the desktop's feature set but at the Hub: sharing, collaboration and operation cost money, the work itself does not."
+          }
+        },
+        {
+          "frage": { "de": "Eine Kollegin will Dataiku als Plattform für ein Pflichtmodul mit 60 Studierenden einsetzen und verlässt sich auf das Academic Program. Welcher Hinweis ist angebracht?", "en": "A colleague wants to use Dataiku as the platform for a compulsory module with 60 students and relies on the academic program. Which advice is appropriate?" },
+          "optionen": [
+            { "de": "Die Verfügbarkeit vorab prüfen: Das Programm ist auf der Anbieterseite als „currently at capacity“ gekennzeichnet, die Cloud-Testversion läuft 14 Tage. Für ein Pflichtmodul ist das keine tragfähige Grundlage — als Vergleichsobjekt neben KNIME dagegen gut geeignet.", "en": "Check availability in advance: the program is marked “currently at capacity” on the vendor's page, and the cloud trial runs 14 days. For a compulsory module that is no sound basis — as an object of comparison beside KNIME it serves well." },
+            { "de": "Kein Hinweis nötig, Academic Programs sind für Hochschulen immer verfügbar.", "en": "No advice needed, academic programs are always available for universities." },
+            { "de": "Die Free Edition deckt 60 Studierende ohne weiteres ab.", "en": "The Free Edition covers 60 students without further ado." }
+          ],
+          "richtig": [0],
+          "erklaerung": {
+            "de": "Genau darum geht es in Lab 00 unter „Kostenlos ist nicht umsonst“: Ein Academic Program ist ein Angebot, kein Anspruch — es kann Wartelisten haben, befristet sein oder ausgeschöpft. Und die Nutzergrenzen der Free Edition sind öffentlich nicht klar dokumentiert. Für ein Pflichtmodul zählt Verfügbarkeit mehr als Funktionsumfang; deshalb steht in diesem Lab KNIME ausführlich und Dataiku als Vergleich.",
+            "en": "That is exactly the point of lab 00 under “free is not without cost”: an academic program is an offer, not an entitlement — it can have waiting lists, be time-limited or be exhausted. And the Free Edition's user limits are not clearly documented publicly. For a compulsory module availability counts more than features; hence KNIME is treated at length in this lab and Dataiku as a comparison."
+          }
+        }
+      ]
+    }
+  ]
+}

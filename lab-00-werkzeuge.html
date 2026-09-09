@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="de" data-lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lab 00 · Die Werkzeuglandschaft · PITM-Lab</title>
+  <meta name="pitm:titel-en" content="Lab 00 · The tool landscape · PITM-Lab" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/pitm.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%232E2A72'/><text x='16' y='23' font-family='sans-serif' font-size='18' font-weight='bold' text-anchor='middle' fill='%23FFC300'>P</text></svg>" />
+</head>
+<body class="lab-page" data-lab="lab-00">
+
+<header class="header">
+  <div class="header-left">
+    <a class="header-logo" href="index.html" data-lab-link><span class="mark">PITM</span>-Lab</a>
+    <a class="header-back" href="index.html" data-lab-link>
+      <span lang="de">← Zur Übersicht</span><span lang="en">← Back to overview</span>
+    </a>
+  </div>
+  <div class="header-right">
+    <button class="lang-btn active" data-lang-btn="de" aria-pressed="true">DE</button>
+    <button class="lang-btn" data-lang-btn="en" aria-pressed="false">EN</button>
+  </div>
+</header>
+
+<nav class="sidebar" aria-label="Lab-Navigation">
+  <div class="sidebar-title"><span lang="de">Abschnitte</span><span lang="en">Sections</span></div>
+  <a class="sidebar-link" href="#warum"><span lang="de">Warum Ebenen statt Namen</span><span lang="en">Why layers, not names</span></a>
+  <a class="sidebar-link" href="#ebenen"><span lang="de">Die sieben Ebenen</span><span lang="en">The seven layers</span></a>
+  <a class="sidebar-link" href="#auswahl"><span lang="de">Auswahl, nicht Empfehlung</span><span lang="en">A selection, not a recommendation</span></a>
+  <a class="sidebar-link" href="#lizenz"><span lang="de">Lizenzen lesen lernen</span><span lang="en">Learning to read licences</span></a>
+  <a class="sidebar-link" href="#kosten"><span lang="de">Kostenlos ist nicht umsonst</span><span lang="en">Free is not without cost</span></a>
+  <a class="sidebar-link" href="#weg"><span lang="de">Der Weg durch die Labs</span><span lang="en">The path through the labs</span></a>
+  <a class="sidebar-link" href="#uebungen"><span lang="de">Übungen</span><span lang="en">Exercises</span></a>
+  <a class="sidebar-link" href="#zusammenfassung"><span lang="de">Zusammenfassung</span><span lang="en">Summary</span></a>
+</nav>
+
+<div class="lab-header">
+  <div class="lab-num-big">00</div>
+  <h1 class="lab-title">
+    <span lang="de">Die Werkzeuglandschaft</span>
+    <span lang="en">The tool landscape</span>
+  </h1>
+  <p class="lab-intro">
+    <span lang="de">Wer eine Liste von Produktnamen lernt, lernt etwas, das in fünf Jahren zur Hälfte falsch ist.
+      Wer die Ebenen lernt, auf denen diese Produkte sitzen, kann ein neues Werkzeug in zehn Minuten einordnen und
+      danach entscheiden, ob es überhaupt gebraucht wird. Dieses Lab baut das Gerüst, in das sich alles Weitere
+      einhängt – und klärt die zwei Fragen, die vor jeder Installation kommen: Wem gehört das, und was kostet es
+      wirklich?</span>
+    <span lang="en">Learning a list of product names means learning something that will be half wrong in five years.
+      Learning the layers those products sit on means being able to place a new tool within ten minutes and then decide
+      whether it is needed at all. This lab builds the frame everything else hangs in – and settles the two questions
+      that come before any installation: who owns this, and what does it really cost?</span>
+  </p>
+  <div class="lernziele">
+    <span class="lernziel-chip"><span lang="de">Referenzarchitektur</span><span lang="en">Reference architecture</span></span>
+    <span class="lernziel-chip"><span lang="de">Ebene vs. Produkt</span><span lang="en">Layer vs. product</span></span>
+    <span class="lernziel-chip"><span lang="de">Lizenzarten</span><span lang="en">Licence types</span></span>
+    <span class="lernziel-chip"><span lang="de">Kostenlose Kontingente</span><span lang="en">Free allowances</span></span>
+    <span class="lernziel-chip"><span lang="de">Academic-Programme</span><span lang="en">Academic programmes</span></span>
+  </div>
+  <div data-einordnung></div>
+</div>
+
+<main class="main-content">
+
+  <section class="section-block" id="warum">
+    <h2><span lang="de">Warum Ebenen statt Namen</span><span lang="en">Why layers, not names</span></h2>
+    <p>
+      <span lang="de">Eine Auswertung durchläuft immer dieselben Stationen, ganz gleich, welche Programme dabei
+        beteiligt sind: Irgendwo liegen die Daten und werden abgefragt. Irgendwo werden sie umgeformt und gerechnet.
+        Irgendwo entsteht daraus eine Kennzahl mit einer Definition. Irgendwo wird das Ergebnis dargestellt. Und
+        irgendwo wird festgehalten, in welchem Stand das alles war, damit es sich morgen wiederholen lässt.</span>
+      <span lang="en">An analysis always passes through the same stations, whatever programs are involved: somewhere
+        the data sits and is queried. Somewhere it is reshaped and computed. Somewhere a metric with a definition comes
+        out of it. Somewhere the result is displayed. And somewhere it is recorded which state all of this was in, so
+        that it can be repeated tomorrow.</span>
+    </p>
+    <p>
+      <span lang="de">Diese Stationen sind die Ebenen. Sie sind erstaunlich stabil – manche seit den 1970er Jahren.
+        Die Produkte auf ihnen sind es nicht: Wer 2010 Analytics gelernt hat, hat mit Werkzeugen gearbeitet, die
+        heute teilweise nicht mehr existieren. Genau deshalb ordnet die Vorlesung nach Ebenen und nicht nach
+        Herstellern.</span>
+      <span lang="en">These stations are the layers. They are remarkably stable – some since the 1970s. The products
+        on them are not: anyone who learned analytics in 2010 worked with tools that in part no longer exist today.
+        That is exactly why the lecture orders things by layer and not by vendor.</span>
+    </p>
+    <div class="concept-box">
+      <h3><span lang="de">Die Frage, die ein neues Werkzeug einordnet</span><span lang="en">The question that places a new tool</span></h3>
+      <p><span lang="de">Nicht „was kann es?“, sondern: <strong>Was liegt darunter, was liegt darüber?</strong>
+        Ein Werkzeug, das eine Datenbank braucht und ein Diagramm liefert, sitzt auf der Auswertungsebene. Ein
+        Werkzeug, das selbst speichert und über eine Abfragesprache erreichbar ist, sitzt auf der Datenhaltungsebene.
+        Ein Werkzeug, das andere Werkzeuge startet und überwacht, sitzt querschnittlich. Damit ist auch die Frage
+        beantwortet, wodurch es ersetzbar ist: durch etwas auf derselben Ebene, sofern die Schnittstellen
+        passen.</span>
+      <span lang="en">Not “what can it do?” but: <strong>what lies beneath it, what lies above it?</strong> A tool that
+        needs a database and delivers a chart sits on the presentation layer. A tool that stores data itself and is
+        reachable through a query language sits on the storage layer. A tool that starts and monitors other tools sits
+        across all of them. That also answers the question of what it can be replaced by: by something on the same
+        layer, provided the interfaces match.</span></p>
+    </div>
+  </section>
+
+  <section class="section-block" id="ebenen">
+    <h2><span lang="de">Die sieben Ebenen</span><span lang="en">The seven layers</span></h2>
+    <p>
+      <span lang="de">Jede Ebene setzt auf der darunterliegenden auf. Werkzeuge einer Ebene sind untereinander
+        austauschbar, solange die Schnittstellen passen. Die letzte Ebene ist keine Stufe, sondern ein Querschnitt:
+        Sie trägt alle übrigen.</span>
+      <span lang="en">Each layer builds on the one below. Tools within a layer are interchangeable as long as the
+        interfaces match. The last layer is not a step but a cross-section: it carries all the others.</span>
+    </p>
+    <div class="ebenen">
+      <div class="ebene">
+        <div class="buchstabe">A</div>
+        <div>
+          <div class="titel"><span lang="de">Datenhaltung und Abfrage</span><span lang="en">Storage and querying</span></div>
+          <div class="was"><span lang="de">Systeme, die Daten dauerhaft speichern, ihre Struktur festlegen und den Zugriff über Abfragen regeln.</span><span lang="en">Systems that store data permanently, define its structure and govern access through queries.</span></div>
+          <div class="wo">PostgreSQL · MS SQL Server · MongoDB · DuckDB · SQLite · <strong>Supabase</strong></div>
+        </div>
+      </div>
+      <div class="ebene">
+        <div class="buchstabe">B</div>
+        <div>
+          <div class="titel"><span lang="de">Auswertung und Business Intelligence</span><span lang="en">Reporting and business intelligence</span></div>
+          <div class="was"><span lang="de">Werkzeuge, die Kennzahlen aus vorhandenen Beständen berechnen und als Bericht oder Dashboard bereitstellen.</span><span lang="en">Tools that compute metrics from existing data and provide them as a report or dashboard.</span></div>
+          <div class="wo">Power BI · Tableau · Metabase · Apache Superset · Looker Studio · Excel mit Power Query</div>
+        </div>
+      </div>
+      <div class="ebene">
+        <div class="buchstabe">C</div>
+        <div>
+          <div class="titel"><span lang="de">Analytics-Plattformen</span><span lang="en">Analytics platforms</span></div>
+          <div class="was"><span lang="de">Umgebungen, die Datenaufbereitung, Modellbildung und den Betrieb der Modelle in einem Ablauf verbinden – meist grafisch, ohne Programmcode.</span><span lang="en">Environments that connect data preparation, model building and model operation in one flow – usually graphically, without code.</span></div>
+          <div class="wo"><strong>KNIME</strong> · <strong>Dataiku</strong> · Apache Spark · IBM SPSS Modeler · Altair RapidMiner</div>
+        </div>
+      </div>
+      <div class="ebene">
+        <div class="buchstabe">D</div>
+        <div>
+          <div class="titel"><span lang="de">Cloud-Infrastruktur</span><span lang="en">Cloud infrastructure</span></div>
+          <div class="was"><span lang="de">Rechenleistung, Speicher und Datendienste, die als Dienst bezogen und nach Verbrauch abgerechnet werden.</span><span lang="en">Compute, storage and data services obtained as a service and billed by consumption.</span></div>
+          <div class="wo">Microsoft Azure · Amazon Web Services · Google Cloud · <strong>Google Colab</strong></div>
+        </div>
+      </div>
+      <div class="ebene">
+        <div class="buchstabe">E</div>
+        <div>
+          <div class="titel"><span lang="de">Versionierung und Betrieb</span><span lang="en">Versioning and operations</span></div>
+          <div class="was"><span lang="de">Werkzeuge, die Änderungen nachvollziehbar halten und Anwendungen reproduzierbar betreiben.</span><span lang="en">Tools that keep changes traceable and run applications reproducibly.</span></div>
+          <div class="wo"><strong>Git</strong> · <strong>GitHub</strong> · GitLab · <strong>Docker</strong> · Kubernetes</div>
+        </div>
+      </div>
+      <div class="ebene">
+        <div class="buchstabe">F</div>
+        <div>
+          <div class="titel"><span lang="de">Programmierung, Notebooks, Entwicklungsumgebungen</span><span lang="en">Programming, notebooks, IDEs</span></div>
+          <div class="was"><span lang="de">Arbeitsumgebungen, in denen Auswertungen als Code entstehen, ausgeführt und dokumentiert werden.</span><span lang="en">Working environments in which analyses are written as code, executed and documented.</span></div>
+          <div class="wo">Python · R und RStudio · Jupyter · <strong>Google Colab</strong> · <strong>VS Code</strong> · PyCharm · <strong>DataGrip</strong> · DBeaver</div>
+        </div>
+      </div>
+      <div class="ebene quer">
+        <div class="buchstabe">G</div>
+        <div>
+          <div class="titel"><span lang="de">Querschnitt: Automatisierung und KI-Assistenz</span><span lang="en">Cross-section: automation and AI assistance</span></div>
+          <div class="was"><span lang="de">Werkzeuge, die andere Werkzeuge auslösen, verbinden und überwachen – oder Vorschläge machen, die ein Mensch prüft. Sie sitzen auf keiner Ebene, sondern greifen in alle.</span><span lang="en">Tools that trigger, connect and monitor other tools – or make suggestions a human checks. They sit on no single layer but reach into all of them.</span></div>
+          <div class="wo"><strong>n8n</strong> · Apache Airflow · dbt · GitHub Actions · GitHub Copilot · Claude · Gemini</div>
+        </div>
+      </div>
+    </div>
+    <p>
+      <span lang="de">Fett gesetzt sind die Werkzeuge, die in dieser Lernumgebung ein eigenes Lab haben. Man sieht
+        daran zwei Dinge. Erstens: Manche Werkzeuge sitzen auf zwei Ebenen – Colab ist eine Notebook-Umgebung (F), die
+        auf gemieteter Rechenleistung läuft (D), und genau daraus folgen seine Eigenheiten. Zweitens: Die Auswahl
+        deckt nicht alle Ebenen gleich ab. Die Auswertungsebene B ist Gegenstand der Lernumgebung BINT, die
+        Datenhaltungsebene A wird in DABA vertieft.</span>
+      <span lang="en">Set in bold are the tools that have their own lab in this environment. Two things follow. First:
+        some tools sit on two layers – Colab is a notebook environment (F) running on rented compute (D), and that is
+        exactly where its peculiarities come from. Second: the selection does not cover all layers equally. The
+        reporting layer B is the subject of the BINT environment, the storage layer A is treated in depth in DABA.</span>
+    </p>
+  </section>
+
+  <section class="section-block" id="auswahl">
+    <h2><span lang="de">Auswahl, nicht Empfehlung</span><span lang="en">A selection, not a recommendation</span></h2>
+    <div class="auswahl-hinweis">
+      <p>
+        <span lang="de"><strong>Hinweis.</strong> Bei den in dieser Lernumgebung gezeigten Tools handelt es sich um eine
+          Auswahl – diese ist weder als Empfehlung noch als Werbung zu verstehen. Kein Hersteller hat auf die Auswahl
+          Einfluss genommen, es bestehen keine Vergütungen oder Kooperationen, und die Nennung eines Produkts sagt
+          nichts über seine Eignung für einen konkreten betrieblichen Zweck.</span>
+        <span lang="en"><strong>Note.</strong> The tools shown in this learning environment are a selection – it is meant
+          neither as a recommendation nor as advertising. No vendor had any influence on the selection, there are no
+          payments or partnerships, and naming a product says nothing about its suitability for any specific business
+          purpose.</span>
+      </p>
+    </div>
+    <p>
+      <span lang="de">Nach welchen Kriterien wurde dann ausgewählt? Nach didaktischen, nicht nach betrieblichen:</span>
+      <span lang="en">By what criteria, then, was the selection made? Didactic ones, not operational ones:</span>
+    </p>
+    <ul>
+      <li><span lang="de"><strong>Ohne Kosten ausprobierbar.</strong> Jedes Werkzeug lässt sich in vollem für die Übung nötigen Umfang kostenlos nutzen, ohne Kreditkarte und ohne automatisch beginnendes Abonnement.</span><span lang="en"><strong>Can be tried at no cost.</strong> Every tool can be used free of charge to the extent the exercise needs, without a credit card and without a subscription starting automatically.</span></li>
+      <li><span lang="de"><strong>Vertreter seiner Ebene.</strong> Was man an Docker über Container versteht, überträgt sich auf Podman; was man an KNIME über Knotengraphen versteht, überträgt sich auf Dataiku und RapidMiner.</span><span lang="en"><strong>Representative of its layer.</strong> What you understand about containers from Docker carries over to Podman; what you understand about node graphs from KNIME carries over to Dataiku and RapidMiner.</span></li>
+      <li><span lang="de"><strong>In Stellenanzeigen vorhanden.</strong> Nicht als Argument für Qualität, sondern weil ein Name, der im Bewerbungsgespräch fällt, erklärt werden können sollte.</span><span lang="en"><strong>Appears in job adverts.</strong> Not as an argument for quality, but because a name that comes up in an interview should be one you can explain.</span></li>
+      <li><span lang="de"><strong>Alternativen dokumentiert.</strong> Jedes Lab nennt mindestens eine quelloffene oder kostenlose Alternative auf derselben Ebene.</span><span lang="en"><strong>Alternatives documented.</strong> Every lab names at least one open-source or free alternative on the same layer.</span></li>
+    </ul>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th><span lang="de">Ebene</span><span lang="en">Layer</span></th>
+            <th><span lang="de">Im Lab behandelt</span><span lang="en">Covered in the lab</span></th>
+            <th><span lang="de">Alternativen auf derselben Ebene</span><span lang="en">Alternatives on the same layer</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>A</td><td>Supabase (PostgreSQL)</td><td>PostgreSQL im Selbstbetrieb · Neon · DuckDB · SQLite</td></tr>
+          <tr><td>C</td><td>KNIME · Dataiku</td><td>Altair RapidMiner · Orange · Apache Spark</td></tr>
+          <tr><td>D/F</td><td>Google Colab</td><td>Jupyter lokal · Deepnote · Kaggle Notebooks · hochschuleigener JupyterHub</td></tr>
+          <tr><td>E</td><td>Git · GitHub</td><td>GitLab (auch selbst betrieben) · Codeberg · Forgejo</td></tr>
+          <tr><td>E</td><td>Docker Desktop</td><td>Docker Engine (Linux, WSL2) · Podman Desktop · Rancher Desktop · Colima</td></tr>
+          <tr><td>F</td><td>Visual Studio Code</td><td>VSCodium · PyCharm · Zed · Neovim</td></tr>
+          <tr><td>F</td><td>DataGrip</td><td>DBeaver Community · pgAdmin 4 · VS-Code-Erweiterungen für SQL</td></tr>
+          <tr><td>G</td><td>n8n</td><td>Apache Airflow · Prefect · Windmill · Node-RED</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="info-box">
+      <h3><span lang="de">Ein eingestelltes Werkzeug als Lehrstück</span><span lang="en">A discontinued tool as a lesson</span></h3>
+      <p><span lang="de">Azure Data Studio wurde am 28.02.2026 endgültig eingestellt – keine Updates, keine
+        Sicherheitskorrekturen. Wer es in einem Lehrplan hatte, musste umstellen. Das ist kein Ausrutscher, sondern der
+        Normalfall: Ein Werkzeug ist eine Wette auf den Fortbestand eines Anbieterinteresses. Die Ebene, auf der es
+        saß, gibt es weiterhin – und die Aufgabe wird heute mit einem anderen Werkzeug derselben Ebene gelöst.</span>
+      <span lang="en">Azure Data Studio was finally retired on 28 February 2026 – no updates, no security fixes.
+        Anyone who had it in a syllabus had to switch. That is not a mishap but the normal case: a tool is a bet on a
+        vendor's continued interest. The layer it sat on still exists – and the task is solved today with a different
+        tool on the same layer.</span></p>
+    </div>
+  </section>
+
+  <section class="section-block" id="lizenz">
+    <h2><span lang="de">Lizenzen lesen lernen</span><span lang="en">Learning to read licences</span></h2>
+    <p>
+      <span lang="de">„Kostenlos“ und „Open Source“ sind zwei verschiedene Aussagen, und beide werden im Marketing
+        unscharf verwendet. Für ein Projekt im Unternehmen ist die Unterscheidung nicht akademisch: Sie entscheidet
+        darüber, ob man das Werkzeug einsetzen, verändern und weitergeben darf.</span>
+      <span lang="en">“Free of charge” and “open source” are two different statements, and both are used loosely in
+        marketing. For a project in a company the distinction is not academic: it decides whether you may use, modify
+        and pass on the tool.</span>
+    </p>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th><span lang="de">Art</span><span lang="en">Kind</span></th>
+            <th><span lang="de">Was sie erlaubt</span><span lang="en">What it allows</span></th>
+            <th><span lang="de">Beispiel aus den Labs</span><span lang="en">Example from the labs</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span lang="de">Permissiv quelloffen (MIT, BSD, Apache&nbsp;2.0, PostgreSQL)</span><span lang="en">Permissive open source (MIT, BSD, Apache&nbsp;2.0, PostgreSQL)</span></td>
+            <td><span lang="de">Nutzen, ändern, weitergeben, auch kommerziell und auch geschlossen.</span><span lang="en">Use, modify, distribute – commercially and in closed form too.</span></td>
+            <td>PostgreSQL · Git · Docker Engine · Podman · DBeaver Community · VS-Code-Quellcode (MIT)</td>
+          </tr>
+          <tr>
+            <td><span lang="de">Copyleft quelloffen (GPL)</span><span lang="en">Copyleft open source (GPL)</span></td>
+            <td><span lang="de">Nutzen, ändern, weitergeben – Weitergabe abgeleiteter Werke aber unter derselben Lizenz.</span><span lang="en">Use, modify, distribute – but derivative works must be distributed under the same licence.</span></td>
+            <td><span lang="de">KNIME Analytics Platform (GPLv3 mit Ausnahme für die Node-Schnittstelle)</span><span lang="en">KNIME Analytics Platform (GPLv3 with an exception for the node API)</span></td>
+          </tr>
+          <tr>
+            <td><span lang="de">„fair-code“ – quelloffen sichtbar, aber nicht Open Source</span><span lang="en">“fair-code” – source visible, but not open source</span></td>
+            <td><span lang="de">Nutzung nur für eigene Zwecke; Weiterverkauf oder Hosting als Dienst für Dritte ist untersagt.</span><span lang="en">Use only for your own purposes; reselling or hosting as a service for third parties is prohibited.</span></td>
+            <td><span lang="de">n8n (Sustainable Use License) – ausdrücklich <em>keine</em> von der OSI anerkannte Open-Source-Lizenz</span><span lang="en">n8n (Sustainable Use License) – expressly <em>not</em> an OSI-approved open-source licence</span></td>
+          </tr>
+          <tr>
+            <td><span lang="de">Proprietär, kostenlos nutzbar</span><span lang="en">Proprietary, free to use</span></td>
+            <td><span lang="de">Nutzung nach den Bedingungen des Anbieters; kein Recht auf Quellcode, Änderung oder Weitergabe.</span><span lang="en">Use under the vendor's terms; no right to source code, modification or distribution.</span></td>
+            <td><span lang="de">Visual Studio Code (das Programm von Microsoft, nicht der Quellcode) · Docker Desktop unterhalb der Größenschwelle · DataGrip mit Bildungslizenz</span><span lang="en">Visual Studio Code (Microsoft's build, not the source) · Docker Desktop below the size threshold · DataGrip with an educational licence</span></td>
+          </tr>
+          <tr>
+            <td><span lang="de">Dienst mit kostenlosem Kontingent</span><span lang="en">Service with a free allowance</span></td>
+            <td><span lang="de">Nutzung bis zu einer Grenze kostenlos; darüber hinaus nach Verbrauch.</span><span lang="en">Free up to a limit; beyond that, billed by consumption.</span></td>
+            <td>Google Colab · GitHub · Supabase · n8n Cloud</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="warn-box">
+      <h3><span lang="de">Zwei Klauseln, die man kennen sollte</span><span lang="en">Two clauses worth knowing</span></h3>
+      <p><span lang="de"><strong>Docker Desktop.</strong> Kostenlos für persönliche und Bildungsnutzung sowie für
+        Unternehmen mit weniger als 250 Beschäftigten <em>und</em> weniger als 10 Mio. US-Dollar Jahresumsatz – beide
+        Bedingungen zusammen. Behörden („Government Entities“) sind ausdrücklich ausgenommen und brauchen ein
+        kostenpflichtiges Abonnement. Ob eine staatliche Hochschule darunter fällt, ist eine Frage an das
+        Justiziariat; auf privaten Geräten Studierender greift die Bildungsnutzung. Docker Engine und Podman umgehen
+        die Frage vollständig, weil sie unter freien Lizenzen stehen.</span>
+      <span lang="en"><strong>Docker Desktop.</strong> Free for personal and educational use and for companies with
+        fewer than 250 employees <em>and</em> less than 10 million US dollars in annual revenue – both conditions
+        together. Government entities are expressly excluded and need a paid subscription. Whether a state university
+        falls under that is a question for legal counsel; on students' private devices educational use applies. Docker
+        Engine and Podman avoid the question entirely, being under free licences.</span></p>
+      <p><span lang="de"><strong>n8n.</strong> Die Sustainable Use License erlaubt die Nutzung „for your own internal
+        business purposes or for non-commercial or personal use“. Lehre und Studium sind gedeckt. Nicht gedeckt wäre,
+        eine hochschulbetriebene Instanz als Dienstleistung gegen Entgelt an Dritte anzubieten. In einer Seminararbeit
+        sollte n8n deshalb nicht als „Open Source“ bezeichnet werden.</span>
+      <span lang="en"><strong>n8n.</strong> The Sustainable Use License permits use “for your own internal business
+        purposes or for non-commercial or personal use”. Teaching and study are covered. What would not be covered is
+        offering a university-run instance as a paid service to third parties. In a term paper n8n should therefore not
+        be described as “open source”.</span></p>
+    </div>
+  </section>
+
+  <section class="section-block" id="kosten">
+    <h2><span lang="de">Kostenlos ist nicht umsonst</span><span lang="en">Free is not without cost</span></h2>
+    <p>
+      <span lang="de">Kostenlose Kontingente sind Einladungen, keine Geschenke. Sie sind begrenzt, sie laufen ab, und
+        einige rechnen ab, sobald die Grenze fällt. Die vier Muster, die im Kurs regelmäßig zu Ausfällen führen:</span>
+      <span lang="en">Free allowances are invitations, not gifts. They are limited, they expire, and some start billing
+        the moment the limit is lifted. The four patterns that regularly cause failures in the course:</span>
+    </p>
+    <div class="karten">
+      <div class="karte">
+        <div class="kopfzeile"><span lang="de">Pausieren bei Ruhe</span><span lang="en">Pausing when idle</span></div>
+        <p><span lang="de">Supabase pausiert Projekte im kostenlosen Plan nach einer Woche ohne Zugriff. Das Projekt
+          ist nicht verloren, aber am Übungstermin nicht erreichbar – wecken lässt es sich im Dashboard, das kostet
+          nur Minuten und Nerven.</span>
+        <span lang="en">Supabase pauses free-plan projects after a week without access. The project is not lost but
+          unreachable on the day of the exercise – it can be woken in the dashboard, which costs only minutes and
+          nerves.</span></p>
+      </div>
+      <div class="karte">
+        <div class="kopfzeile"><span lang="de">Geteiltes Kontingent</span><span lang="en">Shared allowance</span></div>
+        <p><span lang="de">Docker Hub zählt unangemeldete Abrufe je IP-Adresse: 100 in sechs Stunden. Ein Seminarraum
+          hinter einer Adresse teilt sich diese 100. Mit <code>docker login</code> zählt jeder für sich.</span>
+        <span lang="en">Docker Hub counts anonymous pulls per IP address: 100 in six hours. A seminar room behind one
+          address shares those 100. With <code>docker login</code> everyone counts for themselves.</span></p>
+      </div>
+      <div class="karte">
+        <div class="kopfzeile"><span lang="de">Befristete Bildungslizenz</span><span lang="en">Time-limited educational licence</span></div>
+        <p><span lang="de">Die JetBrains-Bildungslizenz für DataGrip läuft ein Jahr und muss mit erneutem Nachweis
+          verlängert werden; die Erinnerung kommt zwei Wochen vorher. GitHub Education verlangt ebenfalls eine
+          periodische Bestätigung des Studierendenstatus.</span>
+        <span lang="en">The JetBrains educational licence for DataGrip runs for a year and must be renewed with fresh
+          proof; the reminder arrives two weeks in advance. GitHub Education likewise requires periodic
+          re-verification of student status.</span></p>
+      </div>
+      <div class="karte">
+        <div class="kopfzeile"><span lang="de">Guthaben, das verfällt</span><span lang="en">Credit that expires</span></div>
+        <p><span lang="de">Cloud-Guthaben aus Studierendenprogrammen läuft ab; danach werden laufende Ressourcen
+          abgerechnet. Wer eine virtuelle Maschine anlegt und vergisst, zahlt sie. Budgetwarnung setzen, Ablaufdatum
+          notieren, Ressourcen nach der Übung löschen.</span>
+        <span lang="en">Cloud credit from student programmes expires; after that, running resources are billed. Anyone
+          who creates a virtual machine and forgets it pays for it. Set a budget alert, note the expiry date, delete
+          resources after the exercise.</span></p>
+      </div>
+    </div>
+    <div class="tip-box">
+      <p><span lang="de">Ein Satz, der ein Semester rettet: <strong>Academic-Programme früh beantragen.</strong>
+        Manche prüfen von Hand, manche haben Wartelisten, und mindestens eines ist derzeit ausgeschöpft. Wer im
+        November beantragt, was er im Dezember braucht, kalkuliert falsch.</span>
+      <span lang="en">One sentence that saves a semester: <strong>apply for academic programmes early.</strong> Some
+        verify by hand, some have waiting lists, and at least one is currently at capacity. Applying in November for
+        what you need in December is a miscalculation.</span></p>
+    </div>
+  </section>
+
+  <section class="section-block" id="weg">
+    <h2><span lang="de">Der Weg durch die Labs</span><span lang="en">The path through the labs</span></h2>
+    <p>
+      <span lang="de">Die Reihenfolge ist nicht beliebig. Lab 01 legt die Kommandozeile, die in fast jedem weiteren
+        Lab gebraucht wird. Docker steht vor Supabase, weil man eine gehostete Datenbank besser einschätzt, wenn man
+        einmal eine selbst betrieben hat. DataGrip steht nach Supabase, weil es dort etwas zum Anbinden gibt. KNIME
+        braucht nur Lab 00, hängt also an keiner Kette – wer mit einem grafischen Werkzeug beginnen will, kann
+        dort einsteigen.</span>
+      <span lang="en">The order is not arbitrary. Lab 01 lays down the command line, which almost every later lab
+        needs. Docker comes before Supabase, because you judge a hosted database better once you have run one
+        yourself. DataGrip comes after Supabase, because by then there is something to connect to. KNIME needs only
+        lab 00 and hangs on no chain – anyone who wants to start with a graphical tool can begin there.</span>
+    </p>
+    <div class="code-block">01 Kommandozeile ─┬─ 03 Git und GitHub ──┬─ 04 VS Code
+                  │                     │
+                  └─ 05 Docker ─────────┴─ 06 Supabase ── 07 DataGrip
+                                                │
+02 Colab (nach 00)                              └─ 09 n8n
+
+08 KNIME und Dataiku (nach 00)</div>
+    <div class="info-box">
+      <h3><span lang="de">Was diese Labs nicht leisten</span><span lang="en">What these labs do not do</span></h3>
+      <p><span lang="de">Sie machen niemanden zur Administratorin und ersetzen keine Dokumentation. Ziel ist der
+        sichere Einstieg: ein Werkzeug in Betrieb nehmen, die zehn Handgriffe beherrschen, die neunzig Prozent der
+        Arbeit ausmachen, und die drei Fehler kennen, die den Rest des Tages kosten. Für alles Weitere gibt es die
+        Herstellerdokumentation – und die zu lesen ist selbst eine Kompetenz.</span>
+      <span lang="en">They make nobody an administrator and replace no documentation. The aim is a safe start: put a
+        tool into operation, master the ten actions that make up ninety percent of the work, and know the three
+        mistakes that cost the rest of the day. For everything else there is the vendor's documentation – and reading
+        that is a competence in itself.</span></p>
+    </div>
+  </section>
+
+  <section class="section-block" id="uebungen">
+    <h2><span lang="de">Übungen</span><span lang="en">Exercises</span></h2>
+    <p>
+      <span lang="de">Vier Übungen: Werkzeuge ihren Ebenen zuordnen, den Unterschied zwischen Ebene und Produkt
+        prüfen, Lizenzarten unterscheiden und die Zugänge anlegen, die für die folgenden Labs gebraucht werden.
+        Gelöste Übungen werden im Browser vermerkt.</span>
+      <span lang="en">Four exercises: assign tools to their layers, test the difference between layer and product,
+        distinguish licence types and set up the accounts the following labs need. Solved exercises are noted in the
+        browser.</span>
+    </p>
+    <div data-uebung="P00-01"></div>
+    <div data-uebung="P00-02"></div>
+    <div data-uebung="P00-03"></div>
+    <div data-uebung="P00-04"></div>
+    <div data-fortschritt></div>
+  </section>
+
+  <section class="section-block" id="zusammenfassung">
+    <h2><span lang="de">Zusammenfassung</span><span lang="en">Summary</span></h2>
+    <ul>
+      <li><span lang="de">Eine Auswertung durchläuft immer dieselben Ebenen: Datenhaltung, Auswertung, Analytics-Plattform, Infrastruktur, Versionierung und Betrieb, Programmierumgebung – dazu querschnittlich Automatisierung und KI-Assistenz.</span><span lang="en">An analysis always passes the same layers: storage, reporting, analytics platform, infrastructure, versioning and operations, programming environment – plus automation and AI assistance across all of them.</span></li>
+      <li><span lang="de">Die Ebenen sind stabil, die Produkte darauf nicht. Ein neues Werkzeug ordnet man ein, indem man fragt, was darunter und was darüber liegt.</span><span lang="en">The layers are stable, the products on them are not. You place a new tool by asking what lies beneath it and what lies above it.</span></li>
+      <li><span lang="de">„Kostenlos“ sagt nichts über die Lizenz. Vier Arten sind zu unterscheiden: permissiv quelloffen, Copyleft, fair-code und proprietär – dazu Dienste mit kostenlosem Kontingent.</span><span lang="en">“Free of charge” says nothing about the licence. Four kinds are to be distinguished: permissive open source, copyleft, fair-code and proprietary – plus services with a free allowance.</span></li>
+      <li><span lang="de">Kostenlose Kontingente pausieren, laufen ab, werden geteilt und schlagen nach Ablauf in Rechnungen um. Bildungslizenzen wollen früh beantragt und jährlich verlängert werden.</span><span lang="en">Free allowances pause, expire, get shared and turn into invoices once they run out. Educational licences want applying for early and renewing annually.</span></li>
+      <li><span lang="de">Zu jedem gezeigten Werkzeug gibt es eine Alternative auf derselben Ebene. Die Auswahl in dieser Umgebung ist didaktisch begründet und keine Empfehlung.</span><span lang="en">For every tool shown there is an alternative on the same layer. The selection in this environment is didactically motivated and is not a recommendation.</span></li>
+    </ul>
+    <div data-lab-nav></div>
+  </section>
+
+</main>
+
+<footer class="footer">
+  <p>
+    <span lang="de">PITM-Lab · Lab 00 · THWS Business School · Stand 09/2026</span>
+    <span lang="en">PITM-Lab · Lab 00 · THWS Business School · as of 09/2026</span>
+  </p>
+</footer>
+
+<script type="module" src="assets/pitm.js"></script>
+</body>
+</html>
