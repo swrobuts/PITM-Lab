@@ -45,18 +45,19 @@ export function zustandTrifft (welt, z) {
   if (z.gitIndexLeer && welt.git && welt.git.index.length) return false
   if (z.gitIndexGefuellt && !(welt.git && welt.git.index.length)) return false
   if (z.gitVeroeffentlicht && (!zweig || !zweig.commits.length || zweig.gepusht < zweig.commits.length)) return false
-  if (z.containerLaeuft && !welt.docker.container.some(c => c.name === z.containerLaeuft && c.laeuft)) return false
   if (z.containerWeg && welt.docker.container.some(c => c.name === z.containerWeg)) return false
   if (z.volumen && !welt.docker.volumen.includes(z.volumen)) return false
   if (z.abbild && !welt.docker.abbilder.some(a => a.voll === z.abbild || a.name === z.abbild)) return false
   // `-p 127.0.0.1:5432:5432` ist dieselbe Abbildung wie `-p 5432:5432`, nur
   // enger gebunden - die Befehlskarten lehren die engere Fassung.
-  if (z.portGebunden && !welt.docker.container.some(c =>
-    c.laeuft && portPaar(c.port) === portPaar(z.portGebunden))) return false
-  if (z.umgebung && !welt.docker.container.some(c =>
-    (c.umgebung || []).some(e => e.startsWith(z.umgebung)))) return false
-  if (z.bandAn && !welt.docker.container.some(c =>
-    (c.baender || []).some(b => b.startsWith(z.bandAn + ':')))) return false
+  if (z.containerLaeuft || z.portGebunden || z.umgebung || z.bandAn) {
+    const passt = welt.docker.container.some(c =>
+      (!z.containerLaeuft || (c.name === z.containerLaeuft && c.laeuft)) &&
+      (!z.portGebunden || (c.laeuft && portPaar(c.port) === portPaar(z.portGebunden))) &&
+      (!z.umgebung || (c.umgebung || []).some(e => e.startsWith(z.umgebung))) &&
+      (!z.bandAn || (c.baender || []).some(b => b.startsWith(z.bandAn + ':'))))
+    if (!passt) return false
+  }
   return true
 }
 
@@ -67,8 +68,14 @@ export function zustandTrifft (welt, z) {
  * @param schritt  Schrittdefinition mit `muster` und/oder `zustand`
  * @param zeile    die eingetippte Zeile
  * @param vorher   galt `schritt.zustand` schon VOR dieser Zeile?
+ * @param ergebnis Ausgabe von fuehreAus; Fehler zaehlen nur, wenn ihr Hinweisschluessel
+ *                 als erwarteterFehler ausdruecklich Teil der Aufgabe ist.
  */
-export function schrittErfuellt (welt, schritt, zeile, vorher) {
+export function schrittErfuellt (welt, schritt, zeile, vorher, ergebnis) {
+  const fehlgeschlagen = ergebnis?.zeilen.some(z => z.art === 'fehler')
+  if (schritt.erwarteterFehler) {
+    if (!fehlgeschlagen || ergebnis.hinweis !== schritt.erwarteterFehler) return false
+  } else if (fehlgeschlagen) return false
   if (schritt.muster && !new RegExp(schritt.muster, 'i').test(zeile)) return false
   if (schritt.zustand) {
     if (!zustandTrifft(welt, schritt.zustand)) return false

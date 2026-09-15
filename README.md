@@ -42,6 +42,7 @@ assets/
   pitm.js                     Laufzeit: Sprache, OS-Umschaltung, LABS, Übungsboxen, Fortschritt
   terminal.js                 Nachgebildete Shell: zsh, PowerShell, cmd.exe, git, docker
   pruefung.js                 Wann ein Terminalschritt erledigt ist — Browser UND Testlauf
+  sql.js                      SQL-Ausführung und getrennte Datenbanken für Bewertungen
   pglite/                     PostgreSQL als WebAssembly (PGlite), lokal statt vom CDN
 
 data/
@@ -118,12 +119,14 @@ Der Zustand der Welt ist das, was `terminal`-Übungen prüfen. Verfügbare Präd
 tippt statt `ls -a`, hat die Aufgabe genauso gelöst. `portGebunden` vergleicht nur Host- und
 Container-Port, damit die engere Bindung aus den Befehlskarten (`-p 127.0.0.1:5432:5432`) zählt.
 
-Zwei Regeln in `assets/pruefung.js` entscheiden, wann ein Schritt hakt:
+Drei Regeln in `assets/pruefung.js` entscheiden, wann ein Schritt hakt:
 
 1. Es wird **immer nur der erste offene Schritt** geprüft. Sonst gilt „Zurück ins
    Heimatverzeichnis“ als erledigt, bevor überhaupt gewechselt wurde.
 2. Ein Schritt **ohne Muster verlangt eine Änderung**: Er zählt erst, wenn dieser Befehl den
    Zustand hergestellt hat — nicht, wenn er ohnehin schon galt.
+3. Ein **fehlgeschlagener Befehl zählt nicht**. Eine Aufgabe zum absichtlichen Provozieren
+   eines Fehlers nennt dessen Hinweisschlüssel in `erwarteterFehler`; nur dieser Fehler zählt.
 
 ---
 
@@ -131,6 +134,7 @@ Zwei Regeln in `assets/pruefung.js` entscheiden, wann ein Schritt hakt:
 
 ```bash
 node tools/verify.mjs
+node --test tools/regression.test.mjs
 ```
 
 Der Lauf braucht keinen Browser und prüft drei Dinge: dass Platzhalter und JSON deckungsgleich
@@ -140,6 +144,24 @@ erledigten Schritte genau stimmen, zu wenige heißt unlösbar, zu viele heißt v
 und dass die bekannten Stolperstellen behoben bleiben (leere Datei in cmd, `md` mit
 Zwischenordnern, Umbenennen ohne Verschieben, Portbindung mit Adresse, Parameterprüfung in
 PowerShell, eingehängte Bänder, Compose-Bandnamen).
+
+Die Regressionstests prüfen zusätzlich fehlgeschlagene Befehle, gezielt erwartete Fehlermeldungen,
+Eigenschaften am richtigen Container, lokale Docker-Abbilder, Git außerhalb des Repositorys
+und leere Eingaben. Die Moduldeklaration in `package.json` ermöglicht die Prüfläufe auch mit
+Node.js 20.
+
+Für den vollständigen Browserlauf aller 54 Übungen in DE/EN:
+
+```bash
+npm install --no-save playwright
+npx playwright install chromium
+node tools/browser.mjs
+```
+
+Der Lauf verwendet einen eigenen lokalen Server und Testbrowser. Er prüft auch gleichzeitige
+SQL-Bewertungen, den Erhalt eigener Tabellen in der freien Konsole, beschädigte Fortschrittsdaten
+und die mobile Ansicht. Optional wählt `BROWSER_CHANNEL=msedge` eine vorhandene Edge-Version;
+`PLAYWRIGHT_MODULE` kann auf ein vorhandenes Playwright-Modul zeigen.
 
 ---
 
@@ -155,6 +177,11 @@ nicht eine Gleichverteilung.
 Eine `sql`-Übung wird nicht am Text der Abfrage geprüft, sondern am Ergebnis: Die eingegebene und
 die Referenzabfrage laufen beide, die Zeilenmengen werden verglichen (sortiert oder unsortiert, je
 nach Aufgabe). Es gibt also mehrere richtige Abfragen.
+
+Für jede bewertete Abfrage wird eine eigene Datenbank mit denselben Saatdaten angelegt und danach
+geschlossen. Damit bleiben eigene Tabellen der freien SQL-Konsole erhalten; gleichzeitig
+gestartete Prüfungen und SQL-Fehler beeinflussen sich nicht gegenseitig. „Ausführen“ arbeitet
+weiter auf der gemeinsamen Datenbank der Seite.
 
 Das PGlite-Bündel liegt unter `assets/pglite/` (19 MB), damit die Umgebung ohne CDN funktioniert;
 schlägt der lokale Pfad fehl, greift ein Rückfall auf jsDelivr.

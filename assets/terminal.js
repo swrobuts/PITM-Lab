@@ -1001,7 +1001,7 @@ function git (w, marken) {
       'Receiving objects: 100% (12/12), 4.21 KiB | 4.21 MiB/s, done.'])
   }
 
-  if (!w.git) {
+  if (!w.git || !w.git.wurzel.every((teil, i) => w.pfad[i] === teil)) {
     return fehler(['fatal: not a git repository (or any of the parent directories): .git'], 'keinRepo')
   }
   const g = w.git
@@ -1261,6 +1261,8 @@ function docker (w, marken) {
     : fehler([`Error response from daemon: No such container: ${n}`], 'containerFehlt')
 
   const zieheAbbild = (bezeichner) => {
+    const lokal = d.abbilder.find(a => a.voll === bezeichner || a.voll === bezeichner + ':latest')
+    if (lokal) return lokal.voll
     const teil = bezeichner.split(':')
     const t = teil.length > 1 ? teil.pop() : null
     const n = teil.join(':')
@@ -1468,13 +1470,17 @@ function docker (w, marken) {
   }
 
   if (unter === 'build') {
-    const t = arg[arg.indexOf('-t') + 1]
-    const k = knoten(w, w.pfad)
+    const ti = arg.findIndex(a => a === '-t' || a === '--tag')
+    const t = ti < 0 ? null : arg[ti + 1]
+    const kontext = arg.filter((a, i) => !a.startsWith('-') && (ti < 0 || i !== ti + 1)).at(-1)
+    if (!kontext || (ti >= 0 && !t)) return fehler(['docker: "docker build" requires a build context.'])
+    const k = knoten(w, loese(w, kontext))
     if (!k || k.typ !== 'ordner' || !k.kinder.Dockerfile) {
       return fehler(['ERROR: failed to solve: failed to read dockerfile: open Dockerfile: no such file or directory'], 'keinDockerfile')
     }
-    const voll = t || 'sha256:' + neueId()
-    d.abbilder.push({ voll, name: (t || 'unbenannt').split(':')[0], tag: (t || ':latest').split(':')[1] || 'latest', groesse: '186MB', id: neueId() })
+    const voll = t ? (t.includes(':') ? t : t + ':latest') : 'sha256:' + neueId()
+    d.abbilder = d.abbilder.filter(a => a.voll !== voll)
+    d.abbilder.push({ voll, name: t ? voll.slice(0, voll.lastIndexOf(':')) : '<none>', tag: t ? voll.slice(voll.lastIndexOf(':') + 1) : '<none>', groesse: '186MB', id: neueId() })
     return ok(['[+] Building 12.4s (9/9) FINISHED',
       ' => [internal] load build definition from Dockerfile        0.0s',
       ' => [1/4] FROM docker.io/library/python:3.12-slim           3.1s',
@@ -1560,6 +1566,7 @@ export function fuehreAus (welt, zeile) {
 
   const roh = ersetzeUmgebung(welt, eingetippt)
   const marken = zerlege(roh)
+  if (!marken.length) return fehler(['Empty command name.'], 'unbekannt')
   const kopf = marken[0].toLowerCase()
 
   if (kopf === 'git') return git(welt, marken)

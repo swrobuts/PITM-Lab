@@ -16,6 +16,7 @@
 
 import { neueWelt, zuruecksetzen as weltZuruecksetzen, fuehreAus, prompt, pfadText } from './terminal.js'
 import { zustandTrifft, schrittErfuellt } from './pruefung.js'
+import { fuehreSql, pruefAbfrage } from './sql.js'
 
 /* ------------------------------------------------------------------ Sprache */
 
@@ -274,7 +275,13 @@ const labVon = (id) => LABS.find(l => l.id === id)
 const fortschrittSchluessel = (lab) => `pitm:fortschritt:${lab}`
 
 function ladeFortschritt (lab) {
-  try { return JSON.parse(localStorage.getItem(fortschrittSchluessel(lab)) || '{}') } catch { return {} }
+  try {
+    const f = JSON.parse(localStorage.getItem(fortschrittSchluessel(lab)) || '{}')
+    if (!f || typeof f !== 'object' || Array.isArray(f)) return {}
+    const l = labVon(lab)
+    return Object.fromEntries(Object.entries(f).filter(([id, fertig]) =>
+      fertig === true && l && new RegExp(`^P${l.nr}-\\d{2}$`).test(id) && +id.slice(-2) >= 1 && +id.slice(-2) <= l.uebungen))
+  } catch { return {} }
 }
 function merkeFortschritt (lab, id) {
   const f = ladeFortschritt(lab)
@@ -496,10 +503,10 @@ function baueTerminal (ziel, opt = {}) {
    * ohne Muster verlangt eine Aenderung: Er zaehlt erst, wenn dieser Befehl den
    * Zustand hergestellt hat.
    */
-  const pruefeSchritte = (zeile, vorher) => {
+  const pruefeSchritte = (zeile, vorher, ergebnis) => {
     const s = offenerSchritt()
     if (!s) return
-    if (!schrittErfuellt(welt, s, zeile, vorher)) return
+    if (!schrittErfuellt(welt, s, zeile, vorher, ergebnis)) return
     s.fertig = true
     zeichneAuftrag()
     if (schritte.every(x => x.fertig) && opt.beiFertig) opt.beiFertig()
@@ -519,7 +526,7 @@ function baueTerminal (ziel, opt = {}) {
       schreibe('dim', '→ ' + txt(TERMINAL_HINWEISE[r.hinweis]))
     }
     zeichneKopf()
-    pruefeSchritte(roh.trim(), vorher)
+    pruefeSchritte(roh.trim(), vorher, r)
   }
 
   eingabe.addEventListener('keydown', (e) => {
@@ -596,8 +603,9 @@ async function holeDb () {
   if (!dbVersprechen) {
     dbVersprechen = (async () => {
       const PGlite = await ladePGlite()
-      return PGlite.create()
-    })()
+      const db = await PGlite.create()
+      try { await saeen(db); return db } catch (e) { await db.close(); throw e }
+    })().catch(e => { dbVersprechen = null; throw e })
   }
   return dbVersprechen
 }
@@ -613,8 +621,7 @@ async function holeSaat () {
 }
 
 async function saeen (db) {
-  await db.exec('DROP SCHEMA IF EXISTS public CASCADE; CREATE SCHEMA public;')
-  await db.exec(await holeSaat())
+  await db.exec('DROP SCHEMA IF EXISTS public CASCADE; CREATE SCHEMA public;\n' + await holeSaat())
 }
 
 /** Baut eine Ergebnistabelle. Zahlen rechtsbuendig, NULL erkennbar. */
@@ -680,13 +687,13 @@ function baueDbBand (ziel) {
   band.append(btn)
   ziel.append(band)
 
-  const setzen = async () => {
+  const setzen = async (reset = false) => {
     band.className = 'db-status busy'
     text.textContent = txt(T.dbLaden)
     btn.disabled = true
     try {
       const db = await holeDb()
-      await saeen(db)
+      if (reset) await saeen(db)
       band.className = 'db-status ready'
       text.textContent = txt(T.dbBereit)
       btn.disabled = false
@@ -694,9 +701,10 @@ function baueDbBand (ziel) {
     } catch (e) {
       band.className = 'db-status failed'
       text.textContent = txt(T.dbFehler) + ' ' + e.message
+      btn.disabled = false
     }
   }
-  btn.addEventListener('click', setzen)
+  btn.addEventListener('click', () => setzen(true))
   document.addEventListener('pitm:sprache', () => {
     if (band.classList.contains('ready')) text.textContent = txt(T.dbBereit)
   })
@@ -965,11 +973,7 @@ function baueBox (uebung, ctx) {
 
     // rowMode 'array' statt Objekten: Sonst fallen gleichnamige Spalten
     // zusammen - `SELECT name, name` liefert als Objekt nur einen Wert.
-    const fuehre = async (db, sql) => {
-      if (!/;\s*\S/.test(sql)) return await db.query(sql, [], { rowMode: 'array' })
-      const teile = await db.exec(sql, { rowMode: 'array' })
-      return [...teile].reverse().find(t => t.fields && t.fields.length) || teile[teile.length - 1] || { fields: [], rows: [] }
-    }
+    const fuehre = fuehreSql
 
     const sperren = (an) => { btnRun.disabled = btnCheck.disabled = an }
 
@@ -996,11 +1000,11 @@ function baueBox (uebung, ctx) {
       if (!sql) { status(meldung, 'note', txt(T.leer)); return }
       sperren(true); status(meldung, 'note', txt(T.dbLaden))
       try {
-        const db = await holeDb()
-        await saeen(db)
-        const meins = await fuehre(db, sql)
-        await saeen(db)
-        const soll = await fuehre(db, uebung.loesung)
+        const PGlite = await ladePGlite()
+        const saat = await holeSaat()
+        const erzeugeDb = () => PGlite.create()
+        const meins = await pruefAbfrage(erzeugeDb, saat, sql)
+        const soll = await pruefAbfrage(erzeugeDb, saat, uebung.loesung)
         const spaltenGleich = meins.fields.length === soll.fields.length
         if (!spaltenGleich) {
           zeigeErgebnis('fail', txt(T.nochNicht), meins, txt(T.spaltenFalsch))

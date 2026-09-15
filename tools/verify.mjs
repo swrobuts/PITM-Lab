@@ -246,8 +246,8 @@ for (const u of terminalUebungen) {
     for (const [befehl, soll] of folge) {
       const offen = schritte.find(s => !s.fertig)
       const vorher = offen ? zustandTrifft(welt, offen.zustand) : false
-      fuehreAus(welt, befehl)
-      if (offen && schrittErfuellt(welt, offen, befehl, vorher)) offen.fertig = true
+      const ergebnis = fuehreAus(welt, befehl)
+      if (offen && schrittErfuellt(welt, offen, befehl, vorher, ergebnis)) offen.fertig = true
       const ist = schritte.filter(s => s.fertig).length
       if (ist !== soll && !stolper) stolper = `nach "${befehl}": ${ist} statt ${soll} Schritte`
     }

@@ -1,0 +1,9 @@
+{
+  "name": "pitm-lab",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test tools/regression.test.mjs",
+    "verify": "node tools/verify.mjs"
+  }
+}

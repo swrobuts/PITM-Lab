@@ -139,7 +139,8 @@
         { "de": "Auftrag 1 von 3 an der Konsole. Der Fernserver ist nachgebildet — es geht nichts nach außen.", "en": "Assignment 1 of 3 at the console. The remote is modelled — nothing goes outside." }
       ],
       "schritte": [
-        { "text": { "de": "Prüfen, dass hier noch kein Repository ist (git status)", "en": "Check that there is no repository here yet (git status)" }, "muster": "^git\\s+status" },
+        { "text": { "de": "Prüfen, dass hier noch kein Repository ist (git status)", "en": "Check that there is no repository here yet (git status)" }, "erwarteterFehler": "keinRepo",
+          "muster": "^git\\s+status" },
         { "text": { "de": "Das Repository klonen", "en": "Clone the repository" }, "muster": "^git\\s+clone\\b", "zustand": { "gitRepo": true } },
         { "text": { "de": "In den entstandenen Ordner wechseln", "en": "Change into the folder that appeared" }, "zustand": { "pfad": "velocity-analyse" } },
         { "text": { "de": "Den Inhalt auflisten — auch die versteckten Dateien (Option -a)", "en": "List the contents — including the hidden files (option -a)" }, "muster": "^(ls\\s+-\\w*a|Get-ChildItem.*-Force|dir\\s+/a)" },

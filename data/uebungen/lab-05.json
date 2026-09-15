@@ -548,6 +548,7 @@
             "de": "Absichtlich einen zweiten Container auf demselben Host-Port starten und die Fehlermeldung lesen",
             "en": "Deliberately start a second container on the same host port and read the error message"
           },
+          "erwarteterFehler": "portBelegt",
           "muster": "^docker\\s+run\\b.*-p\\s+(127\\.0\\.0\\.1:)?5432:5432"
         },
         {
@@ -606,6 +607,7 @@
             "de": "Versuchen, den laufenden Container mit docker rm zu entfernen — und die Zurückweisung lesen",
             "en": "Try to remove the running container with docker rm — and read the refusal"
           },
+          "erwarteterFehler": "rmLaeuft",
           "muster": "^docker\\s+rm\\b"
         },
         {
@@ -682,6 +684,7 @@
             "de": "docker compose up -d ohne compose.yaml versuchen und die Meldung lesen",
             "en": "Try docker compose up -d without a compose.yaml and read the message"
           },
+          "erwarteterFehler": "keinCompose",
           "muster": "^docker\\s+compose\\s+up"
         },
         {
